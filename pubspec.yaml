@@ -1,0 +1,52 @@
+name: meow
+description: "猫猫图鉴"
+
+publish_to: 'none' 
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.10.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # iOS风格图标库
+  cupertino_icons: ^1.0.8
+  # 矢量图加载组件
+  flutter_svg: ^2.2.3
+  # 网络请求库
+  dio: ^5.9.0
+  # 状态管理
+  flutter_riverpod: ^3.1.0
+  riverpod_annotation: ^4.0.0
+  # 路由管理
+  go_router: ^17.0.1
+  # 本地存储
+  shared_preferences: ^2.5.4
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  # 代码规范
+  flutter_lints: ^6.0.0
+
+  # 代码生成
+  build_runner: ^2.10.5
+  riverpod_generator: ^4.0.0+1
+  # JSON 序列化
+  json_serializable: ^6.11.2
+  json_annotation: ^4.9.0
+
+
+
+# The following section is specific to Flutter packages.
+flutter:
+
+  uses-material-design: true
+
+  # 加载资源
+  assets:
+    - assets/images/
