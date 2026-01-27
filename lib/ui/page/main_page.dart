@@ -18,15 +18,31 @@ class _MainPageState extends ConsumerState<MainPage> {
   /// 用于切换当前显示页面
   late PageController _pageController;
 
+  // App生命周期监听
+  late AppLifecycleListener _lifecycleListener;
+
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    _initLifecycleListener();
+    debugPrint('MainPage initialized');
+  }
+
+  void _initLifecycleListener() {
+    _lifecycleListener = AppLifecycleListener(
+      onResume: () {
+        // 应用恢复，处理应用在后台到达新的一天时执行签到
+        debugPrint('App resumed');
+      },
+    );
+    WidgetsBinding.instance.addObserver(_lifecycleListener);
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _lifecycleListener.dispose();
     super.dispose();
   }
 

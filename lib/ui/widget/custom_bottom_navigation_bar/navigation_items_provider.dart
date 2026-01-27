@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/user_provider.dart';
-import 'package:meow/ui/page/home_page.dart';
-import 'package:meow/ui/page/share_page.dart';
-import 'package:meow/ui/page/user_page.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/custom_navigation_item.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_config.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
