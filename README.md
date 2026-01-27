@@ -14,3 +14,24 @@
 git的话咱俩就不用那么规范了，直接在main分支上提交就行，只需要确保提交时项目是可运行的。提交信息写清本次做了什么即可。
 
 我在空白代码的基础上拉了一个练习分支exercise你可以随便玩。
+
+<hr/>
+
+添加新导航项：只需在 NavigationConfigRegistry.allConfigs 中添加配置
+```Dart
+static final _newConfig = NavigationItemConfig(
+  itemData: CustomNavigationItemData(
+    label: '新功能',
+    icon: Icon(Icons.new_releases),
+    activeIcon: Icon(Icons.new_releases),
+  ),
+  pageBuilder: (_) => const NewPage(),
+  allowedRoles: {RoleType.student, RoleType.admin}, // 权限控制
+);
+```
+
+角色权限控制：
+
+allowedRoles: null → 所有角色可见
+allowedRoles: {RoleType.admin} → 仅管理员可见
+allowedRoles: {RoleType.student, RoleType.admin} → 学生和管理员可见
