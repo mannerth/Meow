@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'user_provider.dart';
+part of 'auth_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -8,51 +8,56 @@ part of 'user_provider.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// 登录状态provider
 
-@ProviderFor(UserState)
-final userStateProvider = UserStateProvider._();
+@ProviderFor(AuthState)
+final authStateProvider = AuthStateProvider._();
 
-final class UserStateProvider extends $NotifierProvider<UserState, User> {
-  UserStateProvider._()
+/// 登录状态provider
+final class AuthStateProvider extends $NotifierProvider<AuthState, Auth> {
+  /// 登录状态provider
+  AuthStateProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'userStateProvider',
+        name: r'authStateProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$userStateHash();
+  String debugGetCreateSourceHash() => _$authStateHash();
 
   @$internal
   @override
-  UserState create() => UserState();
+  AuthState create() => AuthState();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(User value) {
+  Override overrideWithValue(Auth value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<User>(value),
+      providerOverride: $SyncValueProvider<Auth>(value),
     );
   }
 }
 
-String _$userStateHash() => r'ff297ec8c8f6bceec0c3463bae08b3db4eccafd5';
+String _$authStateHash() => r'17c2d74ca528524c7159466ace4eb7a7ec336b42';
 
-abstract class _$UserState extends $Notifier<User> {
-  User build();
+/// 登录状态provider
+
+abstract class _$AuthState extends $Notifier<Auth> {
+  Auth build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<User, User>;
+    final ref = this.ref as $Ref<Auth, Auth>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<User, User>,
-              User,
+              AnyNotifier<Auth, Auth>,
+              Auth,
               Object?,
               Object?
             >;

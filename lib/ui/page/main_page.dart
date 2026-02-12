@@ -65,8 +65,6 @@ class _MainPageState extends ConsumerState<MainPage> {
     }
 
     return Scaffold(
-      // 页面顶部
-      appBar: AppBar(),
       // 延申页面主体，为了适应自定义悬浮导航栏
       extendBody: true,
       body: Stack(

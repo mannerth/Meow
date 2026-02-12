@@ -47,7 +47,7 @@ final class NavigationItemsProvider
   }
 }
 
-String _$navigationItemsHash() => r'03874934974b5c100614799f291fa6697722d725';
+String _$navigationItemsHash() => r'82820dc1663bd486dd70b2730f17943e802e88fc';
 
 /// 导航项配置 Provider
 /// 根据用户角色自动计算可见的导航项

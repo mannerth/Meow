@@ -6,9 +6,6 @@
 
 启动虚拟机，在调试里用第一个配置运行。
 
-如果运行不起来，提示网络问题的话，在开启代理的情况下，把[/android/gradle.properties](/android/gradle.properties)里的注释取消掉。咱们用的一个软件，端口应该是一样的。可以从设置里看一眼：
-![clash_verge_settings](/assets/images/clash_verge_settrings.png)
-不行就和我说
 <hr/>
 
 git的话咱俩就不用那么规范了，直接在main分支上提交就行，只需要确保提交时项目是可运行的。提交信息写清本次做了什么即可。
@@ -35,3 +32,12 @@ static final _newConfig = NavigationItemConfig(
 allowedRoles: null → 所有角色可见
 allowedRoles: {RoleType.admin} → 仅管理员可见
 allowedRoles: {RoleType.student, RoleType.admin} → 学生和管理员可见
+
+<hr/>
+
+代码生成命令：
+```bash
+dart run build_runner build --delete-conflicting-outputs
+```
+https://docs.flutter.cn/data-and-backend/serialization/json
+

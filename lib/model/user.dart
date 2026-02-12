@@ -1,3 +1,9 @@
+import 'package:json_annotation/json_annotation.dart';
+
+part 'user.g.dart';
+
+///用户类
+@JsonSerializable()
 class User {
   // UUID
   String id;
@@ -42,6 +48,9 @@ class User {
   bool get isGuest => roleType == RoleType.guest;
   bool get isStudent => roleType == RoleType.student;
   bool get isAdmin => roleType == RoleType.admin;
+
+  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
+  Map<String, dynamic> toJson() => _$UserToJson(this);
 }
 
 enum RoleType {

@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/ui/page/home_page.dart';
+import 'package:meow/ui/page/meow_page.dart';
 import 'package:meow/ui/page/share_page.dart';
+import 'package:meow/ui/page/static_page.dart';
 import 'package:meow/ui/page/user_page.dart';
+import 'package:meow/ui/page/users_page.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/custom_navigation_item.dart';
 
 /// 导航项配置
@@ -39,11 +42,40 @@ class NavigationConfigRegistry {
   /// 所有可用的导航项配置
   /// 按显示顺序排列，新增导航项只需在此添加
   static List<NavigationItemConfig> get allConfigs => [
+    _staticConfig,
+    _meowConfig,
     _homeConfig,
     _shareConfig,
     _adminConfig,
     _userConfig,
   ];
+
+  // ========== 管理员统计页 =======
+  static final _staticConfig = NavigationItemConfig(
+    itemData: CustomNavigationItemData(
+      label: '统计',
+      icon: SvgPicture.asset(
+        'assets/icons/table-cells.svg',
+        width: 24,
+        height: 24,
+      ),
+    ), 
+    pageBuilder: (_)=>StaticPage(),
+    allowedRoles: {RoleType.admin}
+  );
+
+  static final _meowConfig = NavigationItemConfig(
+    itemData: CustomNavigationItemData(
+      label: '猫咪', 
+      icon: SvgPicture.asset(
+        'assets/icons/paw.svg',
+        width: 24,
+        height: 24,
+      ),
+    ), 
+    pageBuilder: (_)=>MeowPage(),
+    allowedRoles: {RoleType.admin}
+  );
 
   // ============ 首页 ============
   static final _homeConfig = NavigationItemConfig(
@@ -79,20 +111,19 @@ class NavigationConfigRegistry {
     allowedRoles: {RoleType.student, RoleType.admin},
   );
 
-  // ============ 管理后台 ============
+  // ============ 用户管理 ============
   static final _adminConfig = NavigationItemConfig(
     itemData: CustomNavigationItemData(
       label: '管理',
-      icon: SvgPicture.asset('assets/icons/admin.svg', width: 24, height: 24),
+      icon: SvgPicture.asset('assets/icons/users.svg', width: 24, height: 24),
       activeIcon: SvgPicture.asset(
-        'assets/icons/admin-selected.svg',
+        'assets/icons/users.svg',
         width: 24,
         height: 24,
       ),
       activeBackgroundColor: Colors.orange.withValues(alpha: 0.15),
     ),
-    //TODO: 替换为实际管理页面
-    pageBuilder: (_) => Placeholder(),
+    pageBuilder: (_) => UsersPage(),
     // 仅管理员可见
     allowedRoles: {RoleType.admin},
   );

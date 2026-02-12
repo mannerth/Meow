@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meow/model/user.dart';
-import 'package:meow/provider/user_provider.dart';
+import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/custom_navigation_item.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_config.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -14,8 +14,8 @@ class NavigationItems extends _$NavigationItems {
   @override
   List<NavigationItemConfig> build() {
     // 监听用户状态变化，自动重新计算导航项
-    final user = ref.watch(userStateProvider);
-    return _getNavigationConfigs(user.roleType);
+    final auth = ref.watch(authStateProvider);
+    return _getNavigationConfigs(auth.role);
   }
 
   /// 根据角色获取导航配置
