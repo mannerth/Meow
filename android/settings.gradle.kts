@@ -17,6 +17,8 @@ pluginManagement {
         google()
         mavenCentral()
         gradlePluginPortal()
+         maven { url = uri("https://storage.flutter-io.cn/download.flutter.io") }
+    
     }
 }
 
@@ -25,5 +27,17 @@ plugins {
     id("com.android.application") version "8.11.1" apply false
     id("org.jetbrains.kotlin.android") version "2.2.20" apply false
 }
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        // 现有镜像 + 官方仓库
+        maven { url = uri("https://maven.aliyun.com/repository/google") }
+        maven { url = uri("https://maven.aliyun.com/repository/central") }
+        google()
+        mavenCentral()
 
+        // 新增：Flutter Maven 仓库（国内镜像）
+        maven { url = uri("https://storage.flutter-io.cn/download.flutter.io") }
+    }
+}
 include(":app")
