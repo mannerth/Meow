@@ -3,7 +3,7 @@ import 'package:meow/util/store.dart';
 
 // 网络请求封装，单例模式
 class Http {
-  static const String baseUrl = '';
+  static const String baseUrl = 'http://10.2.9.114:20202';
   static const Duration connectTimeout = Duration(seconds: 10);
   static const Duration sendTimeout = Duration(seconds: 10);
   static const Duration receiveTimeout = Duration(seconds: 10);

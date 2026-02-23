@@ -24,11 +24,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     super.initState();
     user = ref.read(authStateProvider).user!;
     _nicknameCtrl = TextEditingController(text: user.nickname ?? "");
-    _wechatCtrl = TextEditingController(text: user.wechat ?? "");
-    _phoneCtrl = TextEditingController(text: user.phone ?? "");
+    _wechatCtrl = TextEditingController();
+    _phoneCtrl = TextEditingController();
     //user字段调整
-    showBadge = user.showBadge ?? true;
-    pushNotification = user.pushNotification ?? true;
+    // showBadge = user.showBadge ?? true;
+    // pushNotification = user.pushNotification ?? true;
   }
 
   @override
@@ -42,10 +42,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   void _save() {
     final newUser = user.copyWith(
       nickname: _nicknameCtrl.text,
-      wechat: _wechatCtrl.text,
-      phone: _phoneCtrl.text,
-      showBadge: showBadge,
-      pushNotification: pushNotification,
+      // wechat: _wechatCtrl.text,
+      // phone: _phoneCtrl.text,
+      // showBadge: showBadge,
+      // pushNotification: pushNotification,
     );
     ref.read(authStateProvider.notifier).update(newUser);
     Navigator.pop(context);
@@ -145,7 +145,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   _TextEditField(label: "昵称", controller: _nicknameCtrl),
                   _ArrowField(
                     label: "所属校区",
-                    value: user.campus ?? "",
+                    value: user.campus?.name ?? "",
                     onTap: () {
                       /* TODO: 切换校区 */
                     },
@@ -157,7 +157,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 title: "身份认证",
                 children: [
                   _StaticField(label: "学号/工号", value: user.studentId ?? ""),
-                  _StaticField(label: "真实姓名", value: user.realName ?? ""),
+                  //_StaticField(label: "真实姓名", value: user.realName ?? ""),
                 ],
               ),
               // 联系方式卡片

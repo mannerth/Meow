@@ -11,8 +11,8 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  final _idCtrl = TextEditingController();
-  final _pwdCtrl = TextEditingController();
+  final _idCtrl = TextEditingController(text: '202400300169@mail.sdu.edu.cn');
+  final _pwdCtrl = TextEditingController(text: '123456');
   bool _loading = false;
 
   Future<void> _doLogin() async {
@@ -38,6 +38,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('登录失败：$e')));
+      debugPrint('Login error: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -47,7 +48,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   void _doGuestLogin() {
     final now = DateTime.now();
     final user = User(
-      id: 'guest',
+      id: -1,
       studentId: '',
       nickname: '游客',
       avatar: null,

@@ -1,3 +1,4 @@
+import 'package:meow/api/http.dart';
 import 'package:meow/model/user.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -15,6 +16,9 @@ class AuthState extends _$AuthState {
   /// 更新用户状态
   void update(User user, [String? token]){
     state = Auth(user: user, token: token??'');
+    if(token!=null){
+      Http().setToken(token);
+    }
   }
 
   void clear(){
@@ -32,7 +36,7 @@ class Auth{
     return RoleType.admin;
   }
 
-  bool get loggedIn => _user!=null && _user!.createTime != DateTime.fromMillisecondsSinceEpoch(0);
+  bool get loggedIn => _user!=null && _user!.id != -1;
 
   Auth({User? user, this.token = ''}){
     _user = user;

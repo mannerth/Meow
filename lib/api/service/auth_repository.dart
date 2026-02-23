@@ -18,29 +18,18 @@ class AuthRepository {
     required String password,
   }) async {
     //ai跑的
-    // final resp = await _http.post('/auth/login', body: {'studentId': studentId, 'password': password});
-    // final data = json.decode(resp.body) as Map<String, dynamic>;
-    // final token = data['token'] as String;
-    // final user = User.fromJson(data['user'] as Map<String, dynamic>);
-    // return AuthResult(user: user, token: token);
+    final resp = await _http.post('/users/login', data: {'email': studentId, 'password': password});
+    final data = resp.data['data'] as Map<String, dynamic>;
+    final token = data['accessToken'] as String;
+    _http.setToken(token);
+    final user = await getMe();
+    return AuthResult(user: user, token: token);
+  }
 
-    // 模拟成功
-    final now = DateTime.now();
-    final user = User(
-      id: 'u-$studentId',
-      studentId: studentId,
-      nickname: '同学',
-      avatar: null,
-      roleType: RoleType.student,
-      campus: '中心校区',
-      currency: 0,
-      level: 1,
-      levelTitle: '新生',
-      experience: 0,
-      nextLevelExp: 10,
-      createTime: now,
-    );
-    return AuthResult(user: user, token: 'mock-token-$studentId');
+  Future<User> getMe() async {
+    final res = await _http.get('/users/me');
+    final data = res.data['data'] as Map<String, dynamic>;
+    return User.fromJson(data);
   }
 
   // 注册（接入时替换为真实接口）
