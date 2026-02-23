@@ -1,4 +1,7 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:meow/main.dart';
+import 'package:meow/ui/page/login_page.dart';
 import 'package:meow/util/store.dart';
 
 // 网络请求封装，单例模式
@@ -184,12 +187,13 @@ class Http {
       return response;
     } on DioException catch (e) {
       if (e.type == DioExceptionType.badResponse && allowRetry) {
-        if (e.response?.statusCode == 401) {
-          // TODO: refresh token，失败跳转登录
+        if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
+          navigatorKey.currentState?.push(MaterialPageRoute(builder: (_)=>LoginPage()));
+          return Future.error(Exception('Unauthorized, redirecting to login'));
         }
         if (e.response?.statusCode != null &&
             (e.response!.statusCode! >= 500 ||
-                e.response!.statusCode! == 401)) {
+                e.response!.statusCode! == 403)) {
           // 重试请求
           return await _dio.request<T>(
             path,

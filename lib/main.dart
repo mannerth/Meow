@@ -20,8 +20,11 @@ class MyApp extends ConsumerWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: '猫猫图鉴',
+      navigatorKey: navigatorKey,
 
       home: auth.loggedIn ? const MainPage() : const LoginPage(),
     );
   }
 }
+
+GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

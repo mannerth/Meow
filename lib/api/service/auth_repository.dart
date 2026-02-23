@@ -26,8 +26,8 @@ class AuthRepository {
     return AuthResult(user: user, token: token);
   }
 
-  Future<User> getMe() async {
-    final res = await _http.get('/users/me');
+  static Future<User> getMe() async {
+    final res = await Http().get('/users/me');
     final data = res.data['data'] as Map<String, dynamic>;
     return User.fromJson(data);
   }
@@ -41,5 +41,11 @@ class AuthRepository {
     // final resp = await _http.post('/auth/register', body: {'studentId': studentId, 'password': password});
     // if (resp.statusCode != 200) throw Exception('注册失败：${resp.body}');
     await Future.delayed(const Duration(milliseconds: 600)); // 模拟网络
+  }
+
+  // 签到成功返回 true，已经签到过了返回 false
+  static Future<bool> dailyCheckIn() async {
+    final res = await Http().post('/users/me/checkin');
+    return !(res.data['data']['todayChecked'] as bool);
   }
 }

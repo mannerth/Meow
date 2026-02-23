@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meow/api/service/auth_repository.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/custom_bottom_navigation_bar.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_items_provider.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_provider.dart';
@@ -27,16 +28,26 @@ class _MainPageState extends ConsumerState<MainPage> {
     _pageController = PageController();
     _initLifecycleListener();
     debugPrint('MainPage initialized');
+    daliyCheckIn();
   }
 
   void _initLifecycleListener() {
     _lifecycleListener = AppLifecycleListener(
       onResume: () {
         // 应用恢复，处理应用在后台到达新的一天时执行签到
-        debugPrint('App resumed');
+        daliyCheckIn();
       },
     );
     WidgetsBinding.instance.addObserver(_lifecycleListener);
+  }
+
+  void daliyCheckIn() async{
+    bool checkedIn = await AuthRepository.dailyCheckIn();
+    if(checkedIn){
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('签到成功！')));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('今日已签到过了哦~')));
+    }
   }
 
   @override
