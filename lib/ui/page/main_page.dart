@@ -41,12 +41,14 @@ class _MainPageState extends ConsumerState<MainPage> {
     WidgetsBinding.instance.addObserver(_lifecycleListener);
   }
 
-  void daliyCheckIn() async{
+  void daliyCheckIn() async {
     bool checkedIn = await AuthRepository.dailyCheckIn();
-    if(checkedIn){
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('签到成功！')));
+    if (checkedIn) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('签到成功！')));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('今日已签到过了哦~')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('今日已签到过了哦~')));
     }
   }
 

@@ -1,11 +1,10 @@
 /// 一般工具类
 class CommonTool {
-
   /// 把数字转换成显示友好的字符串
-  /// 
+  ///
   /// value 整数值，
-  /// maxCharacters 允许的最大字符数，默认4 
-  ///  
+  /// maxCharacters 允许的最大字符数，默认4
+  ///
   /// 尽量返回一个长度不超过maxCharacters的字符串，如123, 1k, 1.2w, 1.34m等
   static String getDisplayStringForInteger(int value, {int maxCharacters = 4}) {
     String str = value.toString();
@@ -36,7 +35,8 @@ class CommonTool {
     }
 
     // 计算可供数字部分使用的字符数（扣除单位和符号）
-    int availableForNumber = maxCharacters - sign.length - (units[idx]['symbol'] as String).length;
+    int availableForNumber =
+        maxCharacters - sign.length - (units[idx]['symbol'] as String).length;
     if (availableForNumber <= 0) {
       // 太短时退回到直接截断原始数字（保留符号位置）
       return str.substring(0, maxCharacters);
@@ -52,7 +52,8 @@ class CommonTool {
       // 尝试上一个（更大）单位
       if (idx == 0) break; // 已经是最大的单位，不能再上升
       idx = idx - 1;
-      availableForNumber = maxCharacters - sign.length - (units[idx]['symbol'] as String).length;
+      availableForNumber =
+          maxCharacters - sign.length - (units[idx]['symbol'] as String).length;
       if (availableForNumber <= 0) {
         return str.substring(0, maxCharacters);
       }

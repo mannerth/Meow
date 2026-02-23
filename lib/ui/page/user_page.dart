@@ -14,7 +14,8 @@ class _UserPageState extends ConsumerState<UserPage> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Text(ref.watch(authStateProvider).user?.toJson().toString()?? '未登录'),
+      child:
+          Text(ref.watch(authStateProvider).user?.toJson().toString() ?? '未登录'),
     );
   }
 }

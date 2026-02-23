@@ -18,7 +18,8 @@ class AuthRepository {
     required String password,
   }) async {
     //ai跑的
-    final resp = await _http.post('/users/login', data: {'email': studentId, 'password': password});
+    final resp = await _http
+        .post('/users/login', data: {'email': studentId, 'password': password});
     final data = resp.data['data'] as Map<String, dynamic>;
     final token = data['accessToken'] as String;
     _http.setToken(token);

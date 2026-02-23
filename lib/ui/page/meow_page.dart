@@ -11,7 +11,7 @@ class _MeowPageState extends State<MeowPage> {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child:Text('猫咪管理页'),
+      child: Text('猫咪管理页'),
     );
   }
 }

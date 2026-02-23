@@ -66,7 +66,7 @@ class Http {
         request: true,
         requestHeader: true,
         requestBody: true,
-        responseHeader: true,
+        //responseHeader: true,
         responseBody: true,
         error: true,
       ),
@@ -186,9 +186,11 @@ class Http {
       }
       return response;
     } on DioException catch (e) {
+      debugPrint(e.message);
       if (e.type == DioExceptionType.badResponse && allowRetry) {
         if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
-          navigatorKey.currentState?.push(MaterialPageRoute(builder: (_)=>LoginPage()));
+          navigatorKey.currentState
+              ?.push(MaterialPageRoute(builder: (_) => LoginPage()));
           return Future.error(Exception('Unauthorized, redirecting to login'));
         }
         if (e.response?.statusCode != null &&

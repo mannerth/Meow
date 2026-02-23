@@ -27,9 +27,11 @@ class CustomBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect( // 圆角裁剪
+    return ClipRRect(
+      // 圆角裁剪
       borderRadius: BorderRadius.circular(42.0),
-      child: BackdropFilter(  // 模糊其背景
+      child: BackdropFilter(
+        // 模糊其背景
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),

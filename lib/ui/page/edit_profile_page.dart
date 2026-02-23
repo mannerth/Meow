@@ -53,30 +53,30 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
   // 顶部导航栏
   AppBar _buildAppBar() => AppBar(
-    backgroundColor: Colors.transparent,
-    elevation: 0,
-    leading: TextButton(
-      onPressed: () => Navigator.pop(context),
-      child: const Text(
-        "取消",
-        style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
-      ),
-    ),
-    title: const Text("编辑资料", style: TextStyle(color: Colors.black87)),
-    actions: [
-      TextButton(
-        onPressed: _save,
-        child: const Text(
-          "保存",
-          style: TextStyle(
-            color: Color.fromARGB(255, 43, 184, 223),
-            fontWeight: FontWeight.bold,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text(
+            "取消",
+            style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
           ),
         ),
-      ),
-    ],
-    centerTitle: true,
-  );
+        title: const Text("编辑资料", style: TextStyle(color: Colors.black87)),
+        actions: [
+          TextButton(
+            onPressed: _save,
+            child: const Text(
+              "保存",
+              style: TextStyle(
+                color: Color.fromARGB(255, 43, 184, 223),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+        centerTitle: true,
+      );
 
   @override
   Widget build(BuildContext context) {

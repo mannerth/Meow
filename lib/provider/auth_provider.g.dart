@@ -17,15 +17,15 @@ final authStateProvider = AuthStateProvider._();
 final class AuthStateProvider extends $NotifierProvider<AuthState, Auth> {
   /// 登录状态provider
   AuthStateProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'authStateProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+      : super(
+          from: null,
+          argument: null,
+          retry: null,
+          name: r'authStateProvider',
+          isAutoDispose: false,
+          dependencies: null,
+          $allTransitiveDependencies: null,
+        );
 
   @override
   String debugGetCreateSourceHash() => _$authStateHash();
@@ -53,14 +53,8 @@ abstract class _$AuthState extends $Notifier<Auth> {
   @override
   void runBuild() {
     final ref = this.ref as $Ref<Auth, Auth>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<Auth, Auth>,
-              Auth,
-              Object?,
-              Object?
-            >;
+    final element = ref.element as $ClassProviderElement<
+        AnyNotifier<Auth, Auth>, Auth, Object?, Object?>;
     element.handleCreate(ref, build);
   }
 }

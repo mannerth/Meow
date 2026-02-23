@@ -18,7 +18,7 @@ class Navigation extends _$Navigation {
   }
 }
 
-class NavigationState{
+class NavigationState {
   final int currentIndex;
   final bool isVisible;
 
@@ -30,7 +30,7 @@ class NavigationState{
   NavigationState copyWith({
     int? currentIndex,
     bool? isVisible,
-  }){
+  }) {
     return NavigationState(
       currentIndex: currentIndex ?? this.currentIndex,
       isVisible: isVisible ?? this.isVisible,

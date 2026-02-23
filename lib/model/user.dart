@@ -103,7 +103,7 @@ enum Campus {
   ruanjianyuan(5, '软件园校区'),
   qingdao(6, '青岛校区'),
   weihai(7, '威海校区');
-  
+
   final int code;
   final String name;
   const Campus(this.code, this.name);

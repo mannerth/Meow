@@ -14,35 +14,35 @@ class AuthState extends _$AuthState {
   }
 
   /// 更新用户状态
-  void update(User user, [String? token]){
-    state = Auth(user: user, token: token??'');
-    if(token!=null){
+  void update(User user, [String? token]) {
+    state = Auth(user: user, token: token ?? '');
+    if (token != null) {
       Http().setToken(token);
     }
   }
 
-  void clear(){
+  void clear() {
     state = Auth();
   }
 }
 
-class Auth{
+class Auth {
   User? _user;
   User? get user => _user;
   String token = '';
-  RoleType get role{
-    if(loggedIn) return _user!.roleType;
+  RoleType get role {
+    if (loggedIn) return _user!.roleType;
     // 测试时，可以改这里的身份
     return RoleType.admin;
   }
 
-  bool get loggedIn => _user!=null && _user!.id != -1;
+  bool get loggedIn => _user != null && _user!.id != -1;
 
-  Auth({User? user, this.token = ''}){
+  Auth({User? user, this.token = ''}) {
     _user = user;
   }
 
-  Auth copyWith({User? user, String? token}){
-    return Auth(user: user?? this._user, token: token?? this.token);
+  Auth copyWith({User? user, String? token}) {
+    return Auth(user: user ?? this._user, token: token ?? this.token);
   }
 }

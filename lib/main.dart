@@ -21,7 +21,6 @@ class MyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       title: '猫猫图鉴',
       navigatorKey: navigatorKey,
-
       home: auth.loggedIn ? const MainPage() : const LoginPage(),
     );
   }
