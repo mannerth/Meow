@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:meow/main.dart';
 import 'package:meow/ui/page/login_page.dart';
 import 'package:meow/util/store.dart';
@@ -71,6 +72,21 @@ class Http {
         error: true,
       ),
     );
+  }
+
+  // 上传图片
+  Future<String> uploadImage(XFile image) async {
+    final formData = FormData.fromMap({
+      'file': await MultipartFile.fromFile(image.path, filename: image.name),
+      'strategy_id': 1
+    });
+    final Dio dio = Dio(BaseOptions(
+      headers: {
+        'Authorization': 'Bearer 7|DkcckFRO7XugQCqjU08nDL4YBz5AmNbexnDmBdJC',
+      }
+    ));
+    final response = await dio.post('https://image.foofish.work/api/v1/upload', data: formData);
+    return response.data['data']['links']['url'] as String;
   }
 
   Future<Response<T>> get<T>(
