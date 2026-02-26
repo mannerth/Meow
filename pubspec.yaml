@@ -42,8 +42,14 @@ dev_dependencies:
   riverpod_generator: ^4.0.0+1
   # JSON 序列化
   json_serializable: ^6.11.2
+  # 应用图标生成
+  flutter_launcher_icons: ^0.14.4
 
-
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/images/猫猫图鉴-logo.png"  # 图标路径
+  adaptive_icon_background: "#FFFFFF"  # Android 适应性图标背景色
 
 # The following section is specific to Flutter packages.
 flutter:

@@ -2,7 +2,7 @@
     <application
         android:label="meow"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
 
         <!-- 关闭 Impeller，避免与部分 AVD 图形设置不兼容导致黑屏 -->
         <meta-data
