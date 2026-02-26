@@ -5,15 +5,16 @@ import 'package:meow/model/user.dart';
 import 'package:meow/ui/page/cat_detail_page.dart';
 import 'package:meow/ui/widget/cat_card.dart';
 
-/// 首页
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class CatSelectPage extends StatefulWidget {
+  final bool selectable;
+
+  const CatSelectPage({super.key, this.selectable = false});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<CatSelectPage> createState() => _CatSelectPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _CatSelectPageState extends State<CatSelectPage> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
 
@@ -131,19 +132,11 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(),
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: CustomScrollView(
           controller: _scrollController,
           slivers: [
-            SliverToBoxAdapter(
-              child: Container(
-                height: 400,
-                color: Colors.red.withAlpha(50),
-                child: const Center(child: Text('上部区域')),
-              ),
-            ),
             SliverAppBar(
               pinned: true,
               title: PreferredSize(
@@ -248,6 +241,10 @@ class _HomePageState extends State<HomePage> {
           return CatCard(
             cat: cat,
             onTap: () {
+              if (widget.selectable) {
+                Navigator.of(context).pop(cat.id);
+                return;
+              }
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => CatDetailPage(catId: cat.id),
@@ -359,7 +356,7 @@ class _FilterOptions {
   static final campus = Campus.values
       .map((c) => _FilterOption(c.name, c.code.toString()))
       .toList()
-    ..add(_FilterOption('全部校区', null));
+    ..add(const _FilterOption('全部校区', null));
 
   static const status = [
     _FilterOption('全部状态', null),

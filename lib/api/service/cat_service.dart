@@ -52,4 +52,18 @@ class CatService {
       (object) => CatFeedResult.fromJson(object as Map<String, dynamic>),
     );
   }
+
+  static Future<DataResponse<String>> upsertCat({
+    String? id,
+    required Map<String, dynamic> payload,
+  }) async {
+    final response = id == null
+        ? await Http().post('/admin/cats', data: payload)
+        : await Http().put('/admin/cats/$id', data: payload);
+    final json = response.data as Map<String, dynamic>;
+    return DataResponse.fromJson(
+      json,
+      (object) => (object as Map<String, dynamic>)['id'] as String,
+    );
+  }
 }

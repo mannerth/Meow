@@ -11,12 +11,13 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  final _idCtrl = TextEditingController(text: '202400300169@mail.sdu.edu.cn');
+  final _idCtrl = TextEditingController(text: '202400300169');
   final _pwdCtrl = TextEditingController(text: '123456');
   bool _loading = false;
+  bool _isAdmin = false; // 是否管理员登录
 
   Future<void> _doLogin() async {
-    final id = _idCtrl.text.trim();
+    final id = '${_idCtrl.text.trim()}@mail.sdu.edu.cn';
     final pwd = _pwdCtrl.text;
     if (id.isEmpty || pwd.isEmpty) {
       ScaffoldMessenger.of(
@@ -28,7 +29,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _loading = true);
     try {
       final repo = AuthRepository();
-      final result = await repo.login(studentId: id, password: pwd);
+      final result =
+          await repo.login(studentId: id, password: pwd, isAdmin: _isAdmin);
 
       // 登录完成更新状态
       ref.read(authStateProvider.notifier).update(result.user, result.token);
@@ -111,12 +113,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        TextField(
-                          controller: _idCtrl,
-                          decoration: const InputDecoration(
-                            labelText: '学号 / 工号',
-                            border: OutlineInputBorder(),
-                          ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _idCtrl,
+                                decoration: const InputDecoration(
+                                  labelText: '山大邮箱',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                            ),
+                            Text('@mail.sdu.edu.cn',
+                                style: TextStyle(color: Colors.black54)),
+                          ],
                         ),
                         const SizedBox(height: 12),
                         TextField(
@@ -185,6 +195,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       },
                       child: const Text('忘记密码'),
                     ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Checkbox(
+                      value: _isAdmin,
+                      onChanged: (val) {
+                        setState(() {
+                          _isAdmin = val ?? false;
+                        });
+                      },
+                    ),
+                    const Text('管理员登录'),
                   ],
                 ),
               ],

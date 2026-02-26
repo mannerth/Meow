@@ -13,17 +13,20 @@ class AuthRepository {
   final Http _http = Http();
 
   // 统一认证登录（到时候替换成认证接口）
-  Future<AuthResult> login({
-    required String studentId,
-    required String password,
-  }) async {
-    //ai跑的
+  Future<AuthResult> login(
+      {required String studentId,
+      required String password,
+      bool isAdmin = false}) async {
+    String path = isAdmin ? '/admin/login' : '/users/login';
     final resp = await _http
-        .post('/users/login', data: {'email': studentId, 'password': password});
+        .post(path, data: {'email': studentId, 'password': password});
     final data = resp.data['data'] as Map<String, dynamic>;
     final token = data['accessToken'] as String;
     _http.setToken(token);
     final user = await getMe();
+    if (isAdmin) {
+      user.roleType = RoleType.admin;
+    }
     return AuthResult(user: user, token: token);
   }
 

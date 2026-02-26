@@ -50,26 +50,16 @@
 - 格式化：
   - `dart format .`
 
-### 4.4 测试
-- 运行全部测试：
-  - `flutter test`
-- 运行单个测试文件（推荐）：
-  - `flutter test test/widget_test.dart`
-  - `flutter test test/api_test.dart`
 
 > 说明：`api_test.dart` 当前更像示例脚本，没有 `test()/expect()` 断言；
 > 若需纳入 CI 严格测试，请改写为标准单元测试。
 
 ### 4.5 构建（按目标平台选择）
-- Android：`flutter build apk`
-- iOS（仅 macOS）：`flutter build ios`
-- Web：`flutter build web`
-- Windows：`flutter build windows`
-- macOS：`flutter build macos`
-- Linux：`flutter build linux`
+- Android：`fvm flutter build apk`
+
 
 ### 4.6 运行（开发调试）
-- `flutter run -d <device>`（如 `windows` / `chrome` / 模拟器）
+- `fvm flutter run -d <device>`（如 `windows` / `chrome` / 模拟器）
 
 ## 5. 代码风格与约定
 ### 5.1 格式化与 Lint

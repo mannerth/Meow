@@ -38,7 +38,7 @@ class Cat {
         tags: (json['tags'] as List<dynamic>).map((e) => e as String).toList(),
         isNeutered: json['isNeutered'] as bool,
         popularity: (json['popularity'] as num).toInt(),
-        lastSeenTime: json['lastSeenTime'] as String,
+        lastSeenTime: (json['lastSeenTime'] ?? '') as String,
         roleName: json['roleName'] as String,
       );
 
