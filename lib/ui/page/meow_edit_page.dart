@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:meow/api/http.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/model/cat_detail.dart';
 import 'package:meow/model/user.dart';
@@ -24,6 +26,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
   late TextEditingController _birthYearController;
   late TextEditingController _descriptionController;
   Campus? _campus;
+  final ImagePicker _imagePicker = ImagePicker();
 
   String _status = 'SCHOOL';
   bool _isNeutered = false;
@@ -38,7 +41,9 @@ class _MeowEditPageState extends State<MeowEditPage> {
   double _appearance = 10.0;
 
   List<String> _selectedTags = [];
+  List<String> _images = [];
   bool _loading = false;
+  bool _uploading = false;
 
   static const _statusOptions = [
     'SCHOOL',
@@ -134,7 +139,8 @@ class _MeowEditPageState extends State<MeowEditPage> {
       final response = await CatService.fetchCatDetail(widget.catId!);
       final detail = response.data;
       if (detail == null) return;
-      _tagOptions.addAll(detail.tags.where((tag) => !_tagOptions.contains(tag)));
+      _tagOptions
+          .addAll(detail.tags.where((tag) => !_tagOptions.contains(tag)));
       _applyDetail(detail);
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -168,6 +174,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
     _fight = detail.attributes.fight;
     _appearance = detail.attributes.appearance;
     _selectedTags = detail.tags;
+    _images = List<String>.from(detail.images);
     _birthYearController.text = detail.basicInfo.birthYear == 0
         ? ''
         : detail.basicInfo.birthYear.toString();
@@ -179,6 +186,8 @@ class _MeowEditPageState extends State<MeowEditPage> {
         : _healthStatusDisplayFromApi(detail.basicInfo.healthStatus);
     if (mounted) setState(() {});
   }
+
+  bool get _isBusy => _loading || _uploading;
 
   String _genderDisplayFromApi(String value) {
     if (_genderValueToDisplay.containsKey(value)) {
@@ -264,7 +273,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
       'aliases': <String>[],
       'color': _colorController.text.trim(),
       'avatar': _avatarController.text.trim(),
-      'images': <String>[],
+      'images': _images,
       'gender': _genderValueFromDisplay(_genderController.text.trim()),
       'campus': _campus?.name ?? '',
       'hauntLocation': _hauntController.text.trim(),
@@ -289,9 +298,10 @@ class _MeowEditPageState extends State<MeowEditPage> {
     };
     debugPrint('$payload');
     try {
-      await CatService.upsertCat(id: widget.catId, payload: payload);
-      // if (!mounted) return;
-      // Navigator.of(context).pop(true);
+      var result = await CatService.upsertCat(id: widget.catId, payload: payload);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('保存成功 ${result.data}')),
+      );
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -300,6 +310,60 @@ class _MeowEditPageState extends State<MeowEditPage> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _pickAvatar() async {
+    final image = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+    if (image == null) return;
+    setState(() => _uploading = true);
+    try {
+      final url = await Http().uploadImage(image);
+      _avatarController.text = url;
+      if (mounted) setState(() {});
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('头像上传失败，请稍后重试')),
+      );
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
+
+  void _removeAvatar() {
+    _avatarController.text = '';
+    setState(() {});
+  }
+
+  Future<void> _pickImages() async {
+    final images = await _imagePicker.pickMultiImage(limit: 9);
+    if (images.isEmpty) return;
+    setState(() => _uploading = true);
+    try {
+      for (final image in images) {
+        try {
+          final url = await Http().uploadImage(image);
+          if (!_images.contains(url)) {
+            _images.add(url);
+          }
+        } catch (error) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('图片上传失败，请稍后重试')),
+          );
+        }
+      }
+      if (mounted) setState(() {});
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
+
+  void _removeImage(String url) {
+    setState(() => _images.remove(url));
   }
 
   @override
@@ -324,7 +388,26 @@ class _MeowEditPageState extends State<MeowEditPage> {
               children: [
                 _AvatarCard(
                   avatarUrl: _avatarController.text,
-                  onTap: () {},
+                  onTap: _pickAvatar,
+                  onRemove: _removeAvatar,
+                ),
+                const SizedBox(height: 12),
+                _SectionCard(
+                  title: '图片管理',
+                  children: [
+                    Text(
+                      '支持上传猫咪展示图，可删除原来的图片',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.grey.shade600,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    _ImageGrid(
+                      images: _images,
+                      onAdd: _pickImages,
+                      onRemove: _removeImage,
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 _SectionCard(
@@ -457,47 +540,52 @@ class _MeowEditPageState extends State<MeowEditPage> {
                       }).toList(),
                     ),
                     IconButton(
-                      onPressed: (){
-                        TextEditingController _newTagController = TextEditingController();
+                      onPressed: () {
+                        TextEditingController _newTagController =
+                            TextEditingController();
                         showDialog(
-                          context: context, 
-                          builder: (context) => AlertDialog(
-                            title: const Text('添加新标签'),
-                            content: TextField(
-                              controller: _newTagController,
-                              autofocus: true,
-                              onSubmitted: (value) {
-                                if (value.trim().isEmpty) return;
-                                if (!_tagOptions.contains(value.trim())) {
-                                  setState(() => _tagOptions.add(value.trim()));
-                                }
-                                Navigator.of(context).pop();
-                              },
-                              decoration: const InputDecoration(
-                                hintText: '输入标签名称',
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                child: const Text('取消'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  final value = _newTagController.text;
-                                  if (value.trim().isEmpty) return;
-                                  if (!_tagOptions.contains(value.trim())) {
-                                    setState(() => _tagOptions.add(value.trim()));
-                                  }
-                                  Navigator.of(context).pop();
-                                },
-                                child: const Text('添加'),
-                              )
-                            ],
-                          )
-                        );
-                      }, 
-                      icon: const Icon(Icons.add_box_outlined, color: Color(0xFF7BC97F)),
+                            context: context,
+                            builder: (context) => AlertDialog(
+                                  title: const Text('添加新标签'),
+                                  content: TextField(
+                                    controller: _newTagController,
+                                    autofocus: true,
+                                    onSubmitted: (value) {
+                                      if (value.trim().isEmpty) return;
+                                      if (!_tagOptions.contains(value.trim())) {
+                                        setState(() =>
+                                            _tagOptions.add(value.trim()));
+                                      }
+                                      Navigator.of(context).pop();
+                                    },
+                                    decoration: const InputDecoration(
+                                      hintText: '输入标签名称',
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(),
+                                      child: const Text('取消'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        final value = _newTagController.text;
+                                        if (value.trim().isEmpty) return;
+                                        if (!_tagOptions
+                                            .contains(value.trim())) {
+                                          setState(() =>
+                                              _tagOptions.add(value.trim()));
+                                        }
+                                        Navigator.of(context).pop();
+                                      },
+                                      child: const Text('添加'),
+                                    )
+                                  ],
+                                ));
+                      },
+                      icon: const Icon(Icons.add_box_outlined,
+                          color: Color(0xFF7BC97F)),
                     )
                   ],
                 ),
@@ -544,7 +632,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
               ],
             ),
           ),
-          if (_loading)
+          if (_isBusy)
             const Positioned.fill(
               child: ColoredBox(
                 color: Color(0x66FFFFFF),
@@ -560,8 +648,13 @@ class _MeowEditPageState extends State<MeowEditPage> {
 class _AvatarCard extends StatelessWidget {
   final String avatarUrl;
   final VoidCallback onTap;
+  final VoidCallback onRemove;
 
-  const _AvatarCard({required this.avatarUrl, required this.onTap});
+  const _AvatarCard({
+    required this.avatarUrl,
+    required this.onTap,
+    required this.onRemove,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -573,17 +666,154 @@ class _AvatarCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          CircleAvatar(
-            radius: 48,
-            backgroundImage: avatarUrl.isEmpty ? null : NetworkImage(avatarUrl),
-            child: avatarUrl.isEmpty
-                ? const Icon(Icons.pets, size: 40, color: Color(0xFFB0B4BA))
-                : null,
+          Stack(
+            alignment: Alignment.topRight,
+            children: [
+              GestureDetector(
+                onTap: onTap,
+                child: CircleAvatar(
+                  radius: 48,
+                  backgroundImage:
+                      avatarUrl.isEmpty ? null : NetworkImage(avatarUrl),
+                  child: avatarUrl.isEmpty
+                      ? const Icon(
+                          Icons.pets,
+                          size: 40,
+                          color: Color(0xFFB0B4BA),
+                        )
+                      : null,
+                ),
+              ),
+              if (avatarUrl.isNotEmpty)
+                Positioned(
+                  right: -2,
+                  top: -2,
+                  child: Material(
+                    color: Colors.white,
+                    shape: const CircleBorder(),
+                    child: IconButton(
+                      visualDensity: VisualDensity.compact,
+                      iconSize: 18,
+                      onPressed: onRemove,
+                      icon: const Icon(Icons.close, color: Color(0xFFE14B4B)),
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 12),
           Text('点击图片更换头像', style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
+    );
+  }
+}
+
+class _ImageGrid extends StatelessWidget {
+  final List<String> images;
+  final VoidCallback onAdd;
+  final ValueChanged<String> onRemove;
+
+  const _ImageGrid({
+    required this.images,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tiles = [
+      _ImageAddTile(onTap: onAdd),
+      ...images
+          .map((url) => _ImageTile(url: url, onRemove: () => onRemove(url))),
+    ];
+
+    return GridView.count(
+      crossAxisCount: 3,
+      mainAxisSpacing: 12,
+      crossAxisSpacing: 12,
+      childAspectRatio: 1,
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      children: tiles
+          .map((child) => ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF4F5F7),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: child,
+                ),
+              ))
+          .toList(),
+    );
+  }
+}
+
+class _ImageAddTile extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _ImageAddTile({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.add_photo_alternate_outlined,
+              color: Color(0xFF7B8593)),
+          const SizedBox(height: 6),
+          Text('添加',
+              style: Theme.of(context)
+                  .textTheme
+                  .labelSmall
+                  ?.copyWith(color: const Color(0xFF7B8593))),
+        ],
+      ),
+    );
+  }
+}
+
+class _ImageTile extends StatelessWidget {
+  final String url;
+  final VoidCallback onRemove;
+
+  const _ImageTile({required this.url, required this.onRemove});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.network(
+          url,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => Container(
+            color: const Color(0xFFE6E7EB),
+            alignment: Alignment.center,
+            child: const Icon(Icons.pets, color: Colors.grey),
+          ),
+        ),
+        Positioned(
+          right: 4,
+          top: 4,
+          child: Material(
+            color: Colors.white.withValues(alpha: 0.9),
+            shape: const CircleBorder(),
+            child: IconButton(
+              padding: EdgeInsets.zero,
+              visualDensity: VisualDensity.compact,
+              iconSize: 18,
+              onPressed: onRemove,
+              icon: const Icon(Icons.delete_outline, color: Color(0xFFE14B4B)),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
