@@ -43,13 +43,10 @@ class _MainPageState extends ConsumerState<MainPage> {
 
   void daliyCheckIn() async {
     bool checkedIn = await AuthRepository.dailyCheckIn();
-    if (checkedIn) {
+    if (checkedIn && mounted) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('签到成功！')));
-    } else {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('今日已签到过了哦~')));
-    }
+          .showSnackBar(const SnackBar(content: Text('今日签到成功！')));
+    } 
   }
 
   @override

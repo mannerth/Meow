@@ -242,7 +242,7 @@ class _CatSelectPageState extends State<CatSelectPage> {
             cat: cat,
             onTap: () {
               if (widget.selectable) {
-                Navigator.of(context).pop(cat.id);
+                Navigator.of(context).pop(cat);
                 return;
               }
               Navigator.of(context).push(
