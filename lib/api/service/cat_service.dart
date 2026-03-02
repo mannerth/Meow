@@ -2,6 +2,7 @@ import 'package:meow/api/data_response.dart';
 import 'package:meow/api/http.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/model/cat_detail.dart';
+import 'package:meow/model/moment.dart';
 
 class CatService {
   static Future<DataResponse<CatPage>> fetchCats({
@@ -41,6 +42,46 @@ class CatService {
     return DataResponse.fromJson(
       json,
       (object) => CatDetail.fromJson(object as Map<String, dynamic>),
+    );
+  }
+
+  static Future<DataResponse<MomentPage>> fetchCatMoments({
+    required String catId,
+    int page = 1,
+    int pageSize = 10,
+  }) async {
+    final response = await Http().get(
+      '/moments',
+      queryParameters: {
+        'page': page,
+        'pageSize': pageSize,
+        'catId': catId,
+      },
+    );
+    final json = response.data as Map<String, dynamic>;
+    return DataResponse.fromJson(
+      json,
+      (object) => MomentPage.fromJson(object as Map<String, dynamic>),
+    );
+  }
+
+  static Future<DataResponse<MomentLikeResult>> likeMoment(
+      String momentId) async {
+    final response = await Http().post('/moments/$momentId/like');
+    final json = response.data as Map<String, dynamic>;
+    return DataResponse.fromJson(
+      json,
+      (object) => MomentLikeResult.fromJson(object as Map<String, dynamic>),
+    );
+  }
+
+  static Future<DataResponse<MomentLikeResult>> unlikeMoment(
+      String momentId) async {
+    final response = await Http().delete('/moments/$momentId/like');
+    final json = response.data as Map<String, dynamic>;
+    return DataResponse.fromJson(
+      json,
+      (object) => MomentLikeResult.fromJson(object as Map<String, dynamic>),
     );
   }
 

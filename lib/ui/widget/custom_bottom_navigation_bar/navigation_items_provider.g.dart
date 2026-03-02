@@ -21,15 +21,15 @@ final class NavigationItemsProvider
   /// 导航项配置 Provider
   /// 根据用户角色自动计算可见的导航项
   NavigationItemsProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'navigationItemsProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'navigationItemsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$navigationItemsHash();
@@ -57,13 +57,20 @@ abstract class _$NavigationItems extends $Notifier<List<NavigationItemConfig>> {
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref
-        as $Ref<List<NavigationItemConfig>, List<NavigationItemConfig>>;
-    final element = ref.element as $ClassProviderElement<
-        AnyNotifier<List<NavigationItemConfig>, List<NavigationItemConfig>>,
-        List<NavigationItemConfig>,
-        Object?,
-        Object?>;
+    final ref =
+        this.ref
+            as $Ref<List<NavigationItemConfig>, List<NavigationItemConfig>>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<
+                List<NavigationItemConfig>,
+                List<NavigationItemConfig>
+              >,
+              List<NavigationItemConfig>,
+              Object?,
+              Object?
+            >;
     element.handleCreate(ref, build);
   }
 }
@@ -75,22 +82,25 @@ final navigationItemsDataProvider = NavigationItemsDataProvider._();
 
 /// 导航项数据列表 Provider（仅数据，不含页面）
 
-final class NavigationItemsDataProvider extends $FunctionalProvider<
-        List<CustomNavigationItemData>,
-        List<CustomNavigationItemData>,
-        List<CustomNavigationItemData>>
+final class NavigationItemsDataProvider
+    extends
+        $FunctionalProvider<
+          List<CustomNavigationItemData>,
+          List<CustomNavigationItemData>,
+          List<CustomNavigationItemData>
+        >
     with $Provider<List<CustomNavigationItemData>> {
   /// 导航项数据列表 Provider（仅数据，不含页面）
   NavigationItemsDataProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'navigationItemsDataProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'navigationItemsDataProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$navigationItemsDataHash();
@@ -99,8 +109,7 @@ final class NavigationItemsDataProvider extends $FunctionalProvider<
   @override
   $ProviderElement<List<CustomNavigationItemData>> $createElement(
     $ProviderPointer pointer,
-  ) =>
-      $ProviderElement(pointer);
+  ) => $ProviderElement(pointer);
 
   @override
   List<CustomNavigationItemData> create(Ref ref) {
@@ -133,15 +142,15 @@ final class NavigationPagesProvider
     with $Provider<List<Widget>> {
   /// 导航页面列表 Provider
   NavigationPagesProvider._()
-      : super(
-          from: null,
-          argument: null,
-          retry: null,
-          name: r'navigationPagesProvider',
-          isAutoDispose: true,
-          dependencies: null,
-          $allTransitiveDependencies: null,
-        );
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'navigationPagesProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$navigationPagesHash();

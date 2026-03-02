@@ -722,7 +722,6 @@ class _ImageGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final tiles = [
       _ImageAddTile(onTap: onAdd),
       ...images

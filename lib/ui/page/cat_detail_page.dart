@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/model/cat_detail.dart';
+import 'package:meow/model/moment.dart';
+import 'package:meow/util/time_tool.dart';
 
 class CatDetailPage extends StatefulWidget {
   final String catId;
@@ -13,11 +15,15 @@ class CatDetailPage extends StatefulWidget {
 
 class _CatDetailPageState extends State<CatDetailPage> {
   late Future<CatDetail> _detailFuture;
+  late Future<MomentPage> _momentFuture;
+  final List<Moment> _momentItems = [];
+  bool _momentLoading = false;
 
   @override
   void initState() {
     super.initState();
     _detailFuture = _fetchDetail();
+    _momentFuture = _fetchMoments();
   }
 
   Future<CatDetail> _fetchDetail() async {
@@ -27,6 +33,52 @@ class _CatDetailPageState extends State<CatDetailPage> {
       throw Exception('未获取到猫咪详情');
     }
     return detail;
+  }
+
+  Future<MomentPage> _fetchMoments() async {
+    final response = await CatService.fetchCatMoments(catId: widget.catId);
+    final data = response.data;
+    if (data == null) {
+      throw Exception('未获取到猫咪动态');
+    }
+    _momentItems
+      ..clear()
+      ..addAll(data.items);
+    return data;
+  }
+
+  Future<void> _toggleLike(Moment moment) async {
+    if (_momentLoading) return;
+    setState(() => _momentLoading = true);
+    try {
+      final response = moment.isLiked
+          ? await CatService.unlikeMoment(moment.id)
+          : await CatService.likeMoment(moment.id);
+      final result = response.data;
+      if (result == null) return;
+      final index = _momentItems.indexWhere((item) => item.id == moment.id);
+      if (index == -1) return;
+      final updated = Moment(
+        id: moment.id,
+        content: moment.content,
+        media: moment.media,
+        user: moment.user,
+        relatedCats: moment.relatedCats,
+        likeCount: result.likeCount,
+        isLiked: result.isLiked,
+        createTime: moment.createTime,
+      );
+      setState(() {
+        _momentItems[index] = updated;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('操作失败，请稍后重试')),
+      );
+    } finally {
+      if (mounted) setState(() => _momentLoading = false);
+    }
   }
 
   Future<void> _feedCat() async {
@@ -87,6 +139,17 @@ class _CatDetailPageState extends State<CatDetailPage> {
                       },
                     ),
                   ),
+                  SliverToBoxAdapter(
+                    child: _MomentSection(
+                      momentFuture: _momentFuture,
+                      moments: _momentItems,
+                      onRetry: () {
+                        _momentFuture = _fetchMoments();
+                        setState(() {});
+                      },
+                      onLikeToggle: _toggleLike,
+                    ),
+                  ),
                   const SliverPadding(
                     padding: EdgeInsets.only(bottom: 120),
                   ),
@@ -101,6 +164,68 @@ class _CatDetailPageState extends State<CatDetailPage> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _MomentSection extends StatelessWidget {
+  final Future<MomentPage> momentFuture;
+  final List<Moment> moments;
+  final VoidCallback onRetry;
+  final ValueChanged<Moment> onLikeToggle;
+
+  const _MomentSection({
+    required this.momentFuture,
+    required this.moments,
+    required this.onRetry,
+    required this.onLikeToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '喵喵动态',
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 12),
+          FutureBuilder<MomentPage>(
+            future: momentFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const _MomentSkeleton();
+              }
+              if (snapshot.hasError) {
+                return _MomentError(onRetry: onRetry);
+              }
+              final page = snapshot.data;
+              final items =
+                  moments.isNotEmpty ? moments : (page?.items ?? <Moment>[]);
+              if (items.isEmpty) {
+                return const _EmptyMomentCard();
+              }
+              final displayItems = items.isEmpty ? [] : items;
+              return Column(
+                children: displayItems
+                    .map(
+                      (moment) => _MomentCard(
+                        moment: moment,
+                        onLikeToggle: () => onLikeToggle(moment),
+                      ),
+                    )
+                    .toList(),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -360,6 +485,278 @@ class _RelationSection extends StatelessWidget {
       ),
     );
   }
+}
+
+class _MomentCard extends StatelessWidget {
+  final Moment moment;
+  final VoidCallback onLikeToggle;
+
+  const _MomentCard({required this.moment, required this.onLikeToggle});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final timeText = _formatMomentTime(moment.createTime);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: const Color(0xFFF4F5F7),
+                backgroundImage: moment.user.avatar.isEmpty
+                    ? null
+                    : NetworkImage(moment.user.avatar),
+                child: moment.user.avatar.isEmpty
+                    ? const Icon(Icons.person, color: Color(0xFFB0B4BA))
+                    : null,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      moment.user.name.isEmpty ? '匿名用户' : moment.user.name,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      timeText,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFF7B8593),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              _MomentLikeButton(
+                isLiked: moment.isLiked,
+                likeCount: moment.likeCount,
+                onTap: onLikeToggle,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            moment.content,
+            style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
+          ),
+          if (moment.media.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _MomentMediaGrid(media: moment.media),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _MomentMediaGrid extends StatelessWidget {
+  final List<String> media;
+
+  const _MomentMediaGrid({required this.media});
+
+  @override
+  Widget build(BuildContext context) {
+    final items = media.take(3).toList();
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        height: 180,
+        child: PageView.builder(
+          itemCount: items.length,
+          itemBuilder: (context, index) {
+            return Image.network(
+              items[index],
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: const Color(0xFFE6E7EB),
+                alignment: Alignment.center,
+                child: const Icon(Icons.pets, color: Colors.grey),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _MomentLikeButton extends StatelessWidget {
+  final bool isLiked;
+  final int likeCount;
+  final VoidCallback onTap;
+
+  const _MomentLikeButton({
+    required this.isLiked,
+    required this.likeCount,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isLiked ? const Color(0xFFF26464) : const Color(0xFF7B8593);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              isLiked ? Icons.favorite : Icons.favorite_border,
+              size: 18,
+              color: color,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              likeCount.toString(),
+              style: Theme.of(context)
+                  .textTheme
+                  .labelSmall
+                  ?.copyWith(color: color, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MomentSkeleton extends StatelessWidget {
+  const _MomentSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: List.generate(
+        2,
+        (index) => Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const CircleAvatar(
+                      radius: 18, backgroundColor: Color(0xFFE6E7EB)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          height: 12,
+                          width: 120,
+                          color: const Color(0xFFE6E7EB),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          height: 10,
+                          width: 80,
+                          color: const Color(0xFFE6E7EB),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(height: 12, color: const Color(0xFFE6E7EB)),
+              const SizedBox(height: 6),
+              Container(height: 12, width: 160, color: const Color(0xFFE6E7EB)),
+              const SizedBox(height: 12),
+              Container(height: 140, color: const Color(0xFFE6E7EB)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MomentError extends StatelessWidget {
+  final VoidCallback onRetry;
+
+  const _MomentError({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          const Text('动态加载失败，请稍后重试'),
+          const SizedBox(height: 8),
+          OutlinedButton(onPressed: onRetry, child: const Text('重试')),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyMomentCard extends StatelessWidget {
+  const _EmptyMomentCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          const Icon(Icons.pets, color: Color(0xFFB0B4BA)),
+          const SizedBox(height: 6),
+          Text(
+            '还没有动态，快来发布第一条吧',
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: Colors.grey.shade600),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+String _formatMomentTime(String source) {
+  if (source.isEmpty) return '';
+  final parsed = DateTime.tryParse(source);
+  if (parsed == null) return source;
+  return TimeTool.getExpressionTimeString(parsed);
 }
 
 class _StatusChip extends StatelessWidget {
