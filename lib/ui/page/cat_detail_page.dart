@@ -243,7 +243,7 @@ class _DetailHeader extends StatelessWidget {
     return SliverAppBar(
       expandedHeight: 320,
       pinned: true,
-      backgroundColor: Colors.black,
+      backgroundColor: Colors.transparent,
       leading: Padding(
         padding: const EdgeInsets.only(left: 12),
         child: CircleAvatar(

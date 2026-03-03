@@ -2,6 +2,7 @@ import 'package:meow/api/data_response.dart';
 import 'package:meow/api/http.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/model/cat_detail.dart';
+import 'package:meow/model/leaderboard.dart';
 import 'package:meow/model/moment.dart';
 
 class CatService {
@@ -82,6 +83,24 @@ class CatService {
     return DataResponse.fromJson(
       json,
       (object) => MomentLikeResult.fromJson(object as Map<String, dynamic>),
+    );
+  }
+
+  static Future<DataResponse<LeaderboardResponse>> fetchLeaderboard({
+    required String type,
+    int limit = 20,
+  }) async {
+    final response = await Http().get(
+      '/leaderboard/$type',
+      queryParameters: {
+        'limit': limit,
+      },
+    );
+    final json = response.data as Map<String, dynamic>;
+    return DataResponse.fromJson(
+      json,
+      (object) =>
+          LeaderboardResponse.fromJson(object as Map<String, dynamic>),
     );
   }
 
