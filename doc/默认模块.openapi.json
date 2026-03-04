@@ -219,60 +219,37 @@
         "parameters": [],
         "requestBody": {
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
                 "type": "object",
                 "properties": {
                   "nickname": {
                     "type": "string",
-                    "title": "昵称"
-                  },
-                  "avatar": {
-                    "type": "string",
-                    "title": "头像URL"
+                    "example": "y"
                   },
                   "campus": {
                     "type": "string",
-                    "title": "校区"
+                    "example": ""
                   },
-                  "contact": {
-                    "type": "object",
-                    "properties": {
-                      "wechat": {
-                        "type": "string",
-                        "title": "微信号"
-                      },
-                      "phone": {
-                        "type": "string",
-                        "title": "手机号"
-                      }
-                    },
-                    "title": "联系信息",
-                    "required": [
-                      "wechat",
-                      "phone"
-                    ]
+                  "phone": {
+                    "type": "string"
+                  },
+                  "wechat": {
+                    "type": "string"
+                  },
+                  "avatar": {
+                    "example": "file://D:\\灵感库\\PixPin_2025-12-07_22-21-04.png",
+                    "type": "string",
+                    "format": "binary"
                   }
                 },
                 "required": [
-                  "nickname",
-                  "avatar",
-                  "campus",
-                  "contact"
+                  "nickname"
                 ]
               },
-              "example": {
-                "nickname": "new-name",
-                "avatar": "https://avatars.githubusercontent.com/u/33617685",
-                "campus": "中心校区",
-                "contact": {
-                  "wechat": "---",
-                  "phone": "---"
-                }
-              }
+              "examples": {}
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -280,58 +257,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "integer"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "uid": {
-                          "type": "integer",
-                          "title": "用户ID"
-                        },
-                        "nickname": {
-                          "type": "string",
-                          "title": "新的昵称"
-                        },
-                        "avatar": {
-                          "type": "string",
-                          "title": "新的头像链接"
-                        },
-                        "campus": {
-                          "type": "string",
-                          "title": "新的校区"
-                        }
-                      },
-                      "required": [
-                        "uid",
-                        "nickname",
-                        "avatar",
-                        "campus"
-                      ]
-                    },
-                    "msg": {
-                      "type": "string",
-                      "title": "响应信息"
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "data",
-                    "msg"
-                  ]
+                  "$ref": "#/components/schemas/ResponseEntityResult"
                 },
                 "example": {
-                  "code": 200,
-                  "data": {
-                    "uid": 67,
-                    "nickname": "Jason",
-                    "avatar": "https://avatars.githubusercontent.com/u/81045925",
-                    "campus": "中心校区"
-                  },
-                  "msg": "success"
+                  "code": 0,
+                  "data": {},
+                  "msg": ""
                 }
               }
             },
@@ -901,7 +832,7 @@
             "in": "path",
             "description": "",
             "required": true,
-            "example": "c318aa54-c1ec-47b6-aff1-0869b4447a52",
+            "example": "a51a4216-9191-43c6-86aa-92cdcee4c694",
             "schema": {
               "type": "string"
             }
@@ -969,7 +900,7 @@
             "in": "query",
             "description": "状态",
             "required": false,
-            "example": "INTERVIEW",
+            "example": "PENDING",
             "schema": {
               "type": "string"
             }
@@ -1438,7 +1369,7 @@
     },
     "/admin/cats": {
       "post": {
-        "summary": "createCatWithFiles",
+        "summary": "创建猫咪",
         "deprecated": false,
         "description": "",
         "tags": [],
@@ -1450,7 +1381,8 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "看看"
                   },
                   "aliases": {
                     "type": "array",
@@ -1459,51 +1391,66 @@
                     }
                   },
                   "color": {
-                    "type": "string"
-                  },
-                  "avatar": {
                     "type": "string",
-                    "example": []
-                  },
-                  "images": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "example": []
+                    "example": "纯白"
                   },
                   "gender": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "UNKNOWN"
                   },
                   "campus": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "中心校区"
                   },
                   "hauntLocation": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "教学楼"
                   },
                   "birthYear": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 2026
                   },
                   "admissionDate": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2026-01-01"
                   },
                   "status": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "SCHOOL"
                   },
                   "healthStatus": {
+                    "type": "string",
+                    "example": "HEALTHY"
+                  },
+                  "attributes[friendliness]": {
+                    "type": "string",
+                    "example": "1.0"
+                  },
+                  "attributes[gluttony]": {
+                    "type": "string",
+                    "example": [
+                      "2.0"
+                    ]
+                  },
+                  "attributes[fight]": {
+                    "example": "3.0",
                     "type": "string"
                   },
-                  "attributes.key": {
-                    "type": ""
+                  "attributes[appearance]": {
+                    "example": "4.0",
+                    "type": "string"
                   },
                   "isNeutered": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "example": "true"
                   },
                   "neuteredDate": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2026-01-01"
                   },
                   "neuteredType": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "EAR_CUT"
                   },
                   "description": {
                     "type": "string"
@@ -1513,8 +1460,36 @@
                     "items": {
                       "type": "string"
                     }
+                  },
+                  "avatar": {
+                    "type": "string",
+                    "example": ""
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": []
                   }
-                }
+                },
+                "required": [
+                  "name",
+                  "color",
+                  "gender",
+                  "campus",
+                  "hauntLocation",
+                  "birthYear",
+                  "admissionDate",
+                  "status",
+                  "healthStatus",
+                  "attributes[friendliness]",
+                  "attributes[gluttony]",
+                  "attributes[fight]",
+                  "attributes[appearance]",
+                  "isNeutered",
+                  "avatar"
+                ]
               },
               "examples": {}
             }
@@ -1565,105 +1540,115 @@
         ],
         "requestBody": {
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
-                "description": "",
                 "type": "object",
                 "properties": {
                   "name": {
                     "type": "string",
-                    "description": ""
+                    "example": "kk"
                   },
                   "aliases": {
                     "type": "array",
                     "items": {
                       "type": "string"
-                    },
-                    "description": ""
+                    }
                   },
                   "color": {
                     "type": "string",
-                    "description": ""
-                  },
-                  "avatar": {
-                    "type": "string",
-                    "description": ""
-                  },
-                  "images": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "description": ""
+                    "example": "纯白"
                   },
                   "gender": {
                     "type": "string",
-                    "description": ""
+                    "example": "FEMALE"
                   },
                   "campus": {
                     "type": "string",
-                    "description": ""
+                    "example": "0"
                   },
                   "hauntLocation": {
                     "type": "string",
-                    "description": ""
+                    "example": "教学楼"
                   },
                   "birthYear": {
                     "type": "integer",
-                    "description": ""
+                    "example": 2025
                   },
                   "admissionDate": {
                     "type": "string",
-                    "description": ""
+                    "example": "2025-01-01"
                   },
                   "status": {
                     "type": "string",
-                    "description": ""
+                    "example": "SCHOOL"
                   },
                   "healthStatus": {
                     "type": "string",
-                    "description": ""
+                    "example": "HEALTHY"
                   },
-                  "attributes": {
-                    "$ref": "#/components/schemas/MapDouble",
-                    "description": ""
+                  "attributes[friendliness]": {
+                    "type": "",
+                    "example": "1.1"
+                  },
+                  "attributes[gluttony]": {
+                    "example": "2.2",
+                    "type": "string"
+                  },
+                  "attributes[fight]": {
+                    "example": "3.3",
+                    "type": "string"
+                  },
+                  "attributes[appearance]": {
+                    "example": "4.4",
+                    "type": "string"
                   },
                   "isNeutered": {
                     "type": "boolean",
-                    "description": ""
+                    "example": "false"
                   },
                   "neuteredDate": {
-                    "type": "string",
-                    "description": ""
+                    "type": "string"
                   },
                   "neuteredType": {
-                    "type": "string",
-                    "description": ""
+                    "type": "string"
                   },
                   "description": {
-                    "type": "string",
-                    "description": ""
+                    "type": "string"
                   },
                   "tags": {
                     "type": "array",
                     "items": {
                       "type": "string"
-                    },
-                    "description": ""
+                    }
+                  },
+                  "avatar": {
+                    "example": "",
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "images": {
+                    "type": "string",
+                    "format": "binary"
                   }
                 },
                 "required": [
                   "name",
                   "color",
-                  "avatar",
                   "gender",
                   "campus",
+                  "hauntLocation",
+                  "birthYear",
+                  "admissionDate",
                   "status",
-                  "isNeutered",
-                  "attributes"
+                  "healthStatus",
+                  "attributes[friendliness]",
+                  "attributes[gluttony]",
+                  "attributes[fight]",
+                  "attributes[appearance]",
+                  "isNeutered"
                 ]
               },
-              "example": "{\r\n  \"name\": \"麻薯\", // 名字\r\n  \"aliases\": [\"小麻\", \"三花\"], // 曾用名\r\n  \"color\": \"三花\", // 花色\r\n  \"avatar\": \"url...\", // 头像\r\n  \"images\": [\"url1\", \"url2\"], // 轮播图\r\n  \"gender\": \"FEMALE\", // 性别\r\n  \"campus\": \"软件园校区\", // 校区\r\n  \"hauntLocation\": \"食堂\", // 常驻地点\r\n  //\"role\": \"保安大队\", // 学历/编制\r\n  \"birthYear\": 2022, // 出生年份 (未知默认为-1)\r\n  \"admissionDate\": \"2023-08-01\", // 入园时间\r\n  \"status\": \"SCHOOL\", // 状态\r\n  \"healthStatus\": \"HEALTHY\", // 健康状态\r\n  \"attributes\": { // 属性评分\r\n     \"friendliness\": 9.0,\r\n     \"gluttony\": 9.5,\r\n     \"fight\": 4.0,\r\n     \"appearance\": 10.0\r\n  },\r\n  \"isNeutered\": true, // 是否绝育\r\n  \"neuteredDate\": \"2023-11-13\", // 绝育日期\r\n  \"neuteredType\": \"EAR_CUT\", // 绝育类型\r\n  \"description\": \"...\", // 介绍\r\n  \"tags\": [\"亲人\", \"吃货\"] // 标签\r\n}"
+              "examples": {}
             }
           }
         },
@@ -2760,64 +2745,45 @@
         "parameters": [],
         "requestBody": {
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
-                "description": "",
                 "type": "object",
                 "properties": {
                   "tempName": {
-                    "type": "string",
-                    "description": ""
+                    "type": "string"
                   },
                   "color": {
                     "type": "string",
-                    "description": ""
-                  },
-                  "images": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "description": ""
+                    "example": "纯白"
                   },
                   "campus": {
                     "type": "string",
-                    "description": ""
+                    "example": "0"
                   },
                   "location": {
                     "type": "string",
-                    "description": ""
+                    "example": "宿舍楼底下"
                   },
                   "tags": {
                     "type": "array",
                     "items": {
                       "type": "string"
-                    },
-                    "description": ""
+                    }
+                  },
+                  "images": {
+                    "example": "",
+                    "type": "string",
+                    "format": "binary"
                   }
                 },
                 "required": [
                   "color",
-                  "images",
                   "campus",
-                  "location"
-                ],
-                "title": "暂定名称"
-              },
-              "example": {
-                "tempName": "庾蒙",
-                "color": "ORANGE",
-                "images": [
-                  "https://loremflickr.com/400/400?lock=8351335682210789",
-                  "https://loremflickr.com/400/400?lock=3752139673092941",
-                  "https://loremflickr.com/400/400?lock=4297276881926224"
-                ],
-                "campus": 0,
-                "location": "路口",
-                "tags": [
-                  "可爱啊"
+                  "location",
+                  "images"
                 ]
-              }
+              },
+              "examples": {}
             }
           }
         },
@@ -2827,12 +2793,53 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string"
+                        },
+                        "experience": {
+                          "type": "integer"
+                        },
+                        "currency": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "status",
+                        "experience",
+                        "currency"
+                      ]
+                    },
+                    "msg": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "data",
+                    "msg"
+                  ]
                 },
                 "example": {
-                  "code": 0,
-                  "data": {},
-                  "msg": ""
+                  "code": 200,
+                  "data": {
+                    "id": "85a8673f64818e2f4577f244db87889b",
+                    "status": "PENDING",
+                    "experience": 100,
+                    "currency": 50
+                  },
+                  "msg": "提交成功"
                 }
               }
             },
@@ -2848,46 +2855,45 @@
     },
     "/sos": {
       "post": {
-        "summary": "创建SOS请求",
+        "summary": "发布求助",
         "deprecated": false,
         "description": "",
         "tags": [],
         "parameters": [],
         "requestBody": {
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
                 "type": "object",
                 "properties": {
                   "catId": {
-                    "type": "string",
-                    "title": "关联猫咪ID"
+                    "type": "string"
                   },
                   "campus": {
-                    "type": "integer",
-                    "title": "校区编号"
+                    "type": "string",
+                    "example": "0"
                   },
                   "location": {
                     "type": "string",
-                    "title": "详细位置"
+                    "example": "1号楼门口"
                   },
                   "symptoms": {
                     "type": "array",
                     "items": {
                       "type": "string"
                     },
-                    "title": "症状标签"
+                    "example": [
+                      "外伤"
+                    ]
                   },
                   "description": {
                     "type": "string",
-                    "title": "详细描述"
+                    "example": "很严重"
                   },
                   "media": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "title": "照片证据"
+                    "example": "",
+                    "type": "string",
+                    "format": "binary"
                   }
                 },
                 "required": [
@@ -2898,23 +2904,9 @@
                   "media"
                 ]
               },
-              "example": {
-                "catId": "fe3b06fc43dede196d4d51321a2512dc",
-                "campus": 0,
-                "location": "食堂门口",
-                "symptoms": [
-                  "流血",
-                  "外伤"
-                ],
-                "description": "腹部出血",
-                "media": [
-                  "https://example.com/121",
-                  "https://example.com/121"
-                ]
-              }
+              "examples": {}
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -2922,39 +2914,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "code": {
-                      "type": "integer",
-                      "title": "状态码"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "string",
-                          "title": "SOSID"
-                        },
-                        "status": {
-                          "type": "string",
-                          "title": "当前处理状态"
-                        }
-                      },
-                      "required": [
-                        "id",
-                        "status"
-                      ]
-                    },
-                    "msg": {
-                      "type": "string",
-                      "title": "响应信息"
-                    }
-                  },
-                  "required": [
-                    "code",
-                    "data",
-                    "msg"
-                  ]
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                },
+                "example": {
+                  "code": 0,
+                  "data": {},
+                  "msg": ""
                 }
               }
             },
@@ -3263,18 +3228,7 @@
                   "contact"
                 ]
               },
-              "example": {
-                "catId": "660e8400-e29b-41d4-a716-446655440001",
-                "info": {
-                  "housing": "RENT_WHOLE",
-                  "experience": "HAS_CATS",
-                  "plan": "承诺科学喂养..."
-                },
-                "contact": {
-                  "phone": "138...",
-                  "wechat": "..."
-                }
-              }
+              "example": "{                                                                                              \r\n    \"catId\": \"660e8400-e29b-41d4-a716-446655440001\",                                             \r\n    \"info\": {                                                                                    \r\n      \"housing\": \"RENT_WHOLE\",                                                                   \r\n      \"experience\": \"EXPERIENCED\",                                                               \r\n      \"plan\": \"承诺科学喂养...\"                                                                  \r\n    },                                                                                           \r\n    \"contact\": {                                                                                 \r\n      \"phone\": \"13800000000\",                                                                    \r\n      \"wechat\": \"wx_test\"                                                                        \r\n    }                                                                                            \r\n  }    \r\n}"
             }
           },
           "required": true
@@ -3532,53 +3486,40 @@
         "deprecated": false,
         "description": "",
         "tags": [],
-        "parameters": [
-          {
-            "name": "content",
-            "in": "query",
-            "description": "",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "relatedCatIds",
-            "in": "query",
-            "description": "",
-            "required": true,
-            "example": "660e8400-e29b-41d4-a716-446655440001",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "location",
-            "in": "query",
-            "description": "",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
+        "parameters": [],
         "requestBody": {
           "content": {
             "multipart/form-data": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "media": {
-                    "example": "",
+                  "content": {
                     "type": "string",
-                    "format": "binary"
+                    "example": "成功了么成功吧"
+                  },
+                  "relatedCatIds": {
+                    "type": "string",
+                    "example": "660e8400-e29b-41d4-a716-446655440001"
+                  },
+                  "location": {
+                    "type": "string",
+                    "example": "奥卡福吉安"
+                  },
+                  "media": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": ""
                   }
-                }
+                },
+                "required": [
+                  "relatedCatIds"
+                ]
               },
               "examples": {}
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {

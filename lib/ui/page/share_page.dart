@@ -4,6 +4,7 @@ import 'package:meow/api/http.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/ui/page/cat_select_page.dart';
+import 'package:meow/ui/page/new_cat_page.dart';
 
 /// 发布动态页面
 class SharePage extends StatefulWidget {
@@ -29,6 +30,12 @@ class _SharePageState extends State<SharePage> {
     _titleController.dispose();
     _contentController.dispose();
     super.dispose();
+  }
+
+  void _goToNewCat() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const NewCatPage()),
+    );
   }
 
   bool get _isBusy => _uploading || _publishing;
@@ -254,7 +261,7 @@ class _SharePageState extends State<SharePage> {
               ),
               const SizedBox(height: 12),
               OutlinedButton.icon(
-                onPressed: _isBusy ? null : () => _showMessage('新猫档案功能开发中'),
+                onPressed: _isBusy ? null : _goToNewCat,
                 icon: const Icon(Icons.add_circle_outline, size: 18),
                 label: const Text('找不到它？为新面孔建立档案'),
                 style: OutlinedButton.styleFrom(
