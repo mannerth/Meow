@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -6,6 +9,7 @@ import 'package:meow/model/cat.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/page/cat_select_page.dart';
+import 'package:meow/ui/widget/image_preview.dart';
 
 class SosPage extends ConsumerStatefulWidget {
   const SosPage({super.key});
@@ -20,12 +24,11 @@ class _SosPageState extends ConsumerState<SosPage> {
   final ImagePicker _imagePicker = ImagePicker();
 
   Cat? _selectedCat;
-  final List<String> _media = [];
+  final List<XFile> _media = [];
   final List<String> _selectedSymptoms = [];
   List<String> _symptomOptions = [];
 
   bool _loadingTags = true;
-  bool _uploading = false;
   bool _submitting = false;
 
   @override
@@ -41,7 +44,7 @@ class _SosPageState extends ConsumerState<SosPage> {
     super.dispose();
   }
 
-  bool get _isBusy => _uploading || _submitting;
+  bool get _isBusy => _submitting;
 
   Future<void> _loadSymptomTags() async {
     setState(() => _loadingTags = true);
@@ -127,7 +130,7 @@ class _SosPageState extends ConsumerState<SosPage> {
       imageQuality: 85,
     );
     if (image == null) return;
-    await _uploadImages([image]);
+    setState(() => _media.add(image));
   }
 
   Future<void> _pickFromGallery() async {
@@ -137,30 +140,11 @@ class _SosPageState extends ConsumerState<SosPage> {
     }
     final images = await _imagePicker.pickMultiImage(limit: 9 - _media.length);
     if (images.isEmpty) return;
-    await _uploadImages(images);
+    setState(() => _media.addAll(images));
   }
 
-  Future<void> _uploadImages(List<XFile> images) async {
-    setState(() => _uploading = true);
-    try {
-      for (final image in images) {
-        try {
-          final url = await Http().uploadImage(image);
-          if (!_media.contains(url)) {
-            _media.add(url);
-          }
-        } catch (error) {
-          _showMessage('图片上传失败，请稍后重试');
-        }
-      }
-      if (mounted) setState(() {});
-    } finally {
-      if (mounted) setState(() => _uploading = false);
-    }
-  }
-
-  void _removeMedia(String url) {
-    setState(() => _media.remove(url));
+  void _removeMedia(XFile image) {
+    setState(() => _media.remove(image));
   }
 
   Future<void> _submit() async {
@@ -186,15 +170,28 @@ class _SosPageState extends ConsumerState<SosPage> {
     setState(() => _submitting = true);
     try {
       final campusCode = ref.read(authStateProvider).user?.campus?.code;
-      final payload = <String, dynamic>{
-        'catId': _selectedCat?.id,
-        'campus': campusCode ?? 0,
+      final files = <MultipartFile>[];
+      for (final image in _media) {
+        files.add(
+          await MultipartFile.fromFile(
+            image.path,
+            filename: image.name,
+          ),
+        );
+      }
+      final formData = FormData.fromMap({
+        if (_selectedCat != null) 'catId': _selectedCat!.id,
+        'campus': (campusCode ?? 0).toString(),
         'location': location,
         'symptoms': _selectedSymptoms,
         'description': description,
-        'media': _media,
-      };
-      await Http().post('/sos', data: payload);
+        'media': files,
+      });
+      await Http().post(
+        '/sos',
+        data: formData,
+        options: Options(contentType: 'multipart/form-data'),
+      );
       if (!mounted) return;
       _showMessage('上报成功，已通知协会同学');
       _locationController.clear();
@@ -449,6 +446,7 @@ class _SelectCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasAvatar = leading != null && leading!.isNotEmpty;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(18),
@@ -467,14 +465,18 @@ class _SelectCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundColor: const Color(0xFFFFF2F2),
-              backgroundImage:
-                  leading == null || leading!.isEmpty ? null : NetworkImage(leading!),
-              child: leading == null || leading!.isEmpty
-                  ? const Icon(Icons.pets, color: Color(0xFFE64A4A))
+            GestureDetector(
+              onTap: hasAvatar
+                  ? () => showNetworkImagePreview(context, leading!)
                   : null,
+              child: CircleAvatar(
+                radius: 20,
+                backgroundColor: const Color(0xFFFFF2F2),
+                backgroundImage: hasAvatar ? NetworkImage(leading!) : null,
+                child: hasAvatar
+                    ? null
+                    : const Icon(Icons.pets, color: Color(0xFFE64A4A)),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -623,8 +625,8 @@ class _MediaUploadCard extends StatelessWidget {
 }
 
 class _MediaGrid extends StatelessWidget {
-  final List<String> media;
-  final ValueChanged<String> onRemove;
+  final List<XFile> media;
+  final ValueChanged<XFile> onRemove;
 
   const _MediaGrid({required this.media, required this.onRemove});
 
@@ -639,31 +641,23 @@ class _MediaGrid extends StatelessWidget {
       shrinkWrap: true,
       children: media
           .map(
-            (url) => ClipRRect(
+            (file) => ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.network(
-                    url,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: const Color(0xFFE6E7EB),
-                      alignment: Alignment.center,
-                      child: const Icon(Icons.pets, color: Colors.grey),
-                    ),
-                  ),
+                  _PreviewImageTile(file: file),
                   Positioned(
                     right: 4,
                     top: 4,
                     child: Material(
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Colors.white.withAlpha(230),
                       shape: const CircleBorder(),
                       child: IconButton(
                         padding: EdgeInsets.zero,
                         visualDensity: VisualDensity.compact,
                         iconSize: 18,
-                        onPressed: () => onRemove(url),
+                        onPressed: () => onRemove(file),
                         icon: const Icon(
                           Icons.delete_outline,
                           color: Color(0xFFE14B4B),
@@ -676,6 +670,28 @@ class _MediaGrid extends StatelessWidget {
             ),
           )
           .toList(),
+    );
+  }
+}
+
+class _PreviewImageTile extends StatelessWidget {
+  final XFile file;
+
+  const _PreviewImageTile({required this.file});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => showFileImagePreview(context, File(file.path)),
+      child: Image.file(
+        File(file.path),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          color: const Color(0xFFE6E7EB),
+          alignment: Alignment.center,
+          child: const Icon(Icons.pets, color: Colors.grey),
+        ),
+      ),
     );
   }
 }

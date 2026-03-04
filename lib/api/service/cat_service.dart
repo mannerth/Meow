@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:meow/api/data_response.dart';
 import 'package:meow/api/http.dart';
 import 'package:meow/model/cat.dart';
@@ -117,9 +118,18 @@ class CatService {
     String? id,
     required Map<String, dynamic> payload,
   }) async {
+    final formData = FormData.fromMap(payload);
     final response = id == null
-        ? await Http().post('/admin/cats', data: payload)
-        : await Http().put('/admin/cats/$id', data: payload);
+        ? await Http().post(
+            '/admin/cats',
+            data: formData,
+            options: Options(contentType: 'multipart/form-data'),
+          )
+        : await Http().put(
+            '/admin/cats/$id',
+            data: formData,
+            options: Options(contentType: 'multipart/form-data'),
+          );
     final json = response.data as Map<String, dynamic>;
     return DataResponse.fromJson(
       json,

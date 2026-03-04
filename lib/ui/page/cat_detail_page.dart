@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meow/ui/widget/image_preview.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/model/cat_detail.dart';
 import 'package:meow/model/moment.dart';
@@ -247,7 +248,7 @@ class _DetailHeader extends StatelessWidget {
       leading: Padding(
         padding: const EdgeInsets.only(left: 12),
         child: CircleAvatar(
-          backgroundColor: Colors.white.withValues(alpha: 0.85),
+          backgroundColor: Colors.white.withAlpha(217),
           child: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.black),
             onPressed: () => Navigator.of(context).pop(),
@@ -258,16 +259,20 @@ class _DetailHeader extends StatelessWidget {
         background: PageView.builder(
           itemCount: items.length,
           itemBuilder: (context, index) {
-            return Image.network(
-              items[index],
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  color: const Color(0xFFE6E7EB),
-                  alignment: Alignment.center,
-                  child: const Icon(Icons.pets, size: 48, color: Colors.grey),
-                );
-              },
+            final imageUrl = items[index];
+            return GestureDetector(
+              onTap: () => showNetworkImagePreview(context, imageUrl),
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: const Color(0xFFE6E7EB),
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.pets, size: 48, color: Colors.grey),
+                  );
+                },
+              ),
             );
           },
         ),
@@ -453,9 +458,15 @@ class _RelationSection extends StatelessWidget {
                           padding: const EdgeInsets.only(right: 16),
                           child: Column(
                             children: [
-                              CircleAvatar(
-                                radius: 26,
-                                backgroundImage: NetworkImage(relation.avatar),
+                              GestureDetector(
+                                onTap: () => showNetworkImagePreview(
+                                  context,
+                                  relation.avatar,
+                                ),
+                                child: CircleAvatar(
+                                  radius: 26,
+                                  backgroundImage: NetworkImage(relation.avatar),
+                                ),
                               ),
                               const SizedBox(height: 6),
                               Text(
@@ -517,15 +528,22 @@ class _MomentCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: const Color(0xFFF4F5F7),
-                backgroundImage: moment.user.avatar.isEmpty
-                    ? null
-                    : NetworkImage(moment.user.avatar),
-                child: moment.user.avatar.isEmpty
-                    ? const Icon(Icons.person, color: Color(0xFFB0B4BA))
-                    : null,
+              GestureDetector(
+                onTap: () {
+                  if (moment.user.avatar.isNotEmpty) {
+                    showNetworkImagePreview(context, moment.user.avatar);
+                  }
+                },
+                child: CircleAvatar(
+                  radius: 18,
+                  backgroundColor: const Color(0xFFF4F5F7),
+                  backgroundImage: moment.user.avatar.isEmpty
+                      ? null
+                      : NetworkImage(moment.user.avatar),
+                  child: moment.user.avatar.isEmpty
+                      ? const Icon(Icons.person, color: Color(0xFFB0B4BA))
+                      : null,
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -585,13 +603,17 @@ class _MomentMediaGrid extends StatelessWidget {
         child: PageView.builder(
           itemCount: items.length,
           itemBuilder: (context, index) {
-            return Image.network(
-              items[index],
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                color: const Color(0xFFE6E7EB),
-                alignment: Alignment.center,
-                child: const Icon(Icons.pets, color: Colors.grey),
+            final imageUrl = items[index];
+            return GestureDetector(
+              onTap: () => showNetworkImagePreview(context, imageUrl),
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: const Color(0xFFE6E7EB),
+                  alignment: Alignment.center,
+                  child: const Icon(Icons.pets, color: Colors.grey),
+                ),
               ),
             );
           },

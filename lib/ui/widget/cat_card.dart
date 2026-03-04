@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meow/model/cat.dart';
+import 'package:meow/ui/widget/image_preview.dart';
 
 class CatCard extends StatelessWidget {
   final Cat cat;
@@ -33,17 +34,20 @@ class CatCard extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(16),
                 ),
-                child: Image.network(
-                  cat.avatar,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      color: const Color(0xFFF1F2F4),
-                      alignment: Alignment.center,
-                      child: const Icon(Icons.pets, color: Color(0xFFB0B4BA)),
-                    );
-                  },
+                child: GestureDetector(
+                  onTap: () => showNetworkImagePreview(context, cat.avatar),
+                  child: Image.network(
+                    cat.avatar,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: const Color(0xFFF1F2F4),
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.pets, color: Color(0xFFB0B4BA)),
+                      );
+                    },
+                  ),
                 ),
               ),
             ),

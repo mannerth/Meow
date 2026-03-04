@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meow/ui/widget/image_preview.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/model/leaderboard.dart';
 import 'package:meow/ui/page/cat_detail_page.dart';
@@ -317,10 +318,16 @@ class _TopThreeAvatar extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: ClipOval(
-                  child: Image.network(
+                child: GestureDetector(
+                  onTap: () => showNetworkImagePreview(
+                    context,
                     _vaildUrl(item!.avatar),
-                    fit: BoxFit.cover,
+                  ),
+                  child: ClipOval(
+                    child: Image.network(
+                      _vaildUrl(item!.avatar),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
@@ -438,17 +445,23 @@ class _LeaderboardListItem extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            ClipOval(
-              child: Image.network(
+            GestureDetector(
+              onTap: () => showNetworkImagePreview(
+                context,
                 _vaildUrl(item.avatar),
-                width: 40,
-                height: 40,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
+              ),
+              child: ClipOval(
+                child: Image.network(
+                  _vaildUrl(item.avatar),
                   width: 40,
                   height: 40,
-                  color: Colors.grey.shade300,
-                  child: const Icon(Icons.pets, color: Colors.white),
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: 40,
+                    height: 40,
+                    color: Colors.grey.shade300,
+                    child: const Icon(Icons.pets, color: Colors.white),
+                  ),
                 ),
               ),
             ),

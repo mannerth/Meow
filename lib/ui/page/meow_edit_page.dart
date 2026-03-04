@@ -1,9 +1,12 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:meow/api/http.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/model/cat_detail.dart';
 import 'package:meow/model/user.dart';
+import 'package:meow/ui/widget/image_preview.dart';
 
 class MeowEditPage extends StatefulWidget {
   final String? catId;
@@ -42,8 +45,9 @@ class _MeowEditPageState extends State<MeowEditPage> {
 
   List<String> _selectedTags = [];
   List<String> _images = [];
+  XFile? _avatarFile;
+  final List<XFile> _imageFiles = [];
   bool _loading = false;
-  bool _uploading = false;
 
   static const _statusOptions = [
     'SCHOOL',
@@ -175,6 +179,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
     _appearance = detail.attributes.appearance;
     _selectedTags = detail.tags;
     _images = List<String>.from(detail.images);
+    _imageFiles.clear();
     _birthYearController.text = detail.basicInfo.birthYear == 0
         ? ''
         : detail.basicInfo.birthYear.toString();
@@ -187,7 +192,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
     if (mounted) setState(() {});
   }
 
-  bool get _isBusy => _loading || _uploading;
+  bool get _isBusy => _loading;
 
   String _genderDisplayFromApi(String value) {
     if (_genderValueToDisplay.containsKey(value)) {
@@ -268,12 +273,10 @@ class _MeowEditPageState extends State<MeowEditPage> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
-    final payload = {
+    final payload = <String, dynamic>{
       'name': _nameController.text.trim(),
       'aliases': <String>[],
       'color': _colorController.text.trim(),
-      'avatar': _avatarController.text.trim(),
-      'images': _images,
       'gender': _genderValueFromDisplay(_genderController.text.trim()),
       'campus': _campus?.name ?? '',
       'hauntLocation': _hauntController.text.trim(),
@@ -284,19 +287,41 @@ class _MeowEditPageState extends State<MeowEditPage> {
           : _admissionDate!.toIso8601String().split('T').first,
       'status': _status,
       'healthStatus': _healthStatusValueFromDisplay(_healthStatusDisplay),
-      'attributes': {
-        'friendliness': _friendliness,
-        'gluttony': _gluttony,
-        'fight': _fight,
-        'appearance': _appearance,
-      },
+      'attributes[friendliness]': _friendliness.toStringAsFixed(1),
+      'attributes[gluttony]': _gluttony.toStringAsFixed(1),
+      'attributes[fight]': _fight.toStringAsFixed(1),
+      'attributes[appearance]': _appearance.toStringAsFixed(1),
       'isNeutered': _isNeutered,
       'neuteredDate': _neuteredDate?.toIso8601String().split('T').first,
       'neuteredType': _neuteredTypeValueFromDisplay(_neuteredTypeDisplay),
       'description': _descriptionController.text.trim(),
       'tags': _selectedTags,
     };
-    debugPrint('$payload');
+    if (_avatarFile != null) {
+      payload['avatar'] = await MultipartFile.fromFile(
+        _avatarFile!.path,
+        filename: _avatarFile!.name,
+      );
+    } else if (_avatarController.text.trim().isNotEmpty) {
+      payload['avatar'] = _avatarController.text.trim();
+    }
+    if (_imageFiles.isNotEmpty || _images.isNotEmpty) {
+      final existing = _images.map((url) => url).toList();
+      final files = await Future.wait(
+        _imageFiles
+            .map(
+              (image) => MultipartFile.fromFile(
+                image.path,
+                filename: image.name,
+              ),
+            )
+            .toList(),
+      );
+      payload['images'] = [
+        ...existing,
+        ...files,
+      ];
+    }
     try {
       var result = await CatService.upsertCat(id: widget.catId, payload: payload);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -318,52 +343,28 @@ class _MeowEditPageState extends State<MeowEditPage> {
       imageQuality: 85,
     );
     if (image == null) return;
-    setState(() => _uploading = true);
-    try {
-      final url = await Http().uploadImage(image);
-      _avatarController.text = url;
-      if (mounted) setState(() {});
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('头像上传失败，请稍后重试')),
-      );
-    } finally {
-      if (mounted) setState(() => _uploading = false);
-    }
+    setState(() {
+      _avatarFile = image;
+      _avatarController.text = image.name;
+    });
   }
 
   void _removeAvatar() {
     _avatarController.text = '';
+    _avatarFile = null;
     setState(() {});
   }
 
   Future<void> _pickImages() async {
     final images = await _imagePicker.pickMultiImage(limit: 9);
     if (images.isEmpty) return;
-    setState(() => _uploading = true);
-    try {
-      for (final image in images) {
-        try {
-          final url = await Http().uploadImage(image);
-          if (!_images.contains(url)) {
-            _images.add(url);
-          }
-        } catch (error) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('图片上传失败，请稍后重试')),
-          );
-        }
-      }
-      if (mounted) setState(() {});
-    } finally {
-      if (mounted) setState(() => _uploading = false);
-    }
+    setState(() {
+      _imageFiles.addAll(images);
+    });
   }
 
-  void _removeImage(String url) {
-    setState(() => _images.remove(url));
+  void _removeImage(XFile image) {
+    setState(() => _imageFiles.remove(image));
   }
 
   @override
@@ -402,11 +403,13 @@ class _MeowEditPageState extends State<MeowEditPage> {
                           ),
                     ),
                     const SizedBox(height: 12),
-                    _ImageGrid(
-                      images: _images,
-                      onAdd: _pickImages,
-                      onRemove: _removeImage,
-                    ),
+                _ImageGrid(
+                  images: _images,
+                  files: _imageFiles,
+                  onAdd: _pickImages,
+                  onRemoveUrl: (url) => setState(() => _images.remove(url)),
+                  onRemoveFile: _removeImage,
+                ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -671,6 +674,11 @@ class _AvatarCard extends StatelessWidget {
             children: [
               GestureDetector(
                 onTap: onTap,
+                onLongPress: () {
+                  if (avatarUrl.isNotEmpty) {
+                    showNetworkImagePreview(context, avatarUrl);
+                  }
+                },
                 child: CircleAvatar(
                   radius: 48,
                   backgroundImage:
@@ -702,7 +710,10 @@ class _AvatarCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text('点击图片更换头像', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            '点击图片更换头像，长按预览',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     );
@@ -711,21 +722,35 @@ class _AvatarCard extends StatelessWidget {
 
 class _ImageGrid extends StatelessWidget {
   final List<String> images;
+  final List<XFile> files;
   final VoidCallback onAdd;
-  final ValueChanged<String> onRemove;
+  final ValueChanged<String> onRemoveUrl;
+  final ValueChanged<XFile> onRemoveFile;
 
   const _ImageGrid({
     required this.images,
+    required this.files,
     required this.onAdd,
-    required this.onRemove,
+    required this.onRemoveUrl,
+    required this.onRemoveFile,
   });
 
   @override
   Widget build(BuildContext context) {
     final tiles = [
       _ImageAddTile(onTap: onAdd),
-      ...images
-          .map((url) => _ImageTile(url: url, onRemove: () => onRemove(url))),
+      ...images.map(
+        (url) => _ImageTile(
+          url: url,
+          onRemove: () => onRemoveUrl(url),
+        ),
+      ),
+      ...files.map(
+        (file) => _ImageTile(
+          file: file,
+          onRemove: () => onRemoveFile(file),
+        ),
+      ),
     ];
 
     return GridView.count(
@@ -778,40 +803,65 @@ class _ImageAddTile extends StatelessWidget {
 }
 
 class _ImageTile extends StatelessWidget {
-  final String url;
-  final VoidCallback onRemove;
+  final String? url;
+  final XFile? file;
+  final VoidCallback? onRemove;
 
-  const _ImageTile({required this.url, required this.onRemove});
+  const _ImageTile({this.url, this.file, this.onRemove});
 
   @override
   Widget build(BuildContext context) {
+    final previewWidget = file != null
+        ? Image.file(
+            File(file!.path),
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Container(
+              color: const Color(0xFFE6E7EB),
+              alignment: Alignment.center,
+              child: const Icon(Icons.pets, color: Colors.grey),
+            ),
+          )
+        : Image.network(
+            url ?? '',
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Container(
+              color: const Color(0xFFE6E7EB),
+              alignment: Alignment.center,
+              child: const Icon(Icons.pets, color: Colors.grey),
+            ),
+          );
     return Stack(
       fit: StackFit.expand,
       children: [
-        Image.network(
-          url,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => Container(
-            color: const Color(0xFFE6E7EB),
-            alignment: Alignment.center,
-            child: const Icon(Icons.pets, color: Colors.grey),
-          ),
+        GestureDetector(
+          onTap: () {
+            if (file != null) {
+              showFileImagePreview(context, File(file!.path));
+              return;
+            }
+            if (url != null && url!.isNotEmpty) {
+              showNetworkImagePreview(context, url!);
+            }
+          },
+          child: previewWidget,
         ),
-        Positioned(
-          right: 4,
-          top: 4,
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.9),
-            shape: const CircleBorder(),
-            child: IconButton(
-              padding: EdgeInsets.zero,
-              visualDensity: VisualDensity.compact,
-              iconSize: 18,
-              onPressed: onRemove,
-              icon: const Icon(Icons.delete_outline, color: Color(0xFFE14B4B)),
+        if (onRemove != null)
+          Positioned(
+            right: 4,
+            top: 4,
+            child: Material(
+              color: Colors.white.withAlpha(230),
+              shape: const CircleBorder(),
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+                iconSize: 18,
+                onPressed: onRemove,
+                icon:
+                    const Icon(Icons.delete_outline, color: Color(0xFFE14B4B)),
+              ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -1047,7 +1097,7 @@ class _SliderTile extends StatelessWidget {
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
             activeTrackColor: color,
-            inactiveTrackColor: color.withValues(alpha: 0.2),
+            inactiveTrackColor: color.withAlpha(51),
             thumbColor: color,
           ),
           child: Slider(

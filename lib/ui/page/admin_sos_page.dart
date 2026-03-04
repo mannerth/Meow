@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:meow/api/service/admin_sos_service.dart';
 import 'package:meow/model/admin_sos.dart';
 import 'package:meow/model/user.dart';
+import 'package:meow/ui/widget/image_preview.dart';
 
 class AdminSosPage extends StatefulWidget {
   const AdminSosPage({super.key});
@@ -530,7 +531,7 @@ class _ImageStrip extends StatelessWidget {
         itemBuilder: (context, index) {
           final url = urls[index];
           return GestureDetector(
-            onTap: () => _showImagePreview(context, url),
+            onTap: () => showNetworkImagePreview(context, url),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: AspectRatio(
@@ -555,35 +556,6 @@ class _ImageStrip extends StatelessWidget {
   }
 }
 
-void _showImagePreview(BuildContext context, String url) {
-  showDialog<void>(
-    context: context,
-    barrierColor: Colors.black.withAlpha(200),
-    builder: (context) => GestureDetector(
-      onTap: () => Navigator.of(context).pop(),
-      child: Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.all(16),
-        child: InteractiveViewer(
-          minScale: 0.8,
-          maxScale: 4.0,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.network(
-              url,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => Container(
-                color: const Color(0xFFE6E7EB),
-                alignment: Alignment.center,
-                child: const Icon(Icons.pets, color: Colors.grey),
-              ),
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
-}
 
 class _ResolveSheet extends StatefulWidget {
   final AdminSosItem item;

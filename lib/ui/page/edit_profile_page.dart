@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meow/ui/widget/image_preview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
@@ -95,19 +96,26 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 child: Stack(
                   alignment: Alignment.bottomRight,
                   children: [
-                    CircleAvatar(
-                      radius: 48,
-                      backgroundImage: user.avatar != null
-                          ? NetworkImage(user.avatar!)
-                          : null,
-                      child: user.avatar == null
-                          ? const Icon(
-                              Icons.person,
-                              size: 54,
-                              color: Colors.white,
-                            )
-                          : null,
-                      backgroundColor: Colors.grey[400],
+                    GestureDetector(
+                      onTap: () {
+                        if (user.avatar != null && user.avatar!.isNotEmpty) {
+                          showNetworkImagePreview(context, user.avatar!);
+                        }
+                      },
+                      child: CircleAvatar(
+                        radius: 48,
+                        backgroundImage: user.avatar != null
+                            ? NetworkImage(user.avatar!)
+                            : null,
+                        child: user.avatar == null
+                            ? const Icon(
+                                Icons.person,
+                                size: 54,
+                                color: Colors.white,
+                              )
+                            : null,
+                        backgroundColor: Colors.grey[400],
+                      ),
                     ),
                     Positioned(
                       bottom: 2,

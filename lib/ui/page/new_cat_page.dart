@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:meow/api/http.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
+import 'package:meow/ui/widget/image_preview.dart';
 
 class NewCatPage extends ConsumerStatefulWidget {
   const NewCatPage({super.key});
@@ -313,7 +314,7 @@ class _NewCatPageState extends ConsumerState<NewCatPage> {
                   ),
                   if (_images.isNotEmpty) ...[
                     const SizedBox(height: 12),
-                    _ImageGrid(images: _images, onRemove: _removeImage),
+                  _ImageGrid(images: _images, onRemove: _removeImage),
                   ],
                 ],
               ),
@@ -570,20 +571,12 @@ class _ImageGrid extends StatelessWidget {
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  Image.file(
-                    File(image.path),
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      color: const Color(0xFFE6E7EB),
-                      alignment: Alignment.center,
-                      child: const Icon(Icons.pets, color: Colors.grey),
-                    ),
-                  ),
+                  _PreviewImageTile(file: image),
                   Positioned(
                     right: 4,
                     top: 4,
                     child: Material(
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Colors.white.withAlpha(230),
                       shape: const CircleBorder(),
                       child: IconButton(
                         padding: EdgeInsets.zero,
@@ -602,6 +595,28 @@ class _ImageGrid extends StatelessWidget {
             ),
           )
           .toList(),
+    );
+  }
+}
+
+class _PreviewImageTile extends StatelessWidget {
+  final XFile file;
+
+  const _PreviewImageTile({required this.file});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => showFileImagePreview(context, File(file.path)),
+      child: Image.file(
+        File(file.path),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          color: const Color(0xFFE6E7EB),
+          alignment: Alignment.center,
+          child: const Icon(Icons.pets, color: Colors.grey),
+        ),
+      ),
     );
   }
 }

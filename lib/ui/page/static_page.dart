@@ -4,6 +4,7 @@ import 'package:meow/api/service/admin_dashboard_service.dart';
 import 'package:meow/model/admin_dashboard_stats.dart';
 import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/page/admin_sos_page.dart';
+import 'package:meow/ui/widget/image_preview.dart';
 
 class StaticPage extends ConsumerStatefulWidget {
   const StaticPage({super.key});
@@ -173,15 +174,20 @@ class _HeaderCard extends StatelessWidget {
               ],
             ),
           ),
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: Colors.white,
-            backgroundImage: avatarUrl == null || avatarUrl!.isEmpty
+          GestureDetector(
+            onTap: avatarUrl == null || avatarUrl!.isEmpty
                 ? null
-                : NetworkImage(avatarUrl!),
-            child: avatarUrl == null || avatarUrl!.isEmpty
-                ? const Icon(Icons.person, color: Color(0xFF9CA3AF))
-                : null,
+                : () => showNetworkImagePreview(context, avatarUrl!),
+            child: CircleAvatar(
+              radius: 22,
+              backgroundColor: Colors.white,
+              backgroundImage: avatarUrl == null || avatarUrl!.isEmpty
+                  ? null
+                  : NetworkImage(avatarUrl!),
+              child: avatarUrl == null || avatarUrl!.isEmpty
+                  ? const Icon(Icons.person, color: Color(0xFF9CA3AF))
+                  : null,
+            ),
           ),
         ],
       ),
