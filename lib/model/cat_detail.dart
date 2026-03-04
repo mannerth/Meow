@@ -9,7 +9,7 @@ class CatDetail {
   final List<String> tags;
   final List<CatRelation> relationship;
   final String description;
-  final CatInteraction interaction;
+  // final CatInteraction interaction;
   final int popularity;
 
   CatDetail({
@@ -23,7 +23,7 @@ class CatDetail {
     required this.tags,
     required this.relationship,
     required this.description,
-    required this.interaction,
+    // required this.interaction,
     required this.popularity,
   });
 
@@ -54,9 +54,9 @@ class CatDetail {
                 .toList() ??
             [],
         description: json['description'] as String? ?? '',
-        interaction: CatInteraction.fromJson(
-          json['interaction'] as Map<String, dynamic>,
-        ),
+        // interaction: CatInteraction.fromJson(
+        //   json['interaction'] as Map<String, dynamic>,
+        // ),
         popularity: (json['popularity'] as num?)?.toInt() ?? 0,
       );
 
@@ -71,7 +71,7 @@ class CatDetail {
         'tags': tags,
         'relationship': relationship.map((e) => e.toJson()).toList(),
         'description': description,
-        'interaction': interaction.toJson(),
+        // 'interaction': interaction.toJson(),
         'popularity': popularity,
       };
 }
@@ -218,19 +218,19 @@ class CatRelation {
       };
 }
 
-class CatInteraction {
-  final bool isFollowed;
+// class CatInteraction {
+//   final bool isFollowed;
 
-  CatInteraction({required this.isFollowed});
+//   CatInteraction({required this.isFollowed});
 
-  factory CatInteraction.fromJson(Map<String, dynamic> json) => CatInteraction(
-        isFollowed: json['isFollowed'] as bool? ?? false,
-      );
+//   factory CatInteraction.fromJson(Map<String, dynamic> json) => CatInteraction(
+//         isFollowed: json['isFollowed'] as bool? ?? false,
+//       );
 
-  Map<String, dynamic> toJson() => {
-        'isFollowed': isFollowed,
-      };
-}
+//   Map<String, dynamic> toJson() => {
+//         'isFollowed': isFollowed,
+//       };
+// }
 
 class CatFeedResult {
   final int userCurrency;

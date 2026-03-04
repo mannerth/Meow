@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/api/service/admin_dashboard_service.dart';
 import 'package:meow/model/admin_dashboard_stats.dart';
 import 'package:meow/provider/auth_provider.dart';
+import 'package:meow/ui/page/admin_sos_page.dart';
 
 class StaticPage extends ConsumerStatefulWidget {
   const StaticPage({super.key});
@@ -59,11 +60,15 @@ class _StaticPageState extends ConsumerState<StaticPage> {
               dateText: dateText,
               avatarUrl: ref.watch(authStateProvider).user?.avatar,
             ),
-            const SizedBox(height: 16),
             _StatsGrid(
               isLoading: _loading,
               errorMessage: _errorMessage,
               stats: stats,
+              onSosTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AdminSosPage()),
+                );
+              },
             ),
             const SizedBox(height: 18),
             _SectionTitle(title: '官方公告管理'),
@@ -184,15 +189,18 @@ class _HeaderCard extends StatelessWidget {
   }
 }
 
+
 class _StatsGrid extends StatelessWidget {
   final bool isLoading;
   final String? errorMessage;
   final AdminDashboardStats? stats;
+  final VoidCallback onSosTap;
 
   const _StatsGrid({
     required this.isLoading,
     required this.errorMessage,
     required this.stats,
+    required this.onSosTap,
   });
 
   @override
@@ -215,6 +223,7 @@ class _StatsGrid extends StatelessWidget {
           label: 'SOS待处理',
           footnote: '--',
           footnoteColor: const Color(0xFFF04F4F),
+          onTap: onSosTap,
         ),
         _StatCard(
           icon: Icons.how_to_reg_outlined,
@@ -263,6 +272,7 @@ class _StatCard extends StatelessWidget {
   final String footnote;
   final Color footnoteColor;
   final bool highlight;
+  final VoidCallback? onTap;
 
   const _StatCard({
     required this.icon,
@@ -273,59 +283,67 @@ class _StatCard extends StatelessWidget {
     required this.footnote,
     required this.footnoteColor,
     this.highlight = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-      decoration: BoxDecoration(
-        color: highlight ? const Color(0xFFE4F7F5) : Colors.white,
+    return Material(
+      color: highlight ? const Color(0xFFE4F7F5) : Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 16,
-            offset: Offset(0, 8),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0F000000),
+                blurRadius: 16,
+                offset: Offset(0, 8),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: iconBackground,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: iconColor),
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF1F2A37),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: iconBackground,
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: Icon(icon, color: iconColor),
+              ),
+              const Spacer(),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF1F2A37),
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: const Color(0xFF6B7280),
+                    ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                footnote,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: footnoteColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: const Color(0xFF6B7280),
-                ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            footnote,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: footnoteColor,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-        ],
+        ),
       ),
     );
   }
