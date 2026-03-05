@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
+import 'campus.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
@@ -15,6 +16,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   late TextEditingController _wechatCtrl;
   late TextEditingController _phoneCtrl;
   late User user;
+  String? campus;
 
   bool showBadge = true;
   bool pushNotification = true;
@@ -23,6 +25,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   void initState() {
     super.initState();
     user = ref.read(authStateProvider).user!;
+    campus = user.campus;
     _nicknameCtrl = TextEditingController(text: user.nickname ?? "");
     _wechatCtrl = TextEditingController(text: user.wechat ?? "");
     _phoneCtrl = TextEditingController(text: user.phone ?? "");
@@ -39,11 +42,36 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     super.dispose();
   }
 
+  void _pickCampus() async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) {
+        return ListView(
+          children: campusList.map((campusName) {
+            return ListTile(
+              title: Text(campusName),
+              trailing: campus == campusName
+                  ? Icon(Icons.check, color: Colors.blue)
+                  : null,
+              onTap: () => Navigator.pop(context, campusName),
+            );
+          }).toList(),
+        );
+      },
+    );
+    if (selected != null && selected != campus) {
+      setState(() {
+        campus = selected;
+      });
+    }
+  }
+
   void _save() {
     final newUser = user.copyWith(
       nickname: _nicknameCtrl.text,
       wechat: _wechatCtrl.text,
       phone: _phoneCtrl.text,
+      campus: campus,
       showBadge: showBadge,
       pushNotification: pushNotification,
     );
@@ -145,10 +173,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   _TextEditField(label: "昵称", controller: _nicknameCtrl),
                   _ArrowField(
                     label: "所属校区",
-                    value: user.campus ?? "",
-                    onTap: () {
-                      /* TODO: 切换校区 */
-                    },
+                    value: user.campus ?? "未设置",
+                    onTap: _pickCampus,
                   ),
                 ],
               ),

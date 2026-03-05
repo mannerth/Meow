@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:meow/api/http.dart';
 import 'package:meow/model/user.dart';
 
-// 登录返回的数据结构
 class AuthResult {
   final User user;
   final String token;
@@ -12,45 +11,72 @@ class AuthResult {
 class AuthRepository {
   final Http _http = Http();
 
-  // 统一认证登录（到时候替换成认证接口）
+  // 登录
   Future<AuthResult> login({
-    required String studentId,
+    required String email,
     required String password,
   }) async {
-    //ai跑的
-    // final resp = await _http.post('/auth/login', body: {'studentId': studentId, 'password': password});
-    // final data = json.decode(resp.body) as Map<String, dynamic>;
-    // final token = data['token'] as String;
-    // final user = User.fromJson(data['user'] as Map<String, dynamic>);
-    // return AuthResult(user: user, token: token);
-
-    // 模拟成功
-    final now = DateTime.now();
-    final user = User(
-      id: 'u-$studentId',
-      studentId: studentId,
-      nickname: '同学',
-      avatar: null,
-      roleType: RoleType.student,
-      campus: '中心校区',
-      currency: 0,
-      level: 1,
-      levelTitle: '新生',
-      experience: 0,
-      nextLevelExp: 10,
-      createTime: now,
+    final resp = await _http.post(
+      "/users/login",
+      data: {"email": email, "password": password},
     );
-    return AuthResult(user: user, token: 'mock-token-$studentId');
+    final data = resp.data;
+    final code = data["code"];
+    if (data is Map && (code == 0 || code == 200)) {
+      final dataMap = (data["data"] as Map?) ?? {};
+      final accessToken = dataMap["accessToken"]?.toString() ?? "";
+
+      final userJson = {
+        "id": dataMap["id"] ?? "",
+        "studentId": dataMap["studentId"] ?? "",
+        "nickname": dataMap["nickname"],
+        "realName": dataMap["realName"],
+        "avatar": dataMap["avatar"],
+        "roleType": "student",
+        "campus": dataMap["campus"],
+        "currency": dataMap["currency"] ?? 0,
+        "level": dataMap["level"] ?? 0,
+        "levelTitle": dataMap["levelTitle"],
+        "experience": dataMap["experience"] ?? 0,
+        "nextLevelExp": dataMap["nextLevelExp"] ?? 0,
+        "createTime": dataMap["createTime"] ?? DateTime.now().toIso8601String(),
+        "wechat": dataMap["wechat"],
+        "phone": dataMap["phone"],
+        "showBadge": dataMap["showBadge"],
+        "pushNotification": dataMap["pushNotification"],
+      };
+      final user = User.fromJson(userJson);
+      return AuthResult(user: user, token: accessToken);
+    } else {
+      throw Exception(data is Map ? (data["msg"] ?? "未知错误") : "服务器异常");
+    }
   }
 
-  // 注册（接入时替换为真实接口）
+  // 发送邮箱验证码
+  Future<void> sendVerificationCode(String email) async {
+    final resp = await _http.post(
+      "/users/send-verification-code",
+      data: {"email": email},
+    );
+    final code = resp.data["code"];
+    if (!(code == 0 || code == 200)) {
+      throw Exception(resp.data["msg"] ?? "发送验证码失败");
+    }
+  }
+
+  // 注册
   Future<void> register({
-    required String studentId,
+    required String email,
     required String password,
+    required String code,
   }) async {
-    // ai示例：
-    // final resp = await _http.post('/auth/register', body: {'studentId': studentId, 'password': password});
-    // if (resp.statusCode != 200) throw Exception('注册失败：${resp.body}');
-    await Future.delayed(const Duration(milliseconds: 600)); // 模拟网络
+    final resp = await _http.post(
+      "/users/register",
+      data: {"email": email, "password": password, "code": code},
+    );
+    final resultCode = resp.data["code"];
+    if (!(resultCode == 0 || resultCode == 200)) {
+      throw Exception(resp.data["msg"] ?? "注册失败");
+    }
   }
 }

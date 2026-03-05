@@ -59,22 +59,18 @@ class NavigationConfigRegistry {
         width: 24,
         height: 24,
       ),
-    ), 
-    pageBuilder: (_)=>StaticPage(),
-    allowedRoles: {RoleType.admin}
+    ),
+    pageBuilder: (_) => StaticPage(),
+    allowedRoles: {RoleType.admin},
   );
 
   static final _meowConfig = NavigationItemConfig(
     itemData: CustomNavigationItemData(
-      label: '猫咪', 
-      icon: SvgPicture.asset(
-        'assets/icons/paw.svg',
-        width: 24,
-        height: 24,
-      ),
-    ), 
-    pageBuilder: (_)=>MeowPage(),
-    allowedRoles: {RoleType.admin}
+      label: '猫咪',
+      icon: SvgPicture.asset('assets/icons/paw.svg', width: 24, height: 24),
+    ),
+    pageBuilder: (_) => MeowPage(),
+    allowedRoles: {RoleType.admin},
   );
 
   // ============ 首页 ============
