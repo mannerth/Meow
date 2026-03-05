@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/api/service/admin_dashboard_service.dart';
 import 'package:meow/model/admin_dashboard_stats.dart';
 import 'package:meow/provider/auth_provider.dart';
+import 'package:meow/ui/page/admin_new_cat_page.dart';
 import 'package:meow/ui/page/admin_sos_page.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
@@ -68,6 +69,11 @@ class _StaticPageState extends ConsumerState<StaticPage> {
               onSosTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const AdminSosPage()),
+                );
+              },
+              onPendingTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AdminNewCatPage()),
                 );
               },
             ),
@@ -201,12 +207,14 @@ class _StatsGrid extends StatelessWidget {
   final String? errorMessage;
   final AdminDashboardStats? stats;
   final VoidCallback onSosTap;
+  final VoidCallback onPendingTap;
 
   const _StatsGrid({
     required this.isLoading,
     required this.errorMessage,
     required this.stats,
     required this.onSosTap,
+    required this.onPendingTap,
   });
 
   @override
@@ -239,6 +247,7 @@ class _StatsGrid extends StatelessWidget {
           label: '待审核',
           footnote: '--',
           footnoteColor: const Color(0xFF43A047),
+          onTap: onPendingTap,
         ),
         _StatCard(
           icon: Icons.home_outlined,
