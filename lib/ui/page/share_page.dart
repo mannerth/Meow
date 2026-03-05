@@ -2,23 +2,25 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meow/api/http.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/model/user.dart';
+import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/page/cat_select_page.dart';
 import 'package:meow/ui/page/new_cat_page.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
 /// 发布动态页面
-class SharePage extends StatefulWidget {
+class SharePage extends ConsumerStatefulWidget {
   const SharePage({super.key});
 
   @override
-  State<SharePage> createState() => _SharePageState();
+  ConsumerState<SharePage> createState() => _SharePageState();
 }
 
-class _SharePageState extends State<SharePage> {
+class _SharePageState extends ConsumerState<SharePage> {
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
@@ -27,6 +29,12 @@ class _SharePageState extends State<SharePage> {
   Campus? _selectedCampus;
   final List<XFile> _images = [];
   bool _publishing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCampus = ref.read(authStateProvider).user?.campus;
+  }
 
   @override
   void dispose() {
@@ -175,10 +183,6 @@ class _SharePageState extends State<SharePage> {
       appBar: AppBar(
         title: const Text('分享趣事'),
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
         elevation: 0,
       ),
       body: Stack(

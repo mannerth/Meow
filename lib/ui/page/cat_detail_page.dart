@@ -90,9 +90,7 @@ class _CatDetailPageState extends State<CatDetailPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('投喂成功，剩余小鱼干 $currency')),
       );
-      setState(() {
-        _detailFuture = _fetchDetail();
-      });
+      _detailFuture = _fetchDetail();
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
