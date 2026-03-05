@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/api/service/admin_dashboard_service.dart';
 import 'package:meow/model/admin_dashboard_stats.dart';
 import 'package:meow/provider/auth_provider.dart';
+import 'package:meow/ui/page/admin_adoptions_page.dart';
 import 'package:meow/ui/page/admin_new_cat_page.dart';
 import 'package:meow/ui/page/admin_sos_page.dart';
 import 'package:meow/ui/widget/image_preview.dart';
@@ -74,6 +75,11 @@ class _StaticPageState extends ConsumerState<StaticPage> {
               onPendingTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const AdminNewCatPage()),
+                );
+              },
+              onAdoptionTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AdminAdoptionsPage()),
                 );
               },
             ),
@@ -208,6 +214,7 @@ class _StatsGrid extends StatelessWidget {
   final AdminDashboardStats? stats;
   final VoidCallback onSosTap;
   final VoidCallback onPendingTap;
+  final VoidCallback onAdoptionTap;
 
   const _StatsGrid({
     required this.isLoading,
@@ -215,6 +222,7 @@ class _StatsGrid extends StatelessWidget {
     required this.stats,
     required this.onSosTap,
     required this.onPendingTap,
+    required this.onAdoptionTap,
   });
 
   @override
@@ -258,6 +266,7 @@ class _StatsGrid extends StatelessWidget {
           footnote: '--',
           footnoteColor: const Color(0xFF6B7280),
           highlight: true,
+          onTap: onAdoptionTap,
         ),
         _StatCard(
           icon: Icons.pets_outlined,

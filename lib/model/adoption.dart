@@ -1,0 +1,176 @@
+class AdoptionContact {
+  final String phone;
+  final String wechat;
+
+  const AdoptionContact({
+    required this.phone,
+    required this.wechat,
+  });
+
+  factory AdoptionContact.fromJson(Map<String, dynamic> json) {
+    return AdoptionContact(
+      phone: _stringValue(json['phone']),
+      wechat: _stringValue(json['wechat']),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'phone': phone,
+        'wechat': wechat,
+      };
+}
+
+class AdoptionInfo {
+  final String housing;
+  final String experience;
+  final String plan;
+
+  const AdoptionInfo({
+    required this.housing,
+    required this.experience,
+    required this.plan,
+  });
+
+  factory AdoptionInfo.fromJson(Map<String, dynamic> json) {
+    return AdoptionInfo(
+      housing: _stringValue(json['housing']),
+      experience: _stringValue(json['experience']),
+      plan: _stringValue(json['plan']),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'housing': housing,
+        'experience': experience,
+        'plan': plan,
+      };
+}
+
+class AdminAdoptionListPage {
+  final int total;
+  final int? size;
+  final int? current;
+  final int? pages;
+  final List<AdminAdoptionItem> items;
+
+  AdminAdoptionListPage({
+    required this.total,
+    required this.items,
+    this.size,
+    this.current,
+    this.pages,
+  });
+
+  factory AdminAdoptionListPage.fromJson(Map<String, dynamic> json) {
+    final itemsJson = json['items'] as List<dynamic>? ?? [];
+    return AdminAdoptionListPage(
+      total: _intValue(json['total']) ?? 0,
+      size: _intValue(json['size']),
+      current: _intValue(json['current']),
+      pages: _intValue(json['pages']),
+      items: itemsJson
+          .whereType<Map<String, dynamic>>()
+          .map(AdminAdoptionItem.fromJson)
+          .toList(),
+    );
+  }
+}
+
+class AdminAdoptionItem {
+  final String id;
+  final String? userId;
+  final String userName;
+  final String? userAvatar;
+  final String? userStudentId;
+  final String? userCampus;
+  final String? userCollege;
+  final String catId;
+  final String catName;
+  final String? catAvatar;
+  final String status;
+  final String? createTime;
+  final AdoptionContact? contact;
+  final AdoptionInfo? info;
+
+  AdminAdoptionItem({
+    required this.id,
+    required this.userName,
+    required this.catId,
+    required this.catName,
+    required this.status,
+    this.userId,
+    this.userAvatar,
+    this.userStudentId,
+    this.userCampus,
+    this.userCollege,
+    this.catAvatar,
+    this.createTime,
+    this.contact,
+    this.info,
+  });
+
+  factory AdminAdoptionItem.fromJson(Map<String, dynamic> json) {
+    final contactJson = json['contact'];
+    final infoJson = json['info'] ?? json['formDetails'];
+    return AdminAdoptionItem(
+      id: _stringValue(json['id']),
+      userId: _nullableString(json['userId']),
+      userName: _stringValue(json['userName'] ?? json['applicantName']),
+      userAvatar: _nullableString(json['userAvatar'] ?? json['avatar']),
+      userStudentId: _nullableString(json['studentId'] ?? json['sid']),
+      userCampus: _nullableString(json['campus']),
+      userCollege: _nullableString(json['college']),
+      catId: _stringValue(json['catId']),
+      catName: _stringValue(json['catName']),
+      catAvatar: _nullableString(json['catAvatar']),
+      status: _stringValue(json['status']).toUpperCase(),
+      createTime: _nullableString(json['createTime'] ?? json['create_time']),
+      contact: contactJson is Map<String, dynamic>
+          ? AdoptionContact.fromJson(contactJson)
+          : null,
+      info: infoJson is Map<String, dynamic>
+          ? AdoptionInfo.fromJson(infoJson)
+          : null,
+    );
+  }
+
+  AdminAdoptionItem copyWith({
+    String? status,
+    AdoptionContact? contact,
+    AdoptionInfo? info,
+  }) {
+    return AdminAdoptionItem(
+      id: id,
+      userId: userId,
+      userName: userName,
+      userAvatar: userAvatar,
+      userStudentId: userStudentId,
+      userCampus: userCampus,
+      userCollege: userCollege,
+      catId: catId,
+      catName: catName,
+      catAvatar: catAvatar,
+      status: status ?? this.status,
+      createTime: createTime,
+      contact: contact ?? this.contact,
+      info: info ?? this.info,
+    );
+  }
+}
+
+int? _intValue(dynamic value) {
+  if (value is num) return value.toInt();
+  if (value is String) return int.tryParse(value);
+  return null;
+}
+
+String _stringValue(dynamic value) {
+  if (value == null) return '';
+  return value.toString();
+}
+
+String? _nullableString(dynamic value) {
+  if (value == null) return null;
+  final result = value.toString();
+  return result.isEmpty ? null : result;
+}

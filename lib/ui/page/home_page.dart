@@ -6,6 +6,7 @@ import 'package:meow/model/cat.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/page/cat_detail_page.dart';
+import 'package:meow/ui/page/adoption_apply_page.dart';
 import 'package:meow/ui/page/leaderboard_page.dart';
 import 'package:meow/ui/page/sos_page.dart';
 import 'package:meow/ui/widget/cat_card.dart';
@@ -236,22 +237,45 @@ class _HomePageState extends State<HomePage> {
                           subtitle: '谁是校宠No.1？',
                           height: 180,
                           width: 170,
-                          backgroundColor: Colors.orangeAccent.withAlpha(150),
+                          backgroundColor:
+                              Colors.orangeAccent.withAlpha(150),
                           icon: SvgPicture.asset('assets/icons/ranking.svg'),
                           destination: const LeaderboardPage(),
                         ),
-                        NavigateCard(
-                          title: '紧急SOS',
-                          subtitle: '伤病快速上报',
-                          height: 180,
+                        SizedBox(
                           width: 170,
-                          backgroundColor: Colors.redAccent.withAlpha(170),
-                          icon: const Icon(
-                            Icons.warning,
-                            color: Colors.white70,
-                            size: 72,
+                          child: Column(
+                            children: [
+                              NavigateCard(
+                                title: '紧急SOS',
+                                subtitle: '伤病快速上报',
+                                height: 84,
+                                width: 170,
+                                backgroundColor:
+                                    Colors.redAccent.withAlpha(170),
+                                icon: const Icon(
+                                  Icons.warning,
+                                  color: Colors.white70,
+                                  size: 40,
+                                ),
+                                destination: const SosPage(),
+                              ),
+                              const SizedBox(height: 12),
+                              NavigateCard(
+                                title: '申请领养',
+                                subtitle: '填写领养申请',
+                                height: 84,
+                                width: 170,
+                                backgroundColor: const Color(0xFFFFE2B6),
+                                icon: const Icon(
+                                  Icons.favorite_border,
+                                  color: Colors.white,
+                                  size: 40,
+                                ),
+                                destination: const AdoptionApplyPage(),
+                              ),
+                            ],
                           ),
-                          destination: const SosPage(),
                         ),
                       ],
                     ),

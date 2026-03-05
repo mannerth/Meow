@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 void showNetworkImagePreview(BuildContext context, String url) {
-  if (url.trim().isEmpty) return;
+  if (!_isValidUrl(url)) return;
   _showImagePreview(
     context,
     Image.network(
@@ -31,6 +31,15 @@ void showFileImagePreview(BuildContext context, File file) {
       ),
     ),
   );
+}
+
+bool _isValidUrl(String raw) {
+  final value = raw.trim();
+  if (value.isEmpty) return false;
+  final uri = Uri.tryParse(value);
+  if (uri == null) return false;
+  if (!uri.hasScheme || uri.host.isEmpty) return false;
+  return uri.isScheme('http') || uri.isScheme('https');
 }
 
 void _showImagePreview(BuildContext context, Widget image) {
