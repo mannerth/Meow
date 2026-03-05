@@ -6,6 +6,7 @@ import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/page/admin_adoptions_page.dart';
 import 'package:meow/ui/page/admin_new_cat_page.dart';
 import 'package:meow/ui/page/admin_sos_page.dart';
+import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_provider.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
 class StaticPage extends ConsumerStatefulWidget {
@@ -251,8 +252,8 @@ class _StatsGrid extends StatelessWidget {
           icon: Icons.how_to_reg_outlined,
           iconBackground: const Color(0xFFFFF0DA),
           iconColor: const Color(0xFFF4A43A),
-          value: _formatValue(isLoading, stats?.adoptApplications),
-          label: '待审核',
+          value: _formatValue(isLoading, stats?.pendingNewCatClues),
+          label: '新猫线索待处理',
           footnote: '--',
           footnoteColor: const Color(0xFF43A047),
           onTap: onPendingTap,
@@ -268,15 +269,22 @@ class _StatsGrid extends StatelessWidget {
           highlight: true,
           onTap: onAdoptionTap,
         ),
-        _StatCard(
-          icon: Icons.pets_outlined,
-          iconBackground: const Color(0xFFE8F7EB),
-          iconColor: const Color(0xFF43A047),
-          value: _formatValue(isLoading, stats?.totalCats),
-          label: '猫咪总数',
-          footnote: '--',
-          footnoteColor: const Color(0xFF43A047),
-        ),
+        Consumer(
+          builder: (context, ref, child) {
+            return _StatCard(
+              icon: Icons.pets_outlined,
+              iconBackground: const Color(0xFFE8F7EB),
+              iconColor: const Color(0xFF43A047),
+              value: _formatValue(isLoading, stats?.totalCats),
+              label: '猫咪总数',
+              footnote: '--',
+              footnoteColor: const Color(0xFF43A047),
+              onTap: (){ 
+                ref.read(navigationProvider.notifier).setCurrentIndex(1, controlJump: true);
+              },
+            );
+          },
+        )
       ],
     );
   }

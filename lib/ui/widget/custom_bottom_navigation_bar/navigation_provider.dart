@@ -1,16 +1,27 @@
+import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'navigation_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 class Navigation extends _$Navigation {
+  /// 主页面初始化传递此变量，以后可以在任意位置用 [setCurrentIndex(idx, controlJump: true)] 来切换页面
+  PageController? pageController;
+
   @override
   NavigationState build() {
     return NavigationState();
   }
 
-  void setCurrentIndex(int index) {
+  void setController(PageController controller) {
+    pageController = controller;
+  }
+
+  void setCurrentIndex(int index, {bool controlJump = false}) {
     state = state.copyWith(currentIndex: index);
+    if( controlJump && pageController != null ){
+      pageController!.jumpToPage(index);
+    }
   }
 
   void setVisibility(bool isVisible) {

@@ -26,6 +26,7 @@ class _MainPageState extends ConsumerState<MainPage> {
   void initState() {
     super.initState();
     _pageController = PageController();
+    ref.read(navigationProvider.notifier).setController(_pageController);
     _initLifecycleListener();
     debugPrint('MainPage initialized');
     daliyCheckIn();

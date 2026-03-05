@@ -14,7 +14,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _idCtrl = TextEditingController(text: '202400300169');
   final _pwdCtrl = TextEditingController(text: '123456');
   bool _loading = false;
-  bool _isAdmin = false; // 是否管理员登录
+  bool _isAdmin = true; // 是否管理员登录
 
   Future<void> _doLogin() async {
     final id = '${_idCtrl.text.trim()}@mail.sdu.edu.cn';

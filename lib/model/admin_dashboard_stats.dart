@@ -4,6 +4,7 @@ class AdminDashboardStats {
   final int pendingSos;
   final int adoptApplications;
   final int totalCats;
+  final int pendingNewCatClues;
   final List<CampusDistribution> campusDistribution;
 
   AdminDashboardStats({
@@ -11,6 +12,7 @@ class AdminDashboardStats {
     required this.adoptApplications,
     required this.totalCats,
     required this.campusDistribution,
+    required this.pendingNewCatClues,
   });
 
   factory AdminDashboardStats.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class AdminDashboardStats {
           0,
       totalCats: _intValue(json['totalCats']) ?? 0,
       campusDistribution: distribution,
+      pendingNewCatClues: _intValue(json['pendingNewCatClues']) ?? 0,
     );
   }
 }

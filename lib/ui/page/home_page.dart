@@ -236,23 +236,23 @@ class _HomePageState extends State<HomePage> {
                           title: '封神榜',
                           subtitle: '谁是校宠No.1？',
                           height: 180,
-                          width: 170,
+                          width: 177,
                           backgroundColor:
                               Colors.orangeAccent.withAlpha(150),
                           icon: SvgPicture.asset('assets/icons/ranking.svg'),
                           destination: const LeaderboardPage(),
                         ),
                         SizedBox(
-                          width: 170,
+                          width: 177,
                           child: Column(
                             children: [
                               NavigateCard(
                                 title: '紧急SOS',
                                 subtitle: '伤病快速上报',
                                 height: 84,
-                                width: 170,
+                                width: 177,
                                 backgroundColor:
-                                    Colors.redAccent.withAlpha(170),
+                                    Colors.redAccent.withAlpha(178),
                                 icon: const Icon(
                                   Icons.warning,
                                   color: Colors.white70,
@@ -263,10 +263,10 @@ class _HomePageState extends State<HomePage> {
                               const SizedBox(height: 12),
                               NavigateCard(
                                 title: '申请领养',
-                                subtitle: '填写领养申请',
+                                subtitle: '给咪一个家',
                                 height: 84,
-                                width: 170,
-                                backgroundColor: const Color(0xFFFFE2B6),
+                                width: 177,
+                                backgroundColor: const Color.fromARGB(198, 255, 162, 216),
                                 icon: const Icon(
                                   Icons.favorite_border,
                                   color: Colors.white,

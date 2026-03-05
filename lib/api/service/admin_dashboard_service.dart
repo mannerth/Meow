@@ -20,6 +20,7 @@ class AdminDashboardService {
       pendingSos: 0,
       adoptApplications: 0,
       totalCats: 0,
+      pendingNewCatClues: 0,
       campusDistribution: const [],
     );
   }
