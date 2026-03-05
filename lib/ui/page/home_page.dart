@@ -9,6 +9,7 @@ import 'package:meow/ui/page/cat_detail_page.dart';
 import 'package:meow/ui/page/leaderboard_page.dart';
 import 'package:meow/ui/page/sos_page.dart';
 import 'package:meow/ui/widget/cat_card.dart';
+import 'package:meow/ui/widget/image_preview.dart';
 import 'package:meow/ui/widget/navigate_card.dart';
 
 /// 首页
@@ -361,6 +362,7 @@ class _HomePageState extends State<HomePage> {
           final cat = _items[index];
           return CatCard(
             cat: cat,
+            onImageLongPress: () => showNetworkImagePreview(context, cat.avatar),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(

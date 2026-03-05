@@ -3,6 +3,7 @@ import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/ui/page/meow_edit_page.dart';
 import 'package:meow/ui/widget/cat_card.dart';
+import 'package:meow/ui/widget/image_preview.dart';
 
 class MeowPage extends StatefulWidget {
   const MeowPage({super.key});
@@ -170,6 +171,7 @@ class _MeowPageState extends State<MeowPage> {
           final cat = _items[index];
           return CatCard(
             cat: cat,
+            onImageLongPress: () => showNetworkImagePreview(context, cat.avatar),
             onTap: () => _openEditor(catId: cat.id),
           );
         },

@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:meow/model/cat.dart';
-import 'package:meow/ui/widget/image_preview.dart';
 
 class CatCard extends StatelessWidget {
   final Cat cat;
   final VoidCallback? onTap;
+  final VoidCallback? onImageLongPress;
 
-  const CatCard({super.key, required this.cat, this.onTap});
+  const CatCard({
+    super.key,
+    required this.cat,
+    this.onTap,
+    this.onImageLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +40,7 @@ class CatCard extends StatelessWidget {
                   top: Radius.circular(16),
                 ),
                 child: GestureDetector(
-                  onTap: () => showNetworkImagePreview(context, cat.avatar),
+                  onLongPress: onImageLongPress,
                   child: Image.network(
                     cat.avatar,
                     width: double.infinity,

@@ -4,6 +4,7 @@ import 'package:meow/model/cat.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/ui/page/cat_detail_page.dart';
 import 'package:meow/ui/widget/cat_card.dart';
+import 'package:meow/ui/widget/image_preview.dart';
 
 class CatSelectPage extends StatefulWidget {
   final bool selectable;
@@ -240,6 +241,7 @@ class _CatSelectPageState extends State<CatSelectPage> {
           final cat = _items[index];
           return CatCard(
             cat: cat,
+            onImageLongPress: () => showNetworkImagePreview(context, cat.avatar),
             onTap: () {
               if (widget.selectable) {
                 Navigator.of(context).pop(cat);
