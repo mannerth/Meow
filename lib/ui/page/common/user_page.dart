@@ -21,9 +21,8 @@ class UserPage extends ConsumerWidget {
           child: ElevatedButton(
             onPressed: () {
               ref.read(authStateProvider.notifier).clear();
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const LoginPage()),
-                (route) => false,
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const LoginPage(popAfterLogin: true))
               );
             },
             style: ElevatedButton.styleFrom(

@@ -3,10 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/api/service/auth_repository.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
+import 'package:meow/util/store.dart';
 import 'register_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
-  const LoginPage({super.key});
+  final bool popAfterLogin;
+  final bool showLoginExpired;
+
+  const LoginPage({
+    super.key,
+    this.popAfterLogin = false,
+    this.showLoginExpired = false,
+  });
   @override
   ConsumerState<LoginPage> createState() => _LoginPageState();
 }
@@ -42,8 +50,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         isAdmin: _isAdmin,
       );
 
-      ref.read(authStateProvider.notifier).update(result.user, result.token);
+      Store().setString('roleType', result.user.roleType.toString());
 
+      ref.read(authStateProvider.notifier).update(result.user, result.token);
+      
+      if(widget.popAfterLogin) {
+        Navigator.of(context).pop();
+      }
       // 不需要 Navigator，MyApp 会自动切到 MainPage
     } catch (e) {
       if(mounted) {
@@ -75,6 +88,22 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       createTime: now,
     );
     ref.read(authStateProvider.notifier).update(user, '');
+    Store().setString('roleType', RoleType.guest.toString());
+    if(widget.popAfterLogin) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.showLoginExpired) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('登录状态已过期，请重新登录')),
+        );
+      });
+    }
   }
 
   @override
@@ -214,19 +243,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ),
                       ],
                     ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('忘记密码：请联系统一认证平台')),
-                            );
-                          },
-                          child: const Text('忘记密码'),
-                        ),
-                      ],
-                    ),
+                    // Row(
+                    //   mainAxisAlignment: MainAxisAlignment.center,
+                    //   children: [
+                    //     TextButton(
+                    //       onPressed: () {
+                    //         ScaffoldMessenger.of(context).showSnackBar(
+                    //           const SnackBar(content: Text('忘记密码：请联系统一认证平台')),
+                    //         );
+                    //       },
+                    //       child: const Text('忘记密码'),
+                    //     ),
+                    //   ],
+                    // ),
                   ],
                 ),
                 Row(

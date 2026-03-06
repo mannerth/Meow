@@ -73,9 +73,13 @@ class AuthRepository {
   }
 
   static Future<User> getMe() async {
-    final res = await Http().get('/users/me');
-    final data = res.data['data'] as Map<String, dynamic>;
-    return User.fromJson(data);
+    try {  
+      final res = await Http().get('/users/me');
+      final data = res.data['data'] as Map<String, dynamic>;
+      return User.fromJson(data);
+    } catch (e) {
+      throw Exception("获取用户信息失败");
+    }
   }
 
   // 发送邮箱验证码
@@ -108,8 +112,12 @@ class AuthRepository {
 
   // 签到成功返回 true，已经签到过了返回 false
   static Future<bool> dailyCheckIn() async {
-    final res = await Http().post('/users/me/checkin');
-    return !(res.data['data']['todayChecked'] as bool);
+    try {  
+      final res = await Http().post('/users/me/checkin');
+      return !(res.data['data']['todayChecked'] as bool);
+    } catch (e) {
+      return false;
+    }
   }
 
   static Future<bool> updateUserInfo({
@@ -140,13 +148,4 @@ class AuthRepository {
     return true;
   }
 
-  /**
-   * 
-nickname string  必需 示例: y
-campus string 可选
-phone string 可选
-wechat string 可选
-avatar file 可选 示例:
-file://D:\灵感库\PixPin_2025-12-07_22-21-04.png
-   */
 }

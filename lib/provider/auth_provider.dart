@@ -24,7 +24,7 @@ class AuthState extends _$AuthState {
 
   void clear() {
     state = Auth();
-    Http().setToken('');
+    Http().clearToken();
     ref.watch(navigationProvider.notifier).setCurrentIndex(0, controlJump: true);
   }
 
@@ -43,10 +43,10 @@ class Auth {
   RoleType get role {
     if (loggedIn) return _user!.roleType;
     // 测试时，可以改这里的身份
-    return RoleType.admin;
+    return RoleType.guest;
   }
 
-  bool get loggedIn => _user != null && _user!.id != -1;
+  bool get loggedIn => _user != null;
 
   Auth({User? user, this.token = ''}) {
     _user = user;

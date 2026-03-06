@@ -403,16 +403,14 @@ class _DetailInfoCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.warning_rounded, color: Color(0xFFE04848)),
+                    const Icon(Icons.info),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         detail.description.isEmpty
                             ? '高能预警：吃饭时请勿摸头，会哈气！'
                             : detail.description,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: const Color(0xFFE04848),
-                        ),
+                        style: theme.textTheme.bodySmall,
                       ),
                     ),
                   ],

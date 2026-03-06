@@ -1,9 +1,11 @@
 import 'package:meow/api/http.dart';
+import 'package:meow/model/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // 本地存储，app启动时初始化，全局可用
 class Store {
   late final SharedPreferences _prefs;
+  User? user;
 
   static final Store _instance = Store._internal();
   Store._internal();

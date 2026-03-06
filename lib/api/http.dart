@@ -11,6 +11,8 @@ class Http {
   static const Duration sendTimeout = Duration(seconds: 10);
   static const Duration receiveTimeout = Duration(seconds: 10);
 
+  static bool hasInit = false;
+
   // Dio实例
   late final Dio _dio;
 
@@ -23,6 +25,11 @@ class Http {
   void setToken(String token) {
     _token = token;
     Store().setString('token', token);
+  }
+
+  void clearToken() {
+    _token = null;
+    Store().remove('token');
   }
 
   // 私有化构造函数
@@ -56,6 +63,9 @@ class Http {
         },
         onError: (DioException e, handler) {
           // 错误拦截器
+          if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
+            clearToken();
+          }
           handler.next(e);
         },
       ),
@@ -187,24 +197,29 @@ class Http {
       return response;
     } on DioException catch (e) {
       debugPrint(e.message);
-      if (e.type == DioExceptionType.badResponse && allowRetry && data is! FormData) {
-        if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
+      if (e.type == DioExceptionType.badResponse) {
+        if (hasInit && (e.response?.statusCode == 401 || e.response?.statusCode == 403)) {
           navigatorKey.currentState
-              ?.push(MaterialPageRoute(builder: (_) => LoginPage()));
-          return Future.error(Exception('Unauthorized, redirecting to login'));
+              ?.push(MaterialPageRoute(builder: (_) => 
+                LoginPage(popAfterLogin: true, showLoginExpired: true)));
         }
         if (e.response?.statusCode != null &&
             (e.response!.statusCode! >= 500 ||
-                e.response!.statusCode! == 403)) {
-          // 重试请求
-          return await _dio.request<T>(
-            path,
-            queryParameters: queryParameters,
-            data: data,
-            options:
-                options?.copyWith(method: method) ?? Options(method: method),
-            cancelToken: cancelToken,
-          );
+                e.response!.statusCode! == 403)
+            && allowRetry && data is! FormData) {
+          try {  
+            // 重试请求
+            return await _dio.request<T>(
+              path,
+              queryParameters: queryParameters,
+              data: data,
+              options:
+                  options?.copyWith(method: method) ?? Options(method: method),
+              cancelToken: cancelToken,
+            );
+          } catch (e) {
+            throw Exception('Retry failed: $e');
+          }
         }
         if (e.response != null) {
           return e.response as Response<T>;

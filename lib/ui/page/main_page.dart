@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/api/service/auth_repository.dart';
+import 'package:meow/model/user.dart';
+import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/custom_bottom_navigation_bar.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_items_provider.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_provider.dart';
@@ -43,6 +45,10 @@ class _MainPageState extends ConsumerState<MainPage> {
   }
 
   void daliyCheckIn() async {
+    if(ref.read(authStateProvider).user == null || ref.read(authStateProvider).user!.roleType == RoleType.guest) {
+      // 游客模式不签到
+      return;
+    }
     bool checkedIn = await AuthRepository.dailyCheckIn();
     if (checkedIn && mounted) {
       ScaffoldMessenger.of(context)
