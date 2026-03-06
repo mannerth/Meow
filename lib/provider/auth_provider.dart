@@ -1,5 +1,6 @@
 import 'package:meow/api/http.dart';
 import 'package:meow/model/user.dart';
+import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'auth_provider.g.dart';
@@ -24,6 +25,14 @@ class AuthState extends _$AuthState {
   void clear() {
     state = Auth();
     Http().setToken('');
+    ref.watch(navigationProvider.notifier).setCurrentIndex(0, controlJump: true);
+  }
+
+  void decrementCurrency(int amount) {
+    if (state.user != null) {
+      final updatedUser = state.user!.copyWith(currency: state.user!.currency - amount);
+      update(updatedUser, state.token);
+    }
   }
 }
 

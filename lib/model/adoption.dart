@@ -76,6 +76,68 @@ class AdminAdoptionListPage {
   }
 }
 
+class UserAdoptionListPage {
+  final int total;
+  final int? size;
+  final int? current;
+  final int? pages;
+  final List<UserAdoptionItem> items;
+
+  UserAdoptionListPage({
+    required this.total,
+    required this.items,
+    this.size,
+    this.current,
+    this.pages,
+  });
+
+  factory UserAdoptionListPage.fromJson(Map<String, dynamic> json) {
+    final itemsJson = json['items'] as List<dynamic>? ?? [];
+    return UserAdoptionListPage(
+      total: _intValue(json['total']) ?? 0,
+      size: _intValue(json['size']),
+      current: _intValue(json['current']),
+      pages: _intValue(json['pages']),
+      items: itemsJson
+          .whereType<Map<String, dynamic>>()
+          .map(UserAdoptionItem.fromJson)
+          .toList(),
+    );
+  }
+}
+
+class UserAdoptionItem {
+  final String id;
+  final String catId;
+  final String catName;
+  final String? catAvatar;
+  final String status;
+  final String? createTime;
+  final String? reason;
+
+  UserAdoptionItem({
+    required this.id,
+    required this.catId,
+    required this.catName,
+    required this.status,
+    this.catAvatar,
+    this.createTime,
+    this.reason,
+  });
+
+  factory UserAdoptionItem.fromJson(Map<String, dynamic> json) {
+    return UserAdoptionItem(
+      id: _stringValue(json['id']),
+      catId: _stringValue(json['catId']),
+      catName: _stringValue(json['catName']),
+      catAvatar: _nullableString(json['catAvatar']),
+      status: _stringValue(json['status']).toUpperCase(),
+      createTime: _nullableString(json['createTime'] ?? json['create_time']),
+      reason: _nullableString(json['reason'] ?? json['rejectReason']),
+    );
+  }
+}
+
 class AdminAdoptionItem {
   final String id;
   final String? userId;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
+import 'package:meow/ui/page/user_adoptions_page.dart';
 import 'edit_profile_page.dart';
 import 'login_page.dart';
 
@@ -272,9 +273,13 @@ class _UserCenterDetailPage extends StatelessWidget {
                       icon: Icons.assignment,
                       label: "领养申请",
                       desc: "查看进度",
-                      badge: "新办",
+                      //badge: "新办",
                       onTap: () {
-                        // TODO 查看我的领养申请
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const UserAdoptionsPage(),
+                          ),
+                        );
                       },
                     ),
                   ),
@@ -283,7 +288,7 @@ class _UserCenterDetailPage extends StatelessWidget {
                     child: _ServiceCard(
                       icon: Icons.emoji_events,
                       label: "荣誉勋章",
-                      desc: "已点亮4枚",
+                      desc: "没做",
                     ),
                   ),
                 ],
@@ -360,65 +365,64 @@ class _ServiceCard extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.desc,
+    // ignore: unused_element_parameter
     this.badge,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          height: 100,
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(2, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(icon, color: Colors.black54),
-                  if (badge != null) ...[
-                    const SizedBox(width: 5),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 0,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[100],
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        badge!,
-                        style: const TextStyle(fontSize: 11, color: Colors.blue),
-                      ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 100,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(2, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: Colors.black54),
+                if (badge != null) ...[
+                  const SizedBox(width: 5),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 0,
                     ),
-                  ],
+                    decoration: BoxDecoration(
+                      color: Colors.blue[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      badge!,
+                      style: const TextStyle(fontSize: 11, color: Colors.blue),
+                    ),
+                  ),
                 ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                label,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-              Text(
-                desc,
-                style: const TextStyle(fontSize: 13, color: Colors.black54),
-              ),
-            ],
-          ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            Text(
+              desc,
+              style: const TextStyle(fontSize: 13, color: Colors.black54),
+            ),
+          ],
         ),
       ),
     );

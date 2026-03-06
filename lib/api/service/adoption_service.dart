@@ -58,10 +58,40 @@ class AdoptionService {
     return DataResponse.fromJson(json, (_) {});
   }
 
+  static Future<DataResponse<UserAdoptionListPage>> fetchMyAdoptions({
+    int page = 1,
+    int size = 20,
+    String? status,
+  }) async {
+    final params = <String, dynamic>{
+      'page': page,
+      'size': size,
+    };
+    if (status != null && status.isNotEmpty) {
+      params['status'] = status;
+    }
+    final response = await Http().get(
+      '/adoptions/my',
+      queryParameters: params,
+    );
+    final json = response.data as Map<String, dynamic>;
+    return DataResponse.fromJson(
+      json,
+      (object) => _parseUserList(object),
+    );
+  }
+
   static AdminAdoptionListPage _parseAdminList(Object? object) {
     if (object is Map<String, dynamic>) {
       return AdminAdoptionListPage.fromJson(object);
     }
     return AdminAdoptionListPage(total: 0, items: []);
+  }
+
+  static UserAdoptionListPage _parseUserList(Object? object) {
+    if (object is Map<String, dynamic>) {
+      return UserAdoptionListPage.fromJson(object);
+    }
+    return UserAdoptionListPage(total: 0, items: []);
   }
 }

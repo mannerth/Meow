@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/model/cat_detail.dart';
@@ -82,7 +84,7 @@ class _CatDetailPageState extends State<CatDetailPage> {
     }
   }
 
-  Future<void> _feedCat() async {
+  Future<void> _feedCat(WidgetRef ref) async {
     try {
       final response = await CatService.feedCat(widget.catId);
       final currency = response.data?.userCurrency ?? 0;
@@ -90,6 +92,7 @@ class _CatDetailPageState extends State<CatDetailPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('投喂成功，剩余小鱼干 $currency')),
       );
+      ref.read(authStateProvider.notifier).decrementCurrency(1);
       _detailFuture = _fetchDetail();
     } catch (error) {
       if (!mounted) return;
@@ -158,7 +161,13 @@ class _CatDetailPageState extends State<CatDetailPage> {
                 left: 20,
                 bottom: 32,
                 right: 20,
-                child: _FeedButton(onPressed: _feedCat),
+                child: Consumer(
+                  builder:(context, ref, _){
+                    return _FeedButton(onPressed: (){
+                      _feedCat(ref);
+                    });
+                  } 
+                ),
               ),
             ],
           );
