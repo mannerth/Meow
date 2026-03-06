@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/ui/page/main_page.dart';
 import 'package:meow/util/store.dart';
 import 'package:meow/provider/auth_provider.dart';
-import 'package:meow/ui/page/login_page.dart';
+import 'package:meow/ui/page/common/login_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

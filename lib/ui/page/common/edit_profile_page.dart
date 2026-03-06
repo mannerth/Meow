@@ -3,7 +3,7 @@ import 'package:meow/ui/widget/image_preview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
-import 'campus.dart';
+import '../../../model/campus.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});

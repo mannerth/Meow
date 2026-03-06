@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:meow/main.dart';
-import 'package:meow/ui/page/login_page.dart';
+import 'package:meow/ui/page/common/login_page.dart';
 import 'package:meow/util/store.dart';
 
 // 网络请求封装，单例模式

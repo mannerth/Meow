@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:meow/model/user.dart';
-import 'package:meow/ui/page/home_page.dart';
-import 'package:meow/ui/page/meow_page.dart';
-import 'package:meow/ui/page/share_page.dart';
-import 'package:meow/ui/page/static_page.dart';
-import 'package:meow/ui/page/user_page.dart';
-import 'package:meow/ui/page/users_page.dart';
+import 'package:meow/ui/page/user/home_page.dart';
+import 'package:meow/ui/page/admin/meow_page.dart';
+import 'package:meow/ui/page/user/share_page.dart';
+import 'package:meow/ui/page/admin/static_page.dart';
+import 'package:meow/ui/page/common/user_page.dart';
+import 'package:meow/ui/page/admin/users_page.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/custom_navigation_item.dart';
 
 /// 导航项配置

@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/api/service/admin_dashboard_service.dart';
 import 'package:meow/model/admin_dashboard_stats.dart';
 import 'package:meow/provider/auth_provider.dart';
-import 'package:meow/ui/page/admin_adoptions_page.dart';
-import 'package:meow/ui/page/admin_new_cat_page.dart';
-import 'package:meow/ui/page/admin_sos_page.dart';
+import 'package:meow/ui/page/admin/admin_adoptions_page.dart';
+import 'package:meow/ui/page/admin/admin_new_cat_page.dart';
+import 'package:meow/ui/page/admin/admin_sos_page.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_provider.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 

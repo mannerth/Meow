@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/model/user.dart';
-import 'package:meow/ui/page/cat_detail_page.dart';
+import 'package:meow/provider/auth_provider.dart';
+import 'package:meow/ui/page/user/cat_detail_page.dart';
+import 'package:meow/ui/page/user/adoption_apply_page.dart';
+import 'package:meow/ui/page/user/leaderboard_page.dart';
+import 'package:meow/ui/page/user/sos_page.dart';
 import 'package:meow/ui/widget/cat_card.dart';
 import 'package:meow/ui/widget/image_preview.dart';
+import 'package:meow/ui/widget/navigate_card.dart';
 
-class CatSelectPage extends StatefulWidget {
-  final bool selectable;
-
-  const CatSelectPage({super.key, this.selectable = false});
+/// 首页
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
 
   @override
-  State<CatSelectPage> createState() => _CatSelectPageState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class _CatSelectPageState extends State<CatSelectPage> {
+class _HomePageState extends State<HomePage> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
 
@@ -34,11 +40,26 @@ class _CatSelectPageState extends State<CatSelectPage> {
   String? _selectedColor;
   String? _selectedSort;
 
+  int? _totalCount;
+  int? _schoolCount;
+  int? _graduatedCount;
+  int? _meowStarCount;
+  int? _hospitalCount;
+  bool _isStatsLoading = true;
+  String? _statsError;
+  static const _statusOptions = [
+    'SCHOOL',
+    'GRADUATED',
+    'MEOW_STAR',
+    'HOSPITAL'
+  ];
+
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_handleScroll);
     _loadCats(reset: true);
+    _loadStats();
   }
 
   @override
@@ -121,8 +142,53 @@ class _CatSelectPageState extends State<CatSelectPage> {
     }
   }
 
+  Future<void> _loadStats() async {
+    setState(() {
+      _isStatsLoading = true;
+      _statsError = null;
+    });
+
+    try {
+      final futures = await Future.wait([
+        CatService.fetchCats(page: 1, pageSize: 1),
+        CatService.fetchCats(
+          page: 1,
+          pageSize: 1,
+          status: _statusOptions[0],
+        ),
+        CatService.fetchCats(page: 1, pageSize: 1, status: _statusOptions[1]),
+        CatService.fetchCats(page: 1, pageSize: 1, status: _statusOptions[2]),
+        CatService.fetchCats(page: 1, pageSize: 1, status: _statusOptions[3]),
+      ]);
+      final total = futures[0].data?.total ?? 0;
+      final graduated = futures[2].data?.total ?? 0;
+      final meowStar = futures[3].data?.total ?? 0;
+      final hospital = futures[4].data?.total ?? 0;
+
+      setState(() {
+        _totalCount = total;
+        _schoolCount = futures[1].data?.total ?? 0;
+        _graduatedCount = graduated;
+        _meowStarCount = meowStar;
+        _hospitalCount = hospital;
+        _statsError = null;
+      });
+    } catch (error) {
+      setState(() {
+        _statsError = '数据加载失败';
+      });
+    } finally {
+      setState(() {
+        _isStatsLoading = false;
+      });
+    }
+  }
+
   Future<void> _refresh() async {
-    await _loadCats(reset: true);
+    await Future.wait([
+      _loadCats(reset: true),
+      _loadStats(),
+    ]);
   }
 
   void _applyFilters() {
@@ -133,11 +199,89 @@ class _CatSelectPageState extends State<CatSelectPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
+      appBar: AppBar(
+        title: Consumer(
+          builder: (context, ref, _) {
+            return Text(ref.watch(authStateProvider).user?.campus?.name ?? '喵');
+          },
+        ),
+      ),
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: CustomScrollView(
           controller: _scrollController,
           slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _StatsCard(
+                      isLoading: _isStatsLoading,
+                      errorMessage: _statsError,
+                      total: _totalCount,
+                      graduate: _graduatedCount,
+                      meowStar: _meowStarCount,
+                      school: _schoolCount,
+                      hospital: _hospitalCount,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        NavigateCard(
+                          title: '封神榜',
+                          subtitle: '谁是校宠No.1？',
+                          height: 180,
+                          width: 177,
+                          backgroundColor:
+                              Colors.orangeAccent.withAlpha(150),
+                          icon: SvgPicture.asset('assets/icons/ranking.svg'),
+                          destination: const LeaderboardPage(),
+                        ),
+                        SizedBox(
+                          width: 177,
+                          child: Column(
+                            children: [
+                              NavigateCard(
+                                title: '紧急SOS',
+                                subtitle: '伤病快速上报',
+                                height: 84,
+                                width: 177,
+                                backgroundColor:
+                                    Colors.redAccent.withAlpha(178),
+                                icon: const Icon(
+                                  Icons.warning,
+                                  color: Colors.white70,
+                                  size: 40,
+                                ),
+                                destination: const SosPage(),
+                              ),
+                              const SizedBox(height: 12),
+                              NavigateCard(
+                                title: '申请领养',
+                                subtitle: '给咪一个家',
+                                height: 84,
+                                width: 177,
+                                backgroundColor:
+                                    const Color.fromARGB(198, 255, 162, 216),
+                                icon: const Icon(
+                                  Icons.favorite_border,
+                                  color: Colors.white,
+                                  size: 40,
+                                ),
+                                destination: const AdoptionApplyPage(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
             SliverAppBar(
               pinned: true,
               title: PreferredSize(
@@ -243,10 +387,6 @@ class _CatSelectPageState extends State<CatSelectPage> {
             cat: cat,
             onImageLongPress: () => showNetworkImagePreview(context, cat.avatar),
             onTap: () {
-              if (widget.selectable) {
-                Navigator.of(context).pop(cat);
-                return;
-              }
               Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => CatDetailPage(catId: cat.id),
@@ -358,7 +498,7 @@ class _FilterOptions {
   static final campus = Campus.values
       .map((c) => _FilterOption(c.name, c.code.toString()))
       .toList()
-    ..add(const _FilterOption('全部校区', null));
+    ..add(_FilterOption('全部校区', null));
 
   static const status = [
     _FilterOption('全部状态', null),
@@ -498,6 +638,185 @@ class _NoMoreIndicator extends StatelessWidget {
               ),
         ),
       ),
+    );
+  }
+}
+
+class _StatsCard extends StatelessWidget {
+  final bool isLoading;
+  final String? errorMessage;
+  final int? total;
+  final int? school;
+  final int? graduate;
+  final int? meowStar;
+  final int? hospital;
+
+  const _StatsCard({
+    required this.isLoading,
+    required this.errorMessage,
+    required this.total,
+    required this.school,
+    required this.graduate,
+    required this.meowStar,
+    required this.hospital,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/images/猫猫图鉴-logo.png'), 
+          fit: BoxFit.fitHeight,
+          alignment: Alignment.centerRight
+        ),
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFFBFF6E1),
+            Color(0xFF7BE8F1),
+          ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(18),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '本校猫咪数据',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF1A2B2B),
+                ),
+              ),
+              if (isLoading)
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFF1A2B2B),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (errorMessage != null)
+            Text(
+              errorMessage!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: Colors.redAccent,
+              ),
+            )
+          else
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _StatsItem(
+                  label: '总数',
+                  value: _formatCount(total, isLoading),
+                ),
+                _StatsItem(
+                  label: '在校',
+                  value: _formatCount(school, isLoading),
+                ),
+                _StatsItem(
+                  label: '毕业',
+                  value: _formatCount(graduate, isLoading),
+                ),
+                _StatsItem(
+                  label: '猫星',
+                  value: _formatCount(meowStar, isLoading),
+                ),
+                _StatsItem(
+                  label: '住院',
+                  value: _formatCount(hospital, isLoading),
+                ),
+              ],
+            ),
+          const SizedBox(height: 15),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withAlpha(140),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.favorite,
+                  size: 16,
+                  color: Color(0xFF2F6F6F),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '喵喵喵～',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: const Color(0xFF2F6F6F),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatCount(int? value, bool isLoading) {
+    if (isLoading) return '--';
+    if (value == null) return '0';
+    return value.toString();
+  }
+}
+
+class _StatsItem extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _StatsItem({
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF0D2A2A),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: const Color(0xFF2F6F6F),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/model/leaderboard.dart';
-import 'package:meow/ui/page/cat_detail_page.dart';
+import 'package:meow/ui/page/user/cat_detail_page.dart';
 
 class LeaderboardPage extends StatefulWidget {
   const LeaderboardPage({super.key});

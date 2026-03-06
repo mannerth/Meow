@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meow/api/service/adoption_service.dart';
 import 'package:meow/model/adoption.dart';
-import 'package:meow/ui/page/admin_adoption_detail_page.dart';
+import 'package:meow/ui/page/admin/admin_adoption_detail_page.dart';
 import 'package:meow/ui/widget/safe_network_image.dart';
 import 'package:meow/util/time_tool.dart';
 

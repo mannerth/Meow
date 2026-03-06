@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
-import 'package:meow/ui/page/user_adoptions_page.dart';
+import 'package:meow/ui/page/user/user_adoptions_page.dart';
 import 'edit_profile_page.dart';
 import 'login_page.dart';
 

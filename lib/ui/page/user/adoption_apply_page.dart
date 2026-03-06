@@ -4,7 +4,7 @@ import 'package:meow/api/service/adoption_service.dart';
 import 'package:meow/model/adoption.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/provider/auth_provider.dart';
-import 'package:meow/ui/page/cat_select_page.dart';
+import 'package:meow/ui/page/user/cat_select_page.dart';
 import 'package:meow/ui/widget/safe_network_image.dart';
 
 class AdoptionApplyPage extends ConsumerStatefulWidget {
