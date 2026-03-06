@@ -201,11 +201,9 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: Consumer(
-          builder: (context, ref, _){
-            return Text(
-              ref.watch(authStateProvider).user?.campus?.name ?? '喵'
-            );
-          }
+          builder: (context, ref, _) {
+            return Text(ref.watch(authStateProvider).user?.campus?.name ?? '喵');
+          },
         ),
       ),
       body: RefreshIndicator(
@@ -266,7 +264,8 @@ class _HomePageState extends State<HomePage> {
                                 subtitle: '给咪一个家',
                                 height: 84,
                                 width: 177,
-                                backgroundColor: const Color.fromARGB(198, 255, 162, 216),
+                                backgroundColor:
+                                    const Color.fromARGB(198, 255, 162, 216),
                                 icon: const Icon(
                                   Icons.favorite_border,
                                   color: Colors.white,

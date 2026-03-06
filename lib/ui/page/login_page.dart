@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meow/api/service/auth_repository.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
-import 'package:meow/api/service/auth_repository.dart';
+import 'register_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -17,29 +18,39 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   bool _isAdmin = true; // 是否管理员登录
 
   Future<void> _doLogin() async {
-    final id = '${_idCtrl.text.trim()}@mail.sdu.edu.cn';
+    final email = '${_idCtrl.text.trim()}@mail.sdu.edu.cn';
     final pwd = _pwdCtrl.text;
-    if (id.isEmpty || pwd.isEmpty) {
+    if (!email.contains(RegExp(r'^[0-9]+@mail\.sdu\.edu\.cn$'))) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('请输入学号/工号和密码')));
+      ).showSnackBar(const SnackBar(content: Text('请输入有效的山大邮箱')));
+      return;
+    }
+    if (pwd.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请输入密码')));
       return;
     }
 
     setState(() => _loading = true);
     try {
       final repo = AuthRepository();
-      final result =
-          await repo.login(studentId: id, password: pwd, isAdmin: _isAdmin);
+      final result = await repo.login(
+        email: email,
+        password: pwd,
+        isAdmin: _isAdmin,
+      );
 
-      // 登录完成更新状态
       ref.read(authStateProvider.notifier).update(result.user, result.token);
 
       // 不需要 Navigator，MyApp 会自动切到 MainPage
     } catch (e) {
-      ScaffoldMessenger.of(
+      if(mounted) {
+        ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('登录失败：$e')));
+      }
       debugPrint('Login error: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -64,7 +75,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       createTime: now,
     );
     ref.read(authStateProvider.notifier).update(user, '');
-    // 自动跳转主页面
   }
 
   @override
@@ -79,12 +89,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(height: 24),
-                // 爪子背景改黄色
                 Container(
                   width: 64,
                   height: 64,
                   decoration: const BoxDecoration(
-                    color: Color(0xFFFFE066), // 黄色
+                    color: Color(0xFFFFE066),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -124,8 +133,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 ),
                               ),
                             ),
-                            Text('@mail.sdu.edu.cn',
-                                style: TextStyle(color: Colors.black54)),
+                            Text(
+                              '@mail.sdu.edu.cn',
+                              style: TextStyle(color: Colors.black54),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -178,22 +189,43 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                // 底部：游客访问  忘记密码
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+
+                // 游客访问/忘记密码
+                Column(
                   children: [
-                    TextButton(
-                      onPressed: _doGuestLogin,
-                      child: const Text('游客访问'),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton(
+                          onPressed: _doGuestLogin,
+                          child: const Text('游客访问'),
+                        ),
+                        const Text(
+                          ' | ',
+                          style: TextStyle(color: Colors.black54),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => RegisterPage()),
+                            );
+                          },
+                          child: const Text('注册账号'),
+                        ),
+                      ],
                     ),
-                    const Text(' | ', style: TextStyle(color: Colors.black54)),
-                    TextButton(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('忘记密码：请联系统一认证平台')),
-                        );
-                      },
-                      child: const Text('忘记密码'),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('忘记密码：请联系统一认证平台')),
+                            );
+                          },
+                          child: const Text('忘记密码'),
+                        ),
+                      ],
                     ),
                   ],
                 ),

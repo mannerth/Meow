@@ -324,9 +324,11 @@ class _MeowEditPageState extends State<MeowEditPage> {
     }
     try {
       var result = await CatService.upsertCat(id: widget.catId, payload: payload);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('保存成功 ${result.data}')),
-      );
+      if(mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('保存成功 ${result.data}')),
+        );
+      }
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -544,14 +546,14 @@ class _MeowEditPageState extends State<MeowEditPage> {
                     ),
                     IconButton(
                       onPressed: () {
-                        TextEditingController _newTagController =
+                        TextEditingController newTagController =
                             TextEditingController();
                         showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
                                   title: const Text('添加新标签'),
                                   content: TextField(
-                                    controller: _newTagController,
+                                    controller: newTagController,
                                     autofocus: true,
                                     onSubmitted: (value) {
                                       if (value.trim().isEmpty) return;
@@ -573,7 +575,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
                                     ),
                                     TextButton(
                                       onPressed: () {
-                                        final value = _newTagController.text;
+                                        final value = newTagController.text;
                                         if (value.trim().isEmpty) return;
                                         if (!_tagOptions
                                             .contains(value.trim())) {

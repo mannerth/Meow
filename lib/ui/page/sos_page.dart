@@ -500,7 +500,7 @@ class _SelectCard extends StatelessWidget {
                 ],
               ),
             ),
-            if (trailing != null) trailing!,
+            ?trailing,
             if (trailing == null) const Icon(Icons.chevron_right),
           ],
         ),

@@ -23,6 +23,7 @@ class AuthState extends _$AuthState {
 
   void clear() {
     state = Auth();
+    Http().setToken('');
   }
 }
 

@@ -215,7 +215,7 @@ class _AdminAdoptionsPageState extends State<AdminAdoptionsPage> {
           onTap: () => _openDetail(item),
         );
       },
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemCount: _items.length,
     );
   }

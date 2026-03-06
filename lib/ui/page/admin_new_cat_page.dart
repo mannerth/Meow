@@ -222,7 +222,7 @@ class _AdminNewCatPageState extends State<AdminNewCatPage> {
           onApprove: () => _openApproveSheet(item),
         );
       },
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemCount: _items.length,
     );
   }
@@ -463,7 +463,7 @@ class _ImageStrip extends StatelessWidget {
             ),
           );
         },
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemCount: urls.length,
       ),
     );

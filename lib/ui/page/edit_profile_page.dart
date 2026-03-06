@@ -3,6 +3,7 @@ import 'package:meow/ui/widget/image_preview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
+import 'campus.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
@@ -16,6 +17,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   late TextEditingController _wechatCtrl;
   late TextEditingController _phoneCtrl;
   late User user;
+  String? campus;
 
   bool showBadge = true;
   bool pushNotification = true;
@@ -24,12 +26,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   void initState() {
     super.initState();
     user = ref.read(authStateProvider).user!;
+    campus = user.campus?.name;
     _nicknameCtrl = TextEditingController(text: user.nickname ?? "");
-    _wechatCtrl = TextEditingController();
-    _phoneCtrl = TextEditingController();
-    //user字段调整
-    // showBadge = user.showBadge ?? true;
-    // pushNotification = user.pushNotification ?? true;
+    _wechatCtrl = TextEditingController(text: user.wechat ?? "");
+    _phoneCtrl = TextEditingController(text: user.phone ?? "");
+    showBadge = user.showBadge ?? true;
+    pushNotification = user.pushNotification ?? true;
   }
 
   @override
@@ -40,13 +42,42 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     super.dispose();
   }
 
+  void _pickCampus() async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) {
+        return ListView(
+          children: campusList.map((campusName) {
+            return ListTile(
+              title: Text(campusName),
+              trailing: campus == campusName
+                  ? Icon(Icons.check, color: Colors.blue)
+                  : null,
+              onTap: () => Navigator.pop(context, campusName),
+            );
+          }).toList(),
+        );
+      },
+    );
+    if (selected != null && selected != campus) {
+      setState(() {
+        campus = selected;
+      });
+    }
+  }
+
   void _save() {
+    final campusEnum = Campus.values.cast<Campus?>().firstWhere(
+          (item) => item?.name == campus,
+          orElse: () => null,
+        );
     final newUser = user.copyWith(
       nickname: _nicknameCtrl.text,
-      // wechat: _wechatCtrl.text,
-      // phone: _phoneCtrl.text,
-      // showBadge: showBadge,
-      // pushNotification: pushNotification,
+      wechat: _wechatCtrl.text,
+      phone: _phoneCtrl.text,
+      campus: campusEnum,
+      showBadge: showBadge,
+      pushNotification: pushNotification,
     );
     ref.read(authStateProvider.notifier).update(newUser);
     Navigator.pop(context);
@@ -107,6 +138,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                         backgroundImage: user.avatar != null
                             ? NetworkImage(user.avatar!)
                             : null,
+                        backgroundColor: Colors.grey[400],
                         child: user.avatar == null
                             ? const Icon(
                                 Icons.person,
@@ -114,7 +146,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                                 color: Colors.white,
                               )
                             : null,
-                        backgroundColor: Colors.grey[400],
                       ),
                     ),
                     Positioned(
@@ -128,7 +159,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                           width: 30,
                           height: 30,
                           decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.7),
+                            color: Colors.black.withValues(alpha: 0.7),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -153,10 +184,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   _TextEditField(label: "昵称", controller: _nicknameCtrl),
                   _ArrowField(
                     label: "所属校区",
-                    value: user.campus?.name ?? "",
-                    onTap: () {
-                      /* TODO: 切换校区 */
-                    },
+                    value: campus ?? "未设置",
+                    onTap: _pickCampus,
                   ),
                 ],
               ),
@@ -164,7 +193,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               _FieldCard(
                 title: "身份认证",
                 children: [
-                  _StaticField(label: "学号/工号", value: user.studentId ?? ""),
+                  _StaticField(label: "学号/工号", value: user.studentId),
                   //_StaticField(label: "真实姓名", value: user.realName ?? ""),
                 ],
               ),
@@ -236,7 +265,7 @@ class _FieldCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(18),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 8,
                   offset: Offset(2, 2),
                 ),
@@ -362,7 +391,7 @@ class _SwitchField extends StatelessWidget {
           const Spacer(),
           Switch(
             value: value,
-            activeColor: Color.fromARGB(255, 213, 174, 18),
+            activeThumbColor: Color.fromARGB(255, 213, 174, 18),
             onChanged: onChanged,
           ),
         ],

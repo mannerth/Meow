@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'package:meow/api/http.dart';
 import 'package:meow/model/user.dart';
 
-// 登录返回的数据结构
 class AuthResult {
   final User user;
   final String token;
@@ -13,21 +11,63 @@ class AuthRepository {
   final Http _http = Http();
 
   // 统一认证登录（到时候替换成认证接口）
-  Future<AuthResult> login(
-      {required String studentId,
-      required String password,
-      bool isAdmin = false}) async {
-    String path = isAdmin ? '/admin/login' : '/users/login';
-    final resp = await _http
-        .post(path, data: {'email': studentId, 'password': password});
-    final data = resp.data['data'] as Map<String, dynamic>;
-    final token = data['accessToken'] as String;
-    _http.setToken(token);
-    final user = await getMe();
-    if (isAdmin) {
-      user.roleType = RoleType.admin;
+  Future<AuthResult> login({
+    required String email,
+    required String password,
+    bool isAdmin = false,
+  }) async {
+    final path = isAdmin ? '/admin/login' : '/users/login';
+    final resp = await _http.post(
+      path,
+      data: {'email': email, 'password': password},
+    );
+
+    final data = resp.data;
+    final code = data is Map ? data['code'] : null;
+    if (data is Map && (code == null || code == 0 || code == 200)) {
+      final dataMap = (data['data'] as Map?) ?? {};
+      final accessToken = dataMap['accessToken']?.toString() ??
+          dataMap['token']?.toString() ??
+          '';
+      if (accessToken.isNotEmpty) {
+        _http.setToken(accessToken);
+      }
+
+      User user;
+      if (dataMap.containsKey('id') ||
+          dataMap.containsKey('uid') ||
+          dataMap.containsKey('sid')) {
+        final userJson = {
+          'uid': dataMap['uid'] ?? dataMap['id'] ?? 0,
+          'sid': dataMap['sid'] ?? dataMap['studentId'] ?? '',
+          'nickname': dataMap['nickname'],
+          'realName': dataMap['realName'],
+          'avatar': dataMap['avatar'],
+          'roleType': dataMap['roleType'] ?? 'student',
+          'campus': dataMap['campus'],
+          'currency': dataMap['currency'] ?? 0,
+          'level': dataMap['level'] ?? 0,
+          'levelTitle': dataMap['levelTitle'],
+          'exp': dataMap['experience'] ?? dataMap['exp'] ?? 0,
+          'nextExp': dataMap['nextLevelExp'] ?? dataMap['nextExp'] ?? 0,
+          'createTime': dataMap['createTime'],
+          'wechat': dataMap['wechat'],
+          'phone': dataMap['phone'],
+          'showBadge': dataMap['showBadge'],
+          'pushNotification': dataMap['pushNotification'],
+        };
+        user = User.fromJson(userJson);
+      } else {
+        user = await getMe();
+      }
+
+      if (isAdmin) {
+        user.roleType = RoleType.admin;
+      }
+      return AuthResult(user: user, token: accessToken);
     }
-    return AuthResult(user: user, token: token);
+
+    throw Exception(data is Map ? (data['msg'] ?? '未知错误') : '服务器异常');
   }
 
   static Future<User> getMe() async {
@@ -36,15 +76,32 @@ class AuthRepository {
     return User.fromJson(data);
   }
 
-  // 注册（接入时替换为真实接口）
+  // 发送邮箱验证码
+  Future<void> sendVerificationCode(String email) async {
+    final resp = await _http.post(
+      "/users/send-verification-code",
+      data: {"email": email},
+    );
+    final code = resp.data["code"];
+    if (!(code == 0 || code == 200)) {
+      throw Exception(resp.data["msg"] ?? "发送验证码失败");
+    }
+  }
+
+  // 注册
   Future<void> register({
-    required String studentId,
+    required String email,
     required String password,
+    required String code,
   }) async {
-    // ai示例：
-    // final resp = await _http.post('/auth/register', body: {'studentId': studentId, 'password': password});
-    // if (resp.statusCode != 200) throw Exception('注册失败：${resp.body}');
-    await Future.delayed(const Duration(milliseconds: 600)); // 模拟网络
+    final resp = await _http.post(
+      "/users/register",
+      data: {"email": email, "password": password, "code": code},
+    );
+    final resultCode = resp.data["code"];
+    if (!(resultCode == 0 || resultCode == 200)) {
+      throw Exception(resp.data["msg"] ?? "注册失败");
+    }
   }
 
   // 签到成功返回 true，已经签到过了返回 false

@@ -52,28 +52,26 @@ class NavigationConfigRegistry {
 
   // ========== 管理员统计页 =======
   static final _staticConfig = NavigationItemConfig(
-      itemData: CustomNavigationItemData(
-        label: '统计',
-        icon: SvgPicture.asset(
-          'assets/icons/table-cells.svg',
-          width: 24,
-          height: 24,
-        ),
+    itemData: CustomNavigationItemData(
+      label: '统计',
+      icon: SvgPicture.asset(
+        'assets/icons/table-cells.svg',
+        width: 24,
+        height: 24,
       ),
-      pageBuilder: (_) => StaticPage(),
-      allowedRoles: {RoleType.admin});
+    ),
+    pageBuilder: (_) => StaticPage(),
+    allowedRoles: {RoleType.admin},
+  );
 
   static final _meowConfig = NavigationItemConfig(
-      itemData: CustomNavigationItemData(
-        label: '猫咪',
-        icon: SvgPicture.asset(
-          'assets/icons/paw.svg',
-          width: 24,
-          height: 24,
-        ),
-      ),
-      pageBuilder: (_) => MeowPage(),
-      allowedRoles: {RoleType.admin});
+    itemData: CustomNavigationItemData(
+      label: '猫咪',
+      icon: SvgPicture.asset('assets/icons/paw.svg', width: 24, height: 24),
+    ),
+    pageBuilder: (_) => MeowPage(),
+    allowedRoles: {RoleType.admin},
+  );
 
   // ============ 首页 ============
   static final _homeConfig = NavigationItemConfig(
