@@ -187,7 +187,7 @@ class Http {
       return response;
     } on DioException catch (e) {
       debugPrint(e.message);
-      if (e.type == DioExceptionType.badResponse && allowRetry) {
+      if (e.type == DioExceptionType.badResponse && allowRetry && data is! FormData) {
         if (e.response?.statusCode == 401 || e.response?.statusCode == 403) {
           navigatorKey.currentState
               ?.push(MaterialPageRoute(builder: (_) => LoginPage()));

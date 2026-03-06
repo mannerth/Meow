@@ -1,3 +1,5 @@
+import 'package:dio/dio.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:meow/api/http.dart';
 import 'package:meow/model/user.dart';
 
@@ -109,4 +111,42 @@ class AuthRepository {
     final res = await Http().post('/users/me/checkin');
     return !(res.data['data']['todayChecked'] as bool);
   }
+
+  static Future<bool> updateUserInfo({
+    String? nickname,
+    String? campus,
+    String? phone,
+    String? wechat,
+    XFile? avatar,
+  }) async {
+    final formData = FormData();
+    if (nickname != null) formData.fields.add(MapEntry('nickname', nickname));
+    if (campus != null) formData.fields.add(MapEntry('campus', campus));
+    if (phone != null) formData.fields.add(MapEntry('phone', phone));
+    if (wechat != null) formData.fields.add(MapEntry('wechat', wechat));
+    if (avatar != null) {
+      formData.files.add(MapEntry(
+        'avatar',
+        MultipartFile.fromFileSync(avatar.path, filename: avatar.name),
+      ));
+    }
+
+    final res = await Http().put('/users/me', data: formData);
+    final code = res.data['code'];
+    if (!(code == 0 || code == 200)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * 
+nickname string  必需 示例: y
+campus string 可选
+phone string 可选
+wechat string 可选
+avatar file 可选 示例:
+file://D:\灵感库\PixPin_2025-12-07_22-21-04.png
+   */
 }

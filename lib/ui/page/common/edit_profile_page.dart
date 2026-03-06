@@ -1,4 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:meow/api/service/auth_repository.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/model/user.dart';
@@ -21,6 +25,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
   bool showBadge = true;
   bool pushNotification = true;
+  XFile? _pickedImage;
 
   @override
   void initState() {
@@ -66,19 +71,26 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     }
   }
 
-  void _save() {
+  void _save() async {
     final campusEnum = Campus.values.cast<Campus?>().firstWhere(
           (item) => item?.name == campus,
           orElse: () => null,
         );
-    final newUser = user.copyWith(
-      nickname: _nicknameCtrl.text,
-      wechat: _wechatCtrl.text,
-      phone: _phoneCtrl.text,
-      campus: campusEnum,
-      showBadge: showBadge,
-      pushNotification: pushNotification,
+    final success = await AuthRepository.updateUserInfo(
+      nickname: _nicknameCtrl.text.trim().isEmpty ? null : _nicknameCtrl.text,
+      campus: campusEnum?.index.toString(),
+      phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text,
+      wechat: _wechatCtrl.text.trim().isEmpty ? null : _wechatCtrl.text,
+      avatar: _pickedImage,
     );
+    if (!success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("更新失败，请稍后重试")),
+      );
+      return;
+    }
+    final RoleType role = ref.read(authStateProvider).user?.roleType?? RoleType.student;
+    final newUser = await AuthRepository.getMe()..roleType = role;
     ref.read(authStateProvider.notifier).update(newUser);
     Navigator.pop(context);
   }
@@ -135,7 +147,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       },
                       child: CircleAvatar(
                         radius: 48,
-                        backgroundImage: user.avatar != null
+                        backgroundImage: _pickedImage != null
+                          ? FileImage(File(_pickedImage!.path)) :
+                            user.avatar != null
                             ? NetworkImage(user.avatar!)
                             : null,
                         backgroundColor: Colors.grey[400],
@@ -152,8 +166,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       bottom: 2,
                       right: 2,
                       child: GestureDetector(
-                        onTap: () {
-                          /* TODO: 换头像 */
+                        onTap: () async {
+                          _pickedImage = await ImagePicker().pickImage(source: ImageSource.gallery);
+                          setState(() {});
                         },
                         child: Container(
                           width: 30,
@@ -163,7 +178,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
-                            Icons.camera_alt,
+                            Icons.change_circle,
                             color: Colors.white,
                             size: 18,
                           ),
