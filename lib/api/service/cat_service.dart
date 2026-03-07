@@ -136,4 +136,16 @@ class CatService {
       (object) => (object as Map<String, dynamic>)['id'] as String,
     );
   }
+
+  static Future<DataResponse<void>> deleteCat(String id) async {
+    final response = await Http().delete('/admin/cats/$id');
+    final json = response.data as Map<String, dynamic>;
+    return DataResponse.fromJson(json, (_) {});
+  }
+
+  static Future<DataResponse<void>> deleteMoment(String momentId) async {
+    final response = await Http().delete('/moments/$momentId');
+    final json = response.data as Map<String, dynamic>;
+    return DataResponse.fromJson(json, (_) {});
+  }
 }

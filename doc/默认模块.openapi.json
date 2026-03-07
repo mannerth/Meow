@@ -1404,15 +1404,15 @@
                   },
                   "hauntLocation": {
                     "type": "string",
-                    "example": "教学楼"
+                    "example": ""
                   },
                   "birthYear": {
                     "type": "integer",
-                    "example": 2026
+                    "example": 0
                   },
                   "admissionDate": {
                     "type": "string",
-                    "example": "2026-01-01"
+                    "example": ""
                   },
                   "status": {
                     "type": "string",
@@ -1420,7 +1420,7 @@
                   },
                   "healthStatus": {
                     "type": "string",
-                    "example": "HEALTHY"
+                    "example": ""
                   },
                   "attributes[friendliness]": {
                     "type": "string",
@@ -1470,7 +1470,7 @@
                     "items": {
                       "type": "string"
                     },
-                    "example": []
+                    "example": ""
                   }
                 },
                 "required": [
@@ -1478,11 +1478,7 @@
                   "color",
                   "gender",
                   "campus",
-                  "hauntLocation",
-                  "birthYear",
-                  "admissionDate",
                   "status",
-                  "healthStatus",
                   "attributes[friendliness]",
                   "attributes[gluttony]",
                   "attributes[fight]",
@@ -1636,22 +1632,60 @@
                   "color",
                   "gender",
                   "campus",
-                  "hauntLocation",
-                  "birthYear",
-                  "admissionDate",
                   "status",
-                  "healthStatus",
                   "attributes[friendliness]",
                   "attributes[gluttony]",
                   "attributes[fight]",
                   "attributes[appearance]",
-                  "isNeutered"
+                  "isNeutered",
+                  "avatar"
                 ]
               },
               "examples": {}
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                },
+                "example": {
+                  "code": 0,
+                  "data": {},
+                  "msg": ""
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "删除猫咪档案",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "5e47de3144e9fada7ed2607093414c5c",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -3546,6 +3580,49 @@
         ]
       }
     },
+    "/moments/{id}": {
+      "delete": {
+        "summary": "删除动态",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "e15da9c1e643b40039e4722e09cbaead",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                },
+                "example": {
+                  "code": 0,
+                  "data": {},
+                  "msg": ""
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      }
+    },
     "/moments/{id}/like": {
       "post": {
         "summary": "点赞动态",
@@ -3657,6 +3734,34 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                },
+                "example": {
+                  "code": 0,
+                  "data": {},
+                  "msg": ""
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/stats/public": {
+      "get": {
+        "summary": "获取全站公开统计",
+        "deprecated": false,
+        "description": "",
+        "tags": [],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "",

@@ -111,6 +111,30 @@ class _MeowPageState extends State<MeowPage> {
     }
   }
 
+  Future<void> _deleteCat(Cat cat) async {
+    final confirmed = await _showConfirmDialog(
+      context,
+      title: '删除猫咪档案',
+      message: '确认删除 ${cat.name} 吗？删除后不可恢复。',
+    );
+    if (confirmed != true) return;
+    try {
+      await CatService.deleteCat(cat.id);
+      if (!mounted) return;
+      setState(() {
+        _items.removeWhere((item) => item.id == cat.id);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('已删除猫咪档案')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('删除失败，请稍后重试')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -173,6 +197,7 @@ class _MeowPageState extends State<MeowPage> {
             cat: cat,
             onImageLongPress: () => showNetworkImagePreview(context, cat.avatar),
             onTap: () => _openEditor(catId: cat.id),
+            onDelete: () => _deleteCat(cat),
           );
         },
         childCount: _items.length,
@@ -299,4 +324,28 @@ class _NoMoreIndicator extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<bool?> _showConfirmDialog(
+  BuildContext context, {
+  required String title,
+  required String message,
+}) {
+  return showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('取消'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: const Text('删除'),
+        ),
+      ],
+    ),
+  );
 }

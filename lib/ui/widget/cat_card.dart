@@ -5,12 +5,14 @@ class CatCard extends StatelessWidget {
   final Cat cat;
   final VoidCallback? onTap;
   final VoidCallback? onImageLongPress;
+  final VoidCallback? onDelete;
 
   const CatCard({
     super.key,
     required this.cat,
     this.onTap,
     this.onImageLongPress,
+    this.onDelete,
   });
 
   @override
@@ -39,20 +41,48 @@ class CatCard extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(16),
                 ),
-                child: GestureDetector(
-                  onLongPress: onImageLongPress,
-                  child: Image.network(
-                    cat.avatar,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: const Color(0xFFF1F2F4),
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.pets, color: Color(0xFFB0B4BA)),
-                      );
-                    },
-                  ),
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: GestureDetector(
+                        onLongPress: onImageLongPress,
+                        child: Image.network(
+                          cat.avatar,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: const Color(0xFFF1F2F4),
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.pets,
+                                color: Color(0xFFB0B4BA),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                    if (onDelete != null)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Material(
+                          color: Colors.white.withAlpha(230),
+                          shape: const CircleBorder(),
+                          child: IconButton(
+                            padding: EdgeInsets.zero,
+                            visualDensity: VisualDensity.compact,
+                            iconSize: 18,
+                            onPressed: onDelete,
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              color: Color(0xFFE14B4B),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),

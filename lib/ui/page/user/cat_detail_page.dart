@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 import 'package:meow/api/service/cat_service.dart';
@@ -84,6 +85,34 @@ class _CatDetailPageState extends State<CatDetailPage> {
     }
   }
 
+  Future<void> _deleteMoment(Moment moment) async {
+    if (_momentLoading) return;
+    final confirmed = await _showConfirmDialog(
+      context,
+      title: '删除动态',
+      message: '确认删除这条动态吗？删除后不可恢复。',
+    );
+    if (confirmed != true) return;
+    setState(() => _momentLoading = true);
+    try {
+      await CatService.deleteMoment(moment.id);
+      if (!mounted) return;
+      setState(() {
+        _momentItems.removeWhere((item) => item.id == moment.id);
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('已删除动态')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('删除失败，请稍后重试')),
+      );
+    } finally {
+      if (mounted) setState(() => _momentLoading = false);
+    }
+  }
+
   Future<void> _feedCat(WidgetRef ref) async {
     try {
       final response = await CatService.feedCat(widget.catId);
@@ -141,17 +170,18 @@ class _CatDetailPageState extends State<CatDetailPage> {
                       },
                     ),
                   ),
-                  SliverToBoxAdapter(
-                    child: _MomentSection(
-                      momentFuture: _momentFuture,
-                      moments: _momentItems,
-                      onRetry: () {
-                        _momentFuture = _fetchMoments();
-                        setState(() {});
-                      },
-                      onLikeToggle: _toggleLike,
-                    ),
-                  ),
+                   SliverToBoxAdapter(
+                     child: _MomentSection(
+                       momentFuture: _momentFuture,
+                       moments: _momentItems,
+                       onRetry: () {
+                         _momentFuture = _fetchMoments();
+                         setState(() {});
+                       },
+                       onLikeToggle: _toggleLike,
+                       onDelete: _deleteMoment,
+                     ),
+                   ),
                   const SliverPadding(
                     padding: EdgeInsets.only(bottom: 120),
                   ),
@@ -182,12 +212,14 @@ class _MomentSection extends StatelessWidget {
   final List<Moment> moments;
   final VoidCallback onRetry;
   final ValueChanged<Moment> onLikeToggle;
+  final ValueChanged<Moment> onDelete;
 
   const _MomentSection({
     required this.momentFuture,
     required this.moments,
     required this.onRetry,
     required this.onLikeToggle,
+    required this.onDelete,
   });
 
   @override
@@ -227,6 +259,7 @@ class _MomentSection extends StatelessWidget {
                       (moment) => _MomentCard(
                         moment: moment,
                         onLikeToggle: () => onLikeToggle(moment),
+                        onDelete: () => onDelete(moment),
                       ),
                     )
                     .toList(),
@@ -506,13 +539,20 @@ class _RelationSection extends StatelessWidget {
 class _MomentCard extends StatelessWidget {
   final Moment moment;
   final VoidCallback onLikeToggle;
+  final VoidCallback? onDelete;
 
-  const _MomentCard({required this.moment, required this.onLikeToggle});
+  const _MomentCard({
+    required this.moment,
+    required this.onLikeToggle,
+    this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final timeText = _formatMomentTime(moment.createTime);
+    final isAdmin = _isAdmin(context);
+    final canDelete = isAdmin || _isOwner(context, moment);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -576,6 +616,18 @@ class _MomentCard extends StatelessWidget {
                 likeCount: moment.likeCount,
                 onTap: onLikeToggle,
               ),
+              if (canDelete) ...[
+                const SizedBox(width: 4),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  iconSize: 18,
+                  onPressed: onDelete,
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: Color(0xFFE14B4B),
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 12),
@@ -962,4 +1014,41 @@ class _DetailError extends StatelessWidget {
       ),
     );
   }
+}
+
+bool _isAdmin(BuildContext context) {
+  final container = ProviderScope.containerOf(context, listen: false);
+  final role = container.read(authStateProvider).role;
+  return role == RoleType.admin;
+}
+
+bool _isOwner(BuildContext context, Moment moment) {
+  final container = ProviderScope.containerOf(context, listen: false);
+  final user = container.read(authStateProvider).user;
+  final userId = user?.id.toString() ?? '';
+  return userId.isNotEmpty && userId == moment.user.id;
+}
+
+Future<bool?> _showConfirmDialog(
+  BuildContext context, {
+  required String title,
+  required String message,
+}) {
+  return showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('取消'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: const Text('删除'),
+        ),
+      ],
+    ),
+  );
 }
