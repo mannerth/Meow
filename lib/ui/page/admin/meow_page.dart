@@ -103,9 +103,9 @@ class _MeowPageState extends State<MeowPage> {
   }
 
   Future<void> _openEditor({String? catId}) async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => MeowEditPage(catId: catId)),
-    );
+    final result = await Navigator.of(
+      context,
+    ).push<bool>(MaterialPageRoute(builder: (_) => MeowEditPage(catId: catId)));
     if (result == true) {
       await _loadCats(reset: true);
     }
@@ -124,14 +124,14 @@ class _MeowPageState extends State<MeowPage> {
       setState(() {
         _items.removeWhere((item) => item.id == cat.id);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('已删除猫咪档案')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('已删除猫咪档案')));
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('删除失败，请稍后重试')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('删除失败，请稍后重试')));
     }
   }
 
@@ -190,18 +190,15 @@ class _MeowPageState extends State<MeowPage> {
     }
 
     return SliverGrid(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          final cat = _items[index];
-          return CatCard(
-            cat: cat,
-            onImageLongPress: () => showNetworkImagePreview(context, cat.avatar),
-            onTap: () => _openEditor(catId: cat.id),
-            onDelete: () => _deleteCat(cat),
-          );
-        },
-        childCount: _items.length,
-      ),
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final cat = _items[index];
+        return CatCard(
+          cat: cat,
+          onImageLongPress: () => showNetworkImagePreview(context, cat.avatar),
+          onTap: () => _openEditor(catId: cat.id),
+          onDelete: () => _deleteCat(cat),
+        );
+      }, childCount: _items.length),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         mainAxisSpacing: 12,
@@ -317,9 +314,9 @@ class _NoMoreIndicator extends StatelessWidget {
       child: Center(
         child: Text(
           '没有更多了',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
         ),
       ),
     );

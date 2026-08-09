@@ -26,15 +26,7 @@ class TimeTool {
     return datetime.toString().substring(0, 16);
   }
 
-  static final List<String> names = [
-    '一',
-    '二',
-    '三',
-    '四',
-    '五',
-    '六',
-    '日',
-  ];
+  static final List<String> names = ['一', '二', '三', '四', '五', '六', '日'];
 
   /// 根据数字获取对应的星期名称
   static String getWeekdayName(int weekday) {

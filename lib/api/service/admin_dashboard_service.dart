@@ -6,10 +6,7 @@ class AdminDashboardService {
   static Future<DataResponse<AdminDashboardStats>> fetchStats() async {
     final response = await Http().get('/admin/dashboard/stats');
     final json = response.data as Map<String, dynamic>;
-    return DataResponse.fromJson(
-      json,
-      (object) => _parseStats(object),
-    );
+    return DataResponse.fromJson(json, (object) => _parseStats(object));
   }
 
   static AdminDashboardStats _parseStats(Object? object) {

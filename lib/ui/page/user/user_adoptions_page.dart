@@ -50,7 +50,10 @@ class _UserAdoptionsPageState extends State<UserAdoptionsPage> {
     }
   }
 
-  Future<void> _loadAdoptions({required bool reset, bool loadMore = false}) async {
+  Future<void> _loadAdoptions({
+    required bool reset,
+    bool loadMore = false,
+  }) async {
     if (reset) {
       setState(() {
         _isInitialLoading = true;
@@ -121,9 +124,7 @@ class _UserAdoptionsPageState extends State<UserAdoptionsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
-      appBar: AppBar(
-        title: const Text('我的领养申请'),
-      ),
+      appBar: AppBar(title: const Text('我的领养申请')),
       body: Column(
         children: [
           Padding(
@@ -360,18 +361,16 @@ class _AdoptionCard extends StatelessWidget {
                   children: [
                     Text(
                       item.catName,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       timeText ?? '申请已提交',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: const Color(0xFF9CA3AF)),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFF9CA3AF),
+                      ),
                     ),
                   ],
                 ),

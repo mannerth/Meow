@@ -51,7 +51,10 @@ class _AdminAdoptionsPageState extends State<AdminAdoptionsPage> {
     }
   }
 
-  Future<void> _loadAdoptions({required bool reset, bool loadMore = false}) async {
+  Future<void> _loadAdoptions({
+    required bool reset,
+    bool loadMore = false,
+  }) async {
     if (reset) {
       setState(() {
         _isInitialLoading = true;
@@ -122,13 +125,15 @@ class _AdminAdoptionsPageState extends State<AdminAdoptionsPage> {
           ),
         )
         .then((value) {
-      if (value is AdminAdoptionItem) {
-        setState(() {
-          final index = _items.indexWhere((element) => element.id == value.id);
-          if (index != -1) _items[index] = value;
+          if (value is AdminAdoptionItem) {
+            setState(() {
+              final index = _items.indexWhere(
+                (element) => element.id == value.id,
+              );
+              if (index != -1) _items[index] = value;
+            });
+          }
         });
-      }
-    });
   }
 
   int _countStatus(String status) {
@@ -139,9 +144,7 @@ class _AdminAdoptionsPageState extends State<AdminAdoptionsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
-      appBar: AppBar(
-        title: const Text('领养申请审批'),
-      ),
+      appBar: AppBar(title: const Text('领养申请审批')),
       body: Column(
         children: [
           const Padding(
@@ -210,10 +213,7 @@ class _AdminAdoptionsPageState extends State<AdminAdoptionsPage> {
     return SliverList.separated(
       itemBuilder: (context, index) {
         final item = _items[index];
-        return _AdoptionCard(
-          item: item,
-          onTap: () => _openDetail(item),
-        );
+        return _AdoptionCard(item: item, onTap: () => _openDetail(item));
       },
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemCount: _items.length,
@@ -236,7 +236,10 @@ class _SearchBox extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 10,
+        ),
       ),
     );
   }
@@ -378,21 +381,20 @@ class _AdoptionCard extends StatelessWidget {
           children: [
             Row(
               children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: const Color(0xFFE5E7EB),
-                child: Text(
-                  item.userName.isNotEmpty ? item.userName[0] : '？',
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: const Color(0xFFE5E7EB),
+                  child: Text(
+                    item.userName.isNotEmpty ? item.userName[0] : '？',
+                  ),
                 ),
-              ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     item.userName,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 _StatusLabel(status: item.status),
@@ -404,10 +406,9 @@ class _AdoptionCard extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 timeText,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: const Color(0xFF9CA3AF)),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: const Color(0xFF9CA3AF)),
               ),
             ],
           ],
@@ -464,7 +465,10 @@ class _CatInfoRow extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   item.userCampus ?? '校区未知',
-                  style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
+                  style: const TextStyle(
+                    color: Color(0xFF9CA3AF),
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),

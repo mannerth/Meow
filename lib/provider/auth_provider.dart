@@ -25,12 +25,16 @@ class AuthState extends _$AuthState {
   void clear() {
     state = Auth();
     Http().clearToken();
-    ref.watch(navigationProvider.notifier).setCurrentIndex(0, controlJump: true);
+    ref
+        .watch(navigationProvider.notifier)
+        .setCurrentIndex(0, controlJump: true);
   }
 
   void decrementCurrency(int amount) {
     if (state.user != null) {
-      final updatedUser = state.user!.copyWith(currency: state.user!.currency - amount);
+      final updatedUser = state.user!.copyWith(
+        currency: state.user!.currency - amount,
+      );
       update(updatedUser, state.token);
     }
   }

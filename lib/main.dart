@@ -11,20 +11,27 @@ import 'package:meow/ui/page/common/login_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Store().init();
-  try{
+  try {
     final token = Store().getString('token');
-    if(token!=null && token.isNotEmpty){
+    if (token != null && token.isNotEmpty) {
       Http().setToken(token);
+    }
+    final refreshToken = Store().getString('refreshToken');
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      Http().setRefreshToken(refreshToken);
     }
     final user = await AuthRepository.getMe();
     String? roleType = Store().getString('roleType');
-    if( roleType!=null && roleType.isNotEmpty ){
-      user.roleType = RoleType.values.firstWhere((e) => e.toString() == roleType, orElse: () => user.roleType);
+    if (roleType != null && roleType.isNotEmpty) {
+      user.roleType = RoleType.values.firstWhere(
+        (e) => e.toString() == roleType,
+        orElse: () => user.roleType,
+      );
     }
     Store().user = user;
-  }catch(e){
+  } catch (e) {
     Store().remove('token');
-  }finally{
+  } finally {
     Http.hasInit = true;
   }
   runApp(const ProviderScope(child: MyApp()));
@@ -38,19 +45,24 @@ class MyApp extends ConsumerStatefulWidget {
 }
 
 class _MyAppState extends ConsumerState<MyApp> {
-
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_){
-      if(Store().user != null){
-        ref.read(authStateProvider.notifier).update(Store().user!, Store().getString('token')!);
-      }else if( Store().getString('roleType')==RoleType.guest.toString() ){
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (Store().user != null) {
+        ref
+            .read(authStateProvider.notifier)
+            .update(Store().user!, Store().getString('token')!);
+      } else if (Store().getString('roleType') == RoleType.guest.toString()) {
         // 游客模式
         final user = User(
           id: -1,
           roleType: RoleType.guest,
-          currency: 0, studentId: '', level: 0, experience: 0, nextLevelExp: 0,
+          currency: 0,
+          studentId: '',
+          level: 0,
+          experience: 0,
+          nextLevelExp: 0,
         );
         ref.read(authStateProvider.notifier).update(user, '');
       }

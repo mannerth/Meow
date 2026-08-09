@@ -1,3 +1,34 @@
+import 'package:meow/model/campus.dart';
+import 'package:meow/model/cat.dart';
+
+/// 性别 -> 中文（0未知 1男 2女）
+String catGenderLabel(dynamic value) {
+  if (value is num) {
+    switch (value.toInt()) {
+      case 1:
+        return '公';
+      case 2:
+        return '母';
+      default:
+        return '未知';
+    }
+  }
+  return value?.toString() ?? '';
+}
+
+/// 绝育类型 -> 中文（0剪耳 1未剪耳）
+String catNeuteredTypeLabel(dynamic value) {
+  if (value is num) {
+    switch (value.toInt()) {
+      case 0:
+        return '剪耳';
+      case 1:
+        return '未剪耳';
+    }
+  }
+  return value?.toString() ?? '';
+}
+
 class CatDetail {
   final String id;
   final String name;
@@ -9,7 +40,6 @@ class CatDetail {
   final List<String> tags;
   final List<CatRelation> relationship;
   final String description;
-  // final CatInteraction interaction;
   final int popularity;
 
   CatDetail({
@@ -23,57 +53,53 @@ class CatDetail {
     required this.tags,
     required this.relationship,
     required this.description,
-    // required this.interaction,
     required this.popularity,
   });
 
   factory CatDetail.fromJson(Map<String, dynamic> json) => CatDetail(
-        id: json['id'] as String,
-        name: json['name'] as String,
-        aliases: (json['aliases'] as List<dynamic>?)
-                ?.map((e) => e as String)
-                .toList() ??
-            [],
-        avatar: json['avatar'] as String,
-        images: (json['images'] as List<dynamic>?)
-                ?.map((e) => e as String)
-                .toList() ??
-            [],
-        basicInfo: CatBasicInfo.fromJson(
-          json['basicInfo'] as Map<String, dynamic>,
-        ),
-        attributes: CatAttributes.fromJson(
-          json['attributes'] as Map<String, dynamic>,
-        ),
-        tags: (json['tags'] as List<dynamic>?)
-                ?.map((e) => e as String)
-                .toList() ??
-            [],
-        relationship: (json['relationship'] as List<dynamic>?)
-                ?.map((e) => CatRelation.fromJson(e as Map<String, dynamic>))
-                .toList() ??
-            [],
-        description: json['description'] as String? ?? '',
-        // interaction: CatInteraction.fromJson(
-        //   json['interaction'] as Map<String, dynamic>,
-        // ),
-        popularity: (json['popularity'] as num?)?.toInt() ?? 0,
-      );
+    id: json['id'] as String,
+    name: json['name'] as String,
+    aliases:
+        (json['aliases'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        [],
+    avatar: (json['avatar'] ?? '').toString(),
+    images:
+        (json['images'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+        [],
+    basicInfo: CatBasicInfo.fromJson(
+      json['basicInfo'] as Map<String, dynamic>? ?? const {},
+    ),
+    attributes: CatAttributes.fromJson(
+      json['attributes'] as Map<String, dynamic>? ?? const {},
+    ),
+    tags:
+        (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+        [],
+    relationship:
+        (json['relationship'] as List<dynamic>?)
+            ?.whereType<Map<String, dynamic>>()
+            .map(CatRelation.fromJson)
+            .toList() ??
+        [],
+    description: json['description'] as String? ?? '',
+    popularity: (json['popularity'] as num?)?.toInt() ?? 0,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'aliases': aliases,
-        'avatar': avatar,
-        'images': images,
-        'basicInfo': basicInfo.toJson(),
-        'attributes': attributes.toJson(),
-        'tags': tags,
-        'relationship': relationship.map((e) => e.toJson()).toList(),
-        'description': description,
-        // 'interaction': interaction.toJson(),
-        'popularity': popularity,
-      };
+    'id': id,
+    'name': name,
+    'aliases': aliases,
+    'avatar': avatar,
+    'images': images,
+    'basicInfo': basicInfo.toJson(),
+    'attributes': attributes.toJson(),
+    'tags': tags,
+    'relationship': relationship.map((e) => e.toJson()).toList(),
+    'description': description,
+    'popularity': popularity,
+  };
 }
 
 class CatBasicInfo {
@@ -84,7 +110,7 @@ class CatBasicInfo {
   final String role;
   final int birthYear;
   final String admissionDate;
-  final String status;
+  final int status;
   final String healthStatus;
   final String lastSeenTime;
   final String furLength;
@@ -105,37 +131,60 @@ class CatBasicInfo {
     required this.neutered,
   });
 
-  factory CatBasicInfo.fromJson(Map<String, dynamic> json) => CatBasicInfo(
-        color: json['color'] as String? ?? '',
-        gender: json['gender'] as String? ?? '',
-        campus: json['campus'] as String? ?? '',
-        hauntLocation: json['hauntLocation'] as String? ?? '',
-        role: json['role'] as String? ?? '',
-        birthYear: (json['birthYear'] as num?)?.toInt() ?? 0,
-        admissionDate: json['admissionDate'] as String? ?? '',
-        status: json['status'] as String? ?? '',
-        healthStatus: json['healthStatus'] as String? ?? '',
-        lastSeenTime: json['lastSeenTime'] as String? ?? '',
-        furLength: json['furLength'] as String? ?? '',
-        neutered: CatNeutered.fromJson(
-          json['neutered'] as Map<String, dynamic>? ?? const {},
-        ),
-      );
+  factory CatBasicInfo.fromJson(Map<String, dynamic> json) {
+    final statusValue = json['status'];
+    return CatBasicInfo(
+      color: _colorLabel(json['color']),
+      gender: catGenderLabel(json['gender']),
+      campus: campusLabel(json['campus']),
+      hauntLocation: json['hauntLocation'] as String? ?? '',
+      role: json['role'] as String? ?? '',
+      birthYear: (json['birthYear'] as num?)?.toInt() ?? 0,
+      admissionDate: json['admissionDate'] as String? ?? '',
+      status: statusValue is num
+          ? statusValue.toInt()
+          : (catStatusToCode((statusValue ?? '').toString()) ?? 0),
+      healthStatus: json['healthStatus'] as String? ?? '',
+      lastSeenTime: json['lastSeenTime'] as String? ?? '',
+      furLength: json['furLength'] as String? ?? '',
+      neutered: CatNeutered.fromJson(
+        json['neutered'] as Map<String, dynamic>? ?? const {},
+      ),
+    );
+  }
 
   Map<String, dynamic> toJson() => {
-        'color': color,
-        'gender': gender,
-        'campus': campus,
-        'hauntLocation': hauntLocation,
-        'role': role,
-        'birthYear': birthYear,
-        'admissionDate': admissionDate,
-        'status': status,
-        'healthStatus': healthStatus,
-        'lastSeenTime': lastSeenTime,
-        'furLength': furLength,
-        'neutered': neutered.toJson(),
-      };
+    'color': color,
+    'gender': gender,
+    'campus': campus,
+    'hauntLocation': hauntLocation,
+    'role': role,
+    'birthYear': birthYear,
+    'admissionDate': admissionDate,
+    'status': status,
+    'healthStatus': healthStatus,
+    'lastSeenTime': lastSeenTime,
+    'furLength': furLength,
+    'neutered': neutered.toJson(),
+  };
+}
+
+/// 颜色：新接口可能返回数字 id，先按静态映射兜底
+String _colorLabel(dynamic value) {
+  if (value is num) {
+    const map = {
+      1: '橘猫',
+      2: '狸花',
+      3: '奶牛',
+      4: '三花',
+      5: '玳瑁',
+      6: '纯白',
+      7: '纯黑',
+      8: '其他',
+    };
+    return map[value.toInt()] ?? '其他';
+  }
+  return value?.toString() ?? '';
 }
 
 class CatNeutered {
@@ -150,16 +199,16 @@ class CatNeutered {
   });
 
   factory CatNeutered.fromJson(Map<String, dynamic> json) => CatNeutered(
-        isNeutered: json['isNeutered'] as bool? ?? false,
-        neuteredDate: json['neuteredDate'] as String? ?? '',
-        type: json['type'] as String? ?? '',
-      );
+    isNeutered: json['isNeutered'] as bool? ?? false,
+    neuteredDate: json['neuteredDate'] as String? ?? '',
+    type: catNeuteredTypeLabel(json['type']),
+  );
 
   Map<String, dynamic> toJson() => {
-        'isNeutered': isNeutered,
-        'neuteredDate': neuteredDate,
-        'type': type,
-      };
+    'isNeutered': isNeutered,
+    'neuteredDate': neuteredDate,
+    'type': type,
+  };
 }
 
 class CatAttributes {
@@ -176,18 +225,18 @@ class CatAttributes {
   });
 
   factory CatAttributes.fromJson(Map<String, dynamic> json) => CatAttributes(
-        friendliness: (json['friendliness'] as num?)?.toDouble() ?? 0,
-        gluttony: (json['gluttony'] as num?)?.toDouble() ?? 0,
-        fight: (json['fight'] as num?)?.toDouble() ?? 0,
-        appearance: (json['appearance'] as num?)?.toDouble() ?? 0,
-      );
+    friendliness: (json['friendliness'] as num?)?.toDouble() ?? 0,
+    gluttony: (json['gluttony'] as num?)?.toDouble() ?? 0,
+    fight: (json['fight'] as num?)?.toDouble() ?? 0,
+    appearance: (json['appearance'] as num?)?.toDouble() ?? 0,
+  );
 
   Map<String, dynamic> toJson() => {
-        'friendliness': friendliness,
-        'gluttony': gluttony,
-        'fight': fight,
-        'appearance': appearance,
-      };
+    'friendliness': friendliness,
+    'gluttony': gluttony,
+    'fight': fight,
+    'appearance': appearance,
+  };
 }
 
 class CatRelation {
@@ -204,44 +253,27 @@ class CatRelation {
   });
 
   factory CatRelation.fromJson(Map<String, dynamic> json) => CatRelation(
-        catId: json['catId'] as String,
-        name: json['name'] as String,
-        relation: json['relation'] as String? ?? '',
-        avatar: json['avatar'] as String? ?? '',
-      );
+    catId: json['catId'] as String,
+    name: json['name'] as String,
+    relation: json['relation'] as String? ?? '',
+    avatar: json['avatar'] as String? ?? '',
+  );
 
   Map<String, dynamic> toJson() => {
-        'catId': catId,
-        'name': name,
-        'relation': relation,
-        'avatar': avatar,
-      };
+    'catId': catId,
+    'name': name,
+    'relation': relation,
+    'avatar': avatar,
+  };
 }
-
-// class CatInteraction {
-//   final bool isFollowed;
-
-//   CatInteraction({required this.isFollowed});
-
-//   factory CatInteraction.fromJson(Map<String, dynamic> json) => CatInteraction(
-//         isFollowed: json['isFollowed'] as bool? ?? false,
-//       );
-
-//   Map<String, dynamic> toJson() => {
-//         'isFollowed': isFollowed,
-//       };
-// }
 
 class CatFeedResult {
   final int userCurrency;
 
   CatFeedResult({required this.userCurrency});
 
-  factory CatFeedResult.fromJson(Map<String, dynamic> json) => CatFeedResult(
-        userCurrency: (json['userCurrency'] as num?)?.toInt() ?? 0,
-      );
+  factory CatFeedResult.fromJson(Map<String, dynamic> json) =>
+      CatFeedResult(userCurrency: (json['userCurrency'] as num?)?.toInt() ?? 0);
 
-  Map<String, dynamic> toJson() => {
-        'userCurrency': userCurrency,
-      };
+  Map<String, dynamic> toJson() => {'userCurrency': userCurrency};
 }

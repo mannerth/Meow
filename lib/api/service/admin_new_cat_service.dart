@@ -8,10 +8,7 @@ class AdminNewCatService {
     int pageSize = 20,
     String? status,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'pageSize': pageSize,
-    };
+    final params = <String, dynamic>{'page': page, 'pageSize': pageSize};
     if (status != null && status.isNotEmpty) {
       params['status'] = status;
     }
@@ -21,19 +18,14 @@ class AdminNewCatService {
       queryParameters: params,
     );
     final json = response.data as Map<String, dynamic>;
-    return DataResponse.fromJson(
-      json,
-      (object) => _parseListPage(object),
-    );
+    return DataResponse.fromJson(json, (object) => _parseListPage(object));
   }
 
   static Future<DataResponse<void>> approveNewCat({
     required String id,
     required String officialName,
   }) async {
-    final payload = <String, dynamic>{
-      'officialName': officialName,
-    };
+    final payload = <String, dynamic>{'officialName': officialName};
     final response = await Http().post(
       '/admin/new-cats/$id/approve',
       data: payload,

@@ -1,10 +1,11 @@
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meow/api/http.dart';
+import 'package:meow/api/service/cos_service.dart';
+import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/page/user/cat_select_page.dart';
@@ -24,8 +25,8 @@ class _SosPageState extends ConsumerState<SosPage> {
 
   Cat? _selectedCat;
   final List<XFile> _media = [];
-  final List<String> _selectedSymptoms = [];
-  List<String> _symptomOptions = [];
+  final List<int> _selectedSymptoms = [];
+  List<TypeItem> _symptomOptions = [];
 
   bool _loadingTags = true;
   bool _submitting = false;
@@ -48,14 +49,9 @@ class _SosPageState extends ConsumerState<SosPage> {
   Future<void> _loadSymptomTags() async {
     setState(() => _loadingTags = true);
     try {
-      final response = await Http().get('/sos/tags');
-      final json = response.data as Map<String, dynamic>;
-      final data = json['data'];
-      if (data is List) {
-        _symptomOptions = data.map((item) => item.toString()).toList();
-      }
+      _symptomOptions = await TypeService.fetchSymptoms();
     } catch (error) {
-      _symptomOptions = ['外伤出血', '呼吸困难', '无法站立', '口炎/流涎', '车祸/撞击', '精神萎靡'];
+      _symptomOptions = const [];
     } finally {
       if (mounted) setState(() => _loadingTags = false);
     }
@@ -109,12 +105,12 @@ class _SosPageState extends ConsumerState<SosPage> {
     setState(() => _selectedCat = null);
   }
 
-  void _toggleSymptom(String label) {
+  void _toggleSymptom(int id) {
     setState(() {
-      if (_selectedSymptoms.contains(label)) {
-        _selectedSymptoms.remove(label);
+      if (_selectedSymptoms.contains(id)) {
+        _selectedSymptoms.remove(id);
       } else {
-        _selectedSymptoms.add(label);
+        _selectedSymptoms.add(id);
       }
     });
   }
@@ -169,28 +165,17 @@ class _SosPageState extends ConsumerState<SosPage> {
     setState(() => _submitting = true);
     try {
       final campusCode = ref.read(authStateProvider).user?.campus?.code;
-      final files = <MultipartFile>[];
-      for (final image in _media) {
-        files.add(
-          await MultipartFile.fromFile(
-            image.path,
-            filename: image.name,
-          ),
-        );
-      }
-      final formData = FormData.fromMap({
+      final files = _media.map((image) => File(image.path)).toList();
+      final keys = await CosUploadService.uploadImages(files);
+      final payload = <String, dynamic>{
         if (_selectedCat != null) 'catId': _selectedCat!.id,
-        'campus': (campusCode ?? 0).toString(),
+        'campus': campusCode ?? 0,
         'location': location,
         'symptoms': _selectedSymptoms,
         'description': description,
-        'media': files,
-      });
-      await Http().post(
-        '/sos',
-        data: formData,
-        options: Options(contentType: 'multipart/form-data'),
-      );
+        'medium': keys,
+      };
+      await Http().post('/sos', data: payload);
       if (!mounted) return;
       _showMessage('上报成功，已通知协会同学');
       _locationController.clear();
@@ -209,9 +194,9 @@ class _SosPageState extends ConsumerState<SosPage> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -282,10 +267,10 @@ class _SosPageState extends ConsumerState<SosPage> {
                         runSpacing: 10,
                         children: _symptomOptions
                             .map(
-                              (label) => _SymptomChip(
-                                label: label,
-                                selected: _selectedSymptoms.contains(label),
-                                onTap: () => _toggleSymptom(label),
+                              (item) => _SymptomChip(
+                                label: item.label,
+                                selected: _selectedSymptoms.contains(item.id),
+                                onTap: () => _toggleSymptom(item.id),
                               ),
                             )
                             .toList(),
@@ -335,8 +320,9 @@ class _SosPageState extends ConsumerState<SosPage> {
               Center(
                 child: Text(
                   '请确保自身安全的情况下进行求助',
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: Colors.grey.shade600),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade600,
+                  ),
                 ),
               ),
             ],
@@ -390,15 +376,12 @@ class _HeroBanner extends StatelessWidget {
                 Text(
                   '紧急病情上报',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFFB04545),
-                      ),
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFFB04545),
+                  ),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  '请确保自身安全的情况下进行求助',
-                  style: subtitleStyle,
-                ),
+                Text('请确保自身安全的情况下进行求助', style: subtitleStyle),
               ],
             ),
           ),
@@ -419,10 +402,9 @@ class _SectionTitle extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         title,
-        style: Theme.of(context)
-            .textTheme
-            .titleSmall
-            ?.copyWith(fontWeight: FontWeight.w700),
+        style: Theme.of(
+          context,
+        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -484,18 +466,16 @@ class _SelectCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: Colors.grey.shade600),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey.shade600,
+                    ),
                   ),
                 ],
               ),
@@ -563,10 +543,10 @@ class _SymptomChip extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: Theme.of(context)
-              .textTheme
-              .labelMedium
-              ?.copyWith(color: textColor, fontWeight: FontWeight.w600),
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: textColor,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );

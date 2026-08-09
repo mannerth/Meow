@@ -44,15 +44,17 @@ class _MainPageState extends ConsumerState<MainPage> {
   }
 
   void daliyCheckIn() async {
-    if(ref.read(authStateProvider).user == null || ref.read(authStateProvider).user!.roleType == RoleType.guest) {
+    if (ref.read(authStateProvider).user == null ||
+        ref.read(authStateProvider).user!.roleType == RoleType.guest) {
       // 游客模式不签到
       return;
     }
     bool checkedIn = await AuthRepository.dailyCheckIn();
     if (checkedIn && mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('今日签到成功！')));
-    } 
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('今日签到成功！')));
+    }
   }
 
   @override

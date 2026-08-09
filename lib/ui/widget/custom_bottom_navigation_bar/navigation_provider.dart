@@ -19,7 +19,7 @@ class Navigation extends _$Navigation {
 
   void setCurrentIndex(int index, {bool controlJump = false}) {
     state = state.copyWith(currentIndex: index);
-    if( controlJump && pageController != null ){
+    if (controlJump && pageController != null) {
       pageController!.jumpToPage(index);
     }
   }
@@ -33,15 +33,9 @@ class NavigationState {
   final int currentIndex;
   final bool isVisible;
 
-  NavigationState({
-    this.currentIndex = 0,
-    this.isVisible = true,
-  });
+  NavigationState({this.currentIndex = 0, this.isVisible = true});
 
-  NavigationState copyWith({
-    int? currentIndex,
-    bool? isVisible,
-  }) {
+  NavigationState copyWith({int? currentIndex, bool? isVisible}) {
     return NavigationState(
       currentIndex: currentIndex ?? this.currentIndex,
       isVisible: isVisible ?? this.isVisible,

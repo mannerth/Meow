@@ -9,9 +9,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/main.dart';
 import 'package:meow/ui/page/common/login_page.dart';
+import 'package:meow/util/store.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   testWidgets('默认展示登录页', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({});
+    await Store().init();
+
     await tester.pumpWidget(const ProviderScope(child: MyApp()));
     await tester.pumpAndSettle();
 

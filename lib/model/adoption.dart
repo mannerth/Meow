@@ -1,11 +1,31 @@
+/// 居住类型 -> 中文（0宿舍 1与父母同住 2合租 3整租 4自有住房）
+String adoptionHousingLabel(dynamic value) {
+  if (value is num) {
+    const map = {0: '宿舍', 1: '与父母同住', 2: '合租', 3: '整租', 4: '自有住房'};
+    return map[value.toInt()] ?? '—';
+  }
+  final str = value?.toString() ?? '';
+  if (str.isEmpty) return '—';
+  switch (str) {
+    case 'DORM':
+      return '宿舍';
+    case 'WITH_PARENT':
+      return '与父母同住';
+    case 'RENT_SHARE':
+      return '合租';
+    case 'RENT_WHOLE':
+      return '整租';
+    case 'OWN_HOUSE':
+      return '自有住房';
+  }
+  return str;
+}
+
 class AdoptionContact {
   final String phone;
   final String wechat;
 
-  const AdoptionContact({
-    required this.phone,
-    required this.wechat,
-  });
+  const AdoptionContact({required this.phone, required this.wechat});
 
   factory AdoptionContact.fromJson(Map<String, dynamic> json) {
     return AdoptionContact(
@@ -14,14 +34,11 @@ class AdoptionContact {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'phone': phone,
-        'wechat': wechat,
-      };
+  Map<String, dynamic> toJson() => {'phone': phone, 'wechat': wechat};
 }
 
 class AdoptionInfo {
-  final String housing;
+  final int? housing;
   final String experience;
   final String plan;
 
@@ -32,18 +49,21 @@ class AdoptionInfo {
   });
 
   factory AdoptionInfo.fromJson(Map<String, dynamic> json) {
+    final housingValue = json['housing'];
     return AdoptionInfo(
-      housing: _stringValue(json['housing']),
+      housing: housingValue is num
+          ? housingValue.toInt()
+          : (int.tryParse(housingValue?.toString() ?? '')),
       experience: _stringValue(json['experience']),
       plan: _stringValue(json['plan']),
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'housing': housing,
-        'experience': experience,
-        'plan': plan,
-      };
+    'housing': housing,
+    'experience': experience,
+    'plan': plan,
+  };
 }
 
 class AdminAdoptionListPage {

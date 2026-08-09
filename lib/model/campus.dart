@@ -7,6 +7,7 @@ const campusList = [
   "软件园校区",
   "青岛校区",
   "威海校区",
+  "龙山校区",
 ];
 
 const campusMap = {
@@ -18,4 +19,15 @@ const campusMap = {
   "5": "软件园校区",
   "6": "青岛校区",
   "7": "威海校区",
+  "8": "龙山校区",
 };
+
+/// 根据校区 code / 名称 获取中文名
+String campusLabel(dynamic value) {
+  if (value is num) {
+    return campusMap[value.toInt().toString()] ?? '校区 ${value.toInt()}';
+  }
+  final str = value?.toString() ?? '';
+  if (str.isEmpty) return '';
+  return str;
+}

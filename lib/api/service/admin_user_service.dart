@@ -11,10 +11,7 @@ class AdminUserService {
     String? search,
     String? permission,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'size': size,
-    };
+    final params = <String, dynamic>{'page': page, 'size': size};
     if (campus != null) {
       params['campus'] = campus.code;
     }
@@ -25,25 +22,17 @@ class AdminUserService {
       params['premission'] = permission.trim();
     }
 
-    final response = await Http().get(
-      '/admin/users',
-      queryParameters: params,
-    );
+    final response = await Http().get('/admin/users', queryParameters: params);
     final json = response.data as Map<String, dynamic>;
-    return DataResponse.fromJson(
-      json,
-      (object) => _parseListPage(object),
-    );
+    return DataResponse.fromJson(json, (object) => _parseListPage(object));
   }
 
   static Future<DataResponse<AdminUserDetail>> fetchUserDetail(
-      String id) async {
+    String id,
+  ) async {
     final response = await Http().get('/admin/users/$id');
     final json = response.data as Map<String, dynamic>;
-    return DataResponse.fromJson(
-      json,
-      (object) => _parseDetail(object, id),
-    );
+    return DataResponse.fromJson(json, (object) => _parseDetail(object, id));
   }
 
   static Future<DataResponse<void>> toggleBan(String id) async {

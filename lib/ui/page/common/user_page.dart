@@ -22,7 +22,9 @@ class UserPage extends ConsumerWidget {
             onPressed: () {
               ref.read(authStateProvider.notifier).clear();
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const LoginPage(popAfterLogin: true))
+                MaterialPageRoute(
+                  builder: (_) => const LoginPage(popAfterLogin: true),
+                ),
               );
             },
             style: ElevatedButton.styleFrom(
@@ -145,7 +147,11 @@ class _UserCenterDetailPage extends StatelessWidget {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.edit, size: 18, color: Colors.black87),
+                    icon: const Icon(
+                      Icons.edit,
+                      size: 18,
+                      color: Colors.black87,
+                    ),
                     label: const Text(
                       '编辑资料',
                       style: TextStyle(color: Colors.black87),
@@ -185,10 +191,19 @@ class _UserCenterDetailPage extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _StatItem(label: "累计投喂", value: '${user.stats?.feedCount}'),
+                      _StatItem(
+                        label: "累计投喂",
+                        value: '${user.stats?.feedCount}',
+                      ),
                       _StatItem(label: "发现新猫", value: '${user.stats?.found}'),
-                      _StatItem(label: "发布动态", value: '${user.stats?.momentCount}'),
-                      _StatItem(label: "动态获赞", value: '${user.stats?.receivedLikes}'),
+                      _StatItem(
+                        label: "发布动态",
+                        value: '${user.stats?.momentCount}',
+                      ),
+                      _StatItem(
+                        label: "动态获赞",
+                        value: '${user.stats?.receivedLikes}',
+                      ),
                     ],
                   ),
                 ),
@@ -299,7 +314,7 @@ class _UserCenterDetailPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Consumer(
-                builder: (context, ref, _){
+                builder: (context, ref, _) {
                   return ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 52),
@@ -321,8 +336,8 @@ class _UserCenterDetailPage extends StatelessWidget {
                       ),
                     ),
                   );
-                }
-              )
+                },
+              ),
             ),
             const SizedBox(height: 40),
           ],
@@ -346,7 +361,10 @@ class _StatItem extends StatelessWidget {
           style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 2),
-        Text(label, style: const TextStyle(color: Colors.black54, fontSize: 14)),
+        Text(
+          label,
+          style: const TextStyle(color: Colors.black54, fontSize: 14),
+        ),
       ],
     );
   }

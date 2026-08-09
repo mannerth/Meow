@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:meow/api/http.dart';
+import 'package:meow/api/service/cat_service.dart';
+import 'package:meow/api/service/cos_service.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
@@ -44,9 +44,9 @@ class _SharePageState extends ConsumerState<SharePage> {
   }
 
   void _goToNewCat() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const NewCatPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const NewCatPage()));
   }
 
   bool get _isBusy => _publishing;
@@ -132,25 +132,13 @@ class _SharePageState extends ConsumerState<SharePage> {
     }
     setState(() => _publishing = true);
     try {
-      final files = <MultipartFile>[];
-      for (final image in _images) {
-        files.add(
-          await MultipartFile.fromFile(
-            image.path,
-            filename: image.name,
-          ),
-        );
-      }
-    final formData = FormData.fromMap({
-      'content': '$title\n$content',
-      'media': files,
-      'relatedCatIds': _selectedCat?.id ?? '',
-      if (_selectedCampus != null) 'location': _selectedCampus!.name,
-    });
-      await Http().post(
-        '/moments',
-        data: formData,
-        options: Options(contentType: 'multipart/form-data'),
+      final files = _images.map((image) => File(image.path)).toList();
+      final keys = await CosUploadService.uploadImages(files);
+      await CatService.publishPost(
+        content: '$title\n$content',
+        media: keys,
+        catId: _selectedCat?.id,
+        location: _selectedCampus?.name,
       );
       if (!mounted) return;
       _showMessage('发布成功，等待审核');
@@ -170,9 +158,9 @@ class _SharePageState extends ConsumerState<SharePage> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -273,8 +261,10 @@ class _SharePageState extends ConsumerState<SharePage> {
                   foregroundColor: const Color(0xFFF4B24D),
                   side: const BorderSide(color: Color(0xFFF4B24D), width: 1.2),
                   shape: const StadiumBorder(),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 16,
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -289,7 +279,9 @@ class _SharePageState extends ConsumerState<SharePage> {
                     foregroundColor: Colors.black87,
                     shape: const StadiumBorder(),
                     textStyle: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.w600),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -377,8 +369,9 @@ class _MediaActionCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color:
-                  highlight ? const Color(0xFFF6C14D) : const Color(0xFFE2E5EA),
+              color: highlight
+                  ? const Color(0xFFF6C14D)
+                  : const Color(0xFFE2E5EA),
               width: 1.2,
             ),
             color: Colors.white,
@@ -391,9 +384,9 @@ class _MediaActionCard extends StatelessWidget {
               Text(
                 label,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: contentColor,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: contentColor,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -425,7 +418,9 @@ class _ActionRow extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: GestureDetector(
-        onTap: hasAvatar ? () => showNetworkImagePreview(context, avatarUrl!) : null,
+        onTap: hasAvatar
+            ? () => showNetworkImagePreview(context, avatarUrl!)
+            : null,
         child: CircleAvatar(
           radius: 18,
           backgroundColor: const Color(0xFFFFF4E0),
@@ -437,8 +432,9 @@ class _ActionRow extends StatelessWidget {
       ),
       title: Text(
         title,
-        style:
-            theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
       ),
       subtitle: Text(
         value,

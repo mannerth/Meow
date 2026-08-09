@@ -13,8 +13,7 @@ class AdoptionApplyPage extends ConsumerStatefulWidget {
   const AdoptionApplyPage({super.key, this.initialCat});
 
   @override
-  ConsumerState<AdoptionApplyPage> createState() =>
-      _AdoptionApplyPageState();
+  ConsumerState<AdoptionApplyPage> createState() => _AdoptionApplyPageState();
 }
 
 class _AdoptionApplyPageState extends ConsumerState<AdoptionApplyPage> {
@@ -88,7 +87,7 @@ class _AdoptionApplyPageState extends ConsumerState<AdoptionApplyPage> {
       await AdoptionService.submitAdoption(
         catId: cat.id,
         info: AdoptionInfo(
-          housing: housing,
+          housing: int.tryParse(housing),
           experience: experience,
           plan: plan,
         ),
@@ -114,9 +113,9 @@ class _AdoptionApplyPageState extends ConsumerState<AdoptionApplyPage> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -139,23 +138,19 @@ class _AdoptionApplyPageState extends ConsumerState<AdoptionApplyPage> {
         children: [
           const _ProgressHeader(),
           const SizedBox(height: 16),
-          _SelectedCatCard(
-            cat: _selectedCat,
-            onTap: _selectCat,
-          ),
+          _SelectedCatCard(cat: _selectedCat, onTap: _selectCat),
           const SizedBox(height: 12),
-          _TipCard(
-            text: '温馨提示：学生宿舍严禁饲养宠物，请确保您有校外稳定住所。',
-          ),
+          _TipCard(text: '温馨提示：学生宿舍严禁饲养宠物，请确保您有校外稳定住所。'),
           const SizedBox(height: 16),
           _SectionTitle(title: '目前的居住情况'),
           const SizedBox(height: 10),
           _OptionGrid(
             options: const [
-              _OptionItem(label: '自有住房', value: 'OWN_HOUSE'),
-              _OptionItem(label: '整租/合租', value: 'SHARE'),
-              _OptionItem(label: '校内宿舍', value: 'DORM'),
-              _OptionItem(label: '与父母同住', value: 'WITH_PARENT'),
+              _OptionItem(label: '自有住房', value: '4'),
+              _OptionItem(label: '整租', value: '3'),
+              _OptionItem(label: '合租', value: '2'),
+              _OptionItem(label: '与父母同住', value: '1'),
+              _OptionItem(label: '校内宿舍', value: '0'),
             ],
             selectedValue: _selectedHousing,
             onChanged: (value) => setState(() => _selectedHousing = value),
@@ -189,10 +184,7 @@ class _AdoptionApplyPageState extends ConsumerState<AdoptionApplyPage> {
             keyboardType: TextInputType.phone,
           ),
           const SizedBox(height: 10),
-          _TextCard(
-            controller: _wechatController,
-            hintText: '微信号',
-          ),
+          _TextCard(controller: _wechatController, hintText: '微信号'),
           const SizedBox(height: 14),
           _AgreementRow(
             value: _agreed,
@@ -203,8 +195,9 @@ class _AdoptionApplyPageState extends ConsumerState<AdoptionApplyPage> {
               padding: const EdgeInsets.only(top: 6),
               child: Text(
                 '当前账号：${user.nickname ?? '同学'}',
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: const Color(0xFF8C7A63)),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: const Color(0xFF8C7A63),
+                ),
               ),
             ),
           const SizedBox(height: 20),
@@ -248,10 +241,7 @@ class _ProgressHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [
-          Text(
-            '领养流程',
-            style: TextStyle(fontWeight: FontWeight.w700),
-          ),
+          Text('领养流程', style: TextStyle(fontWeight: FontWeight.w700)),
           SizedBox(height: 10),
           _StepRow(),
         ],
@@ -276,9 +266,7 @@ class _StepRow extends StatelessWidget {
                 width: 26,
                 height: 26,
                 decoration: BoxDecoration(
-                  color: index == 0
-                      ? const Color(0xFFF6C65B)
-                      : Colors.white,
+                  color: index == 0 ? const Color(0xFFF6C65B) : Colors.white,
                   borderRadius: BorderRadius.circular(13),
                   border: Border.all(color: const Color(0xFFF6C65B)),
                 ),
@@ -289,10 +277,7 @@ class _StepRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
-                steps[index],
-                style: const TextStyle(fontSize: 12),
-              ),
+              Text(steps[index], style: const TextStyle(fontSize: 12)),
             ],
           ),
         ),
@@ -398,10 +383,7 @@ class _TipCard extends StatelessWidget {
           Expanded(
             child: Text(
               text,
-              style: const TextStyle(
-                color: Color(0xFF3B6FD0),
-                fontSize: 12,
-              ),
+              style: const TextStyle(color: Color(0xFF3B6FD0), fontSize: 12),
             ),
           ),
         ],
@@ -419,10 +401,9 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: Theme.of(context)
-          .textTheme
-          .titleSmall
-          ?.copyWith(fontWeight: FontWeight.w700),
+      style: Theme.of(
+        context,
+      ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
     );
   }
 }

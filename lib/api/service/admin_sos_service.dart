@@ -10,26 +10,17 @@ class AdminSosService {
     String? status,
     Campus? campus,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'size': size,
-    };
+    final params = <String, dynamic>{'page': page, 'size': size};
     if (status != null && status.isNotEmpty) {
       params['status'] = status;
     }
     if (campus != null) {
-      params['campus'] = campus.code;
+      params['campus'] = campus.apiKey;
     }
 
-    final response = await Http().get(
-      '/admin/sos',
-      queryParameters: params,
-    );
+    final response = await Http().get('/admin/sos', queryParameters: params);
     final json = response.data as Map<String, dynamic>;
-    return DataResponse.fromJson(
-      json,
-      (object) => _parseListPage(object),
-    );
+    return DataResponse.fromJson(json, (object) => _parseListPage(object));
   }
 
   static Future<DataResponse<void>> resolveSos({
@@ -37,14 +28,8 @@ class AdminSosService {
     required String status,
     required String reply,
   }) async {
-    final payload = <String, dynamic>{
-      'status': status,
-      'reply': reply,
-    };
-    final response = await Http().post(
-      '/admin/sos/$id/resolve',
-      data: payload,
-    );
+    final payload = <String, dynamic>{'status': status, 'reply': reply};
+    final response = await Http().post('/admin/sos/$id/resolve', data: payload);
     final json = response.data as Map<String, dynamic>;
     return DataResponse.fromJson(json, (_) {});
   }

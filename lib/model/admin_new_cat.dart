@@ -34,6 +34,7 @@ class AdminNewCatItem {
   final String id;
   final String? tempName;
   final String? color;
+  final int? colorId;
   final List<String> images;
   final int? campusCode;
   final String? campusName;
@@ -48,6 +49,7 @@ class AdminNewCatItem {
     required this.status,
     this.tempName,
     this.color,
+    this.colorId,
     this.images = const [],
     this.campusCode,
     this.campusName,
@@ -60,10 +62,14 @@ class AdminNewCatItem {
   factory AdminNewCatItem.fromJson(Map<String, dynamic> json) {
     final campusValue = json['campus'];
     final imagesValue = json['images'] ?? json['imageUrls'] ?? json['media'];
+    final colorValue = json['color'];
     return AdminNewCatItem(
       id: _stringValue(json['id']),
       tempName: _nullableString(json['tempName']),
-      color: _nullableString(json['color']),
+      color: colorValue is num ? null : _nullableString(colorValue),
+      colorId: colorValue is num
+          ? colorValue.toInt()
+          : int.tryParse(colorValue?.toString() ?? ''),
       images: _imageList(imagesValue),
       campusCode: _campusCodeFromDynamic(campusValue),
       campusName: _campusNameFromDynamic(campusValue),

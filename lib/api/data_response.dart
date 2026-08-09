@@ -12,15 +12,18 @@ class DataResponse<T> {
 
   DataResponse({required this.code, required this.msg, this.data});
 
-  factory DataResponse.fromJson(Map<String, dynamic> json,
-      [T Function(Object?)? fromJsonT]) {
+  factory DataResponse.fromJson(
+    Map<String, dynamic> json, [
+    T Function(Object?)? fromJsonT,
+  ]) {
     if (fromJsonT != null) {
       return _$DataResponseFromJson(json, fromJsonT);
     } else {
       return DataResponse(
-          code: (json['code'] as num).toInt(),
-          msg: json['msg'] as String,
-          data: json['data']);
+        code: (json['code'] as num).toInt(),
+        msg: json['msg'] as String,
+        data: json['data'],
+      );
     }
   }
 

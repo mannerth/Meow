@@ -26,6 +26,7 @@ class User {
   // 等级
   int level;
   // 等级头衔
+  @JsonKey(name: 'title')
   String? levelTitle;
   // 当前经验值
   @JsonKey(name: 'exp')
@@ -115,26 +116,24 @@ class User {
   Map<String, dynamic> toJson() => _$UserToJson(this);
 }
 
-enum RoleType {
-  guest,
-  student,
-  admin,
-}
+enum RoleType { guest, student, admin }
 
 @JsonEnum(valueField: 'code')
 enum Campus {
-  zhongxin(0, '中心校区'),
-  baotuquan(1, '趵突泉校区'),
-  hongjialou(2, '洪家楼校区'),
-  qianfoshan(3, '千佛山校区'),
-  xinglongshan(4, '兴隆山校区'),
-  ruanjianyuan(5, '软件园校区'),
-  qingdao(6, '青岛校区'),
-  weihai(7, '威海校区');
+  zhongxin(0, '中心校区', 'ZHONG_XIN'),
+  baotuquan(1, '趵突泉校区', 'BAO_TU_QUAN'),
+  hongjialou(2, '洪家楼校区', 'HONG_JIA_LOU'),
+  qianfoshan(3, '千佛山校区', 'QIAN_FO_SHAN'),
+  xinglongshan(4, '兴隆山校区', 'XING_LONG_SHAN'),
+  ruanjianyuan(5, '软件园校区', 'RUAN_JIAN_YUAN'),
+  qingdao(6, '青岛校区', 'QING_DAO'),
+  weihai(7, '威海校区', 'WEI_HAI'),
+  longshan(8, '龙山校区', 'LONG_SHAN');
 
   final int code;
   final String name;
-  const Campus(this.code, this.name);
+  final String apiKey;
+  const Campus(this.code, this.name, this.apiKey);
 }
 
 @JsonSerializable()
@@ -145,7 +144,7 @@ class UserStats {
   int found;
   @JsonKey(defaultValue: 0)
   int receivedLikes;
-  @JsonKey(defaultValue: 0)
+  @JsonKey(name: 'postCount', defaultValue: 0)
   int momentCount;
 
   UserStats({
@@ -155,6 +154,7 @@ class UserStats {
     required this.momentCount,
   });
 
-  factory UserStats.fromJson(Map<String, dynamic> json) =>_$UserStatsFromJson(json);
+  factory UserStats.fromJson(Map<String, dynamic> json) =>
+      _$UserStatsFromJson(json);
   Map<String, dynamic> toJson() => _$UserStatsToJson(this);
 }

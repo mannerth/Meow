@@ -22,7 +22,8 @@ class AdminDashboardStats {
         .toList();
     return AdminDashboardStats(
       pendingSos: _intValue(json['pendingSOS']) ?? 0,
-      adoptApplications: _intValue(
+      adoptApplications:
+          _intValue(
             json['adoptApplications'] ?? json['adoptionApplications'],
           ) ??
           0,

@@ -1,6 +1,8 @@
-import 'package:dio/dio.dart';
+import 'dart:io';
+
 import 'package:image_picker/image_picker.dart';
 import 'package:meow/api/http.dart';
+import 'package:meow/api/service/cos_service.dart';
 import 'package:meow/model/user.dart';
 
 class AuthResult {
@@ -12,7 +14,7 @@ class AuthResult {
 class AuthRepository {
   final Http _http = Http();
 
-  // 统一认证登录（到时候替换成认证接口）
+  // 统一认证登录（返回 token，用户信息通过 getMe 获取）
   Future<AuthResult> login({
     required String email,
     required String password,
@@ -28,41 +30,19 @@ class AuthRepository {
     final code = data is Map ? data['code'] : null;
     if (data is Map && (code == null || code == 0 || code == 200)) {
       final dataMap = (data['data'] as Map?) ?? {};
-      final accessToken = dataMap['accessToken']?.toString() ??
+      final accessToken =
+          dataMap['accessToken']?.toString() ??
           dataMap['token']?.toString() ??
           '';
+      final refreshToken = dataMap['refreshToken']?.toString();
       if (accessToken.isNotEmpty) {
         _http.setToken(accessToken);
       }
-
-      User user;
-      if (dataMap.containsKey('id') ||
-          dataMap.containsKey('uid') ||
-          dataMap.containsKey('sid')) {
-        final userJson = {
-          'uid': dataMap['uid'] ?? dataMap['id'] ?? 0,
-          'sid': dataMap['sid'] ?? dataMap['studentId'] ?? '',
-          'nickname': dataMap['nickname'],
-          'realName': dataMap['realName'],
-          'avatar': dataMap['avatar'],
-          'roleType': dataMap['roleType'] ?? 'student',
-          'campus': dataMap['campus'],
-          'currency': dataMap['currency'] ?? 0,
-          'level': dataMap['level'] ?? 0,
-          'levelTitle': dataMap['levelTitle'],
-          'exp': dataMap['experience'] ?? dataMap['exp'] ?? 0,
-          'nextExp': dataMap['nextLevelExp'] ?? dataMap['nextExp'] ?? 0,
-          'createTime': dataMap['createTime'],
-          'wechat': dataMap['wechat'],
-          'phone': dataMap['phone'],
-          'showBadge': dataMap['showBadge'],
-          'pushNotification': dataMap['pushNotification'],
-        };
-        user = User.fromJson(userJson);
-      } else {
-        user = await getMe();
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        _http.setRefreshToken(refreshToken);
       }
 
+      User user = await getMe();
       if (isAdmin) {
         user.roleType = RoleType.admin;
       }
@@ -73,7 +53,7 @@ class AuthRepository {
   }
 
   static Future<User> getMe() async {
-    try {  
+    try {
       final res = await Http().get('/users/me');
       final data = res.data['data'] as Map<String, dynamic>;
       return User.fromJson(data);
@@ -112,7 +92,7 @@ class AuthRepository {
 
   // 签到成功返回 true，已经签到过了返回 false
   static Future<bool> dailyCheckIn() async {
-    try {  
+    try {
       final res = await Http().post('/users/me/checkin');
       return !(res.data['data']['todayChecked'] as bool);
     } catch (e) {
@@ -120,32 +100,34 @@ class AuthRepository {
     }
   }
 
+  // 更新用户信息（头像若更换，先上传 COS 后提交 key）
   static Future<bool> updateUserInfo({
     String? nickname,
-    String? campus,
+    Campus? campus,
     String? phone,
     String? wechat,
     XFile? avatar,
+    String? currentAvatar,
   }) async {
-    final formData = FormData();
-    if (nickname != null) formData.fields.add(MapEntry('nickname', nickname));
-    if (campus != null) formData.fields.add(MapEntry('campus', campus));
-    if (phone != null) formData.fields.add(MapEntry('phone', phone));
-    if (wechat != null) formData.fields.add(MapEntry('wechat', wechat));
-    if (avatar != null) {
-      formData.files.add(MapEntry(
-        'avatar',
-        MultipartFile.fromFileSync(avatar.path, filename: avatar.name),
-      ));
-    }
+    try {
+      String? avatarKey;
+      if (avatar != null) {
+        final keys = await CosUploadService.uploadImages([File(avatar.path)]);
+        if (keys.isNotEmpty) avatarKey = keys.first;
+      }
 
-    final res = await Http().put('/users/me', data: formData);
-    final code = res.data['code'];
-    if (!(code == 0 || code == 200)) {
+      final payload = <String, dynamic>{
+        'nickname': nickname ?? '',
+        'avatar': avatarKey ?? currentAvatar ?? '',
+        'campus': campus?.code ?? 0,
+        'contact': {'wechat': wechat ?? '', 'phone': phone ?? ''},
+      };
+
+      final res = await Http().put('/users/me', data: payload);
+      final code = res.data['code'];
+      return code == 0 || code == 200;
+    } catch (e) {
       return false;
     }
-
-    return true;
   }
-
 }

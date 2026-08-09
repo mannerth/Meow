@@ -18,7 +18,7 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
   campus: $enumDecodeNullable(_$CampusEnumMap, json['campus']),
   currency: (json['currency'] as num).toInt(),
   level: (json['level'] as num).toInt(),
-  levelTitle: json['levelTitle'] as String?,
+  levelTitle: json['title'] as String?,
   experience: (json['exp'] as num).toInt(),
   nextLevelExp: (json['nextExp'] as num).toInt(),
   createTime: json['createTime'] == null
@@ -43,7 +43,7 @@ Map<String, dynamic> _$UserToJson(User instance) => <String, dynamic>{
   'campus': _$CampusEnumMap[instance.campus],
   'currency': instance.currency,
   'level': instance.level,
-  'levelTitle': instance.levelTitle,
+  'title': instance.levelTitle,
   'exp': instance.experience,
   'nextExp': instance.nextLevelExp,
   'createTime': instance.createTime?.toIso8601String(),
@@ -69,18 +69,19 @@ const _$CampusEnumMap = {
   Campus.ruanjianyuan: 5,
   Campus.qingdao: 6,
   Campus.weihai: 7,
+  Campus.longshan: 8,
 };
 
 UserStats _$UserStatsFromJson(Map<String, dynamic> json) => UserStats(
   feedCount: (json['feedCount'] as num?)?.toInt() ?? 0,
   found: (json['found'] as num?)?.toInt() ?? 0,
   receivedLikes: (json['receivedLikes'] as num?)?.toInt() ?? 0,
-  momentCount: (json['momentCount'] as num?)?.toInt() ?? 0,
+  momentCount: (json['postCount'] as num?)?.toInt() ?? 0,
 );
 
 Map<String, dynamic> _$UserStatsToJson(UserStats instance) => <String, dynamic>{
   'feedCount': instance.feedCount,
   'found': instance.found,
   'receivedLikes': instance.receivedLikes,
-  'momentCount': instance.momentCount,
+  'postCount': instance.momentCount,
 };

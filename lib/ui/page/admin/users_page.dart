@@ -117,10 +117,8 @@ class _UsersPageState extends State<UsersPage> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      builder: (context) => _UserDetailSheet(
-        detail: detail,
-        onToggleBan: () => _toggleBan(item),
-      ),
+      builder: (context) =>
+          _UserDetailSheet(detail: detail, onToggleBan: () => _toggleBan(item)),
     );
   }
 
@@ -130,9 +128,9 @@ class _UsersPageState extends State<UsersPage> {
       return response.data;
     } catch (error) {
       if (!mounted) return null;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('获取用户详情失败')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('获取用户详情失败')));
       return null;
     }
   }
@@ -143,23 +141,22 @@ class _UsersPageState extends State<UsersPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-            content: Text('${item.name.isEmpty ? '用户' : item.name} 状态已更新')),
+          content: Text('${item.name.isEmpty ? '用户' : item.name} 状态已更新'),
+        ),
       );
       await _loadUsers(reset: true);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('操作失败，请稍后重试')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('操作失败，请稍后重试')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('用户管理'),
-      ),
+      appBar: AppBar(title: const Text('用户管理')),
       body: Column(
         children: [
           _FilterBar(
@@ -372,8 +369,9 @@ class _UserCard extends StatelessWidget {
                   child: FilledButton(
                     onPressed: onToggleBan,
                     style: FilledButton.styleFrom(
-                      backgroundColor:
-                          _isBanned ? Colors.green : Colors.redAccent,
+                      backgroundColor: _isBanned
+                          ? Colors.green
+                          : Colors.redAccent,
                     ),
                     child: Text(_isBanned ? '解除封禁' : '封禁用户'),
                   ),
@@ -394,8 +392,9 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final background =
-        isBanned ? const Color(0xFFFFE5E5) : const Color(0xFFE8F5E9);
+    final background = isBanned
+        ? const Color(0xFFFFE5E5)
+        : const Color(0xFFE8F5E9);
     final color = isBanned ? Colors.redAccent : Colors.green;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -419,7 +418,8 @@ class _UserDetailSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final campusText = detail.campus?.name ??
+    final campusText =
+        detail.campus?.name ??
         (detail.campusCode != null ? '校区编号 ${detail.campusCode}' : '未设置');
     return Padding(
       padding: EdgeInsets.only(
@@ -487,10 +487,9 @@ class _DetailRow extends StatelessWidget {
             width: 90,
             child: Text(
               label,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: Colors.black54),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
             ),
           ),
           Expanded(child: Text(value)),
@@ -601,9 +600,9 @@ class _NoMoreIndicator extends StatelessWidget {
       child: Center(
         child: Text(
           '没有更多了',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
         ),
       ),
     );

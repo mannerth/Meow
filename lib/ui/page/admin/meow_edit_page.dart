@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meow/api/service/cat_service.dart';
+import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat_detail.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/ui/widget/image_preview.dart';
@@ -31,7 +32,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
   Campus? _campus;
   final ImagePicker _imagePicker = ImagePicker();
 
-  String _status = 'SCHOOL';
+  String _status = '0';
   bool _isNeutered = false;
   String _neuteredTypeDisplay = '剪耳';
   DateTime? _neuteredDate;
@@ -49,20 +50,12 @@ class _MeowEditPageState extends State<MeowEditPage> {
   final List<XFile> _imageFiles = [];
   bool _loading = false;
 
-  static const _statusOptions = [
-    'SCHOOL',
-    'GRADUATED',
-    'MEOW_STAR',
-    'HOSPITAL'
-  ];
-  static const _campusOptions = <Campus?>[
-    null,
-    ...Campus.values,
-  ];
+  static const _statusOptions = ['0', '1', '2', '3'];
+  static const _campusOptions = <Campus?>[null, ...Campus.values];
   static const _genderDisplayOptions = ['公', '母', '未知'];
   static const _neuteredTypeDisplayOptions = ['剪耳', '未剪耳'];
   static const _healthStatusDisplayOptions = ['健康', '生病', '恢复中'];
-  final List _tagOptions = [
+  List<String> _tagOptions = [
     '亲人',
     '吃货',
     '话痨',
@@ -71,33 +64,12 @@ class _MeowEditPageState extends State<MeowEditPage> {
     '学霸',
     '安静',
     '粘人',
-    '胆小'
+    '胆小',
   ];
 
-  static const _genderDisplayToValue = {
-    '公': 'MALE',
-    '母': 'FEMALE',
-    '未知': 'UNKNOWN',
-  };
-  static const _genderValueToDisplay = {
-    'MALE': '公',
-    'FEMALE': '母',
-    'UNKNOWN': '未知',
-  };
-  static const _statusDisplayToValue = {
-    '在校': 'SCHOOL',
-    '已毕业': 'GRADUATED',
-    '喵星': 'MEOW_STAR',
-    '住院': 'HOSPITAL',
-  };
-  static const _neuteredTypeDisplayToValue = {
-    '剪耳': 'EAR_CUT',
-    '未剪耳': 'UNCUT',
-  };
-  static const _neuteredTypeValueToDisplay = {
-    'EAR_CUT': '剪耳',
-    'UNCUT': '未剪耳',
-  };
+  static const _genderDisplayToValue = {'公': 1, '母': 2, '未知': 0};
+  static const _statusDisplayToValue = {'在校': 0, '已毕业': 1, '喵星': 2, '住院': 3};
+  static const _neuteredTypeDisplayToValue = {'剪耳': 0, '未剪耳': 1};
   static const _healthStatusDisplayToValue = {
     '健康': 'HEALTHY',
     '生病': 'SICK',
@@ -140,11 +112,17 @@ class _MeowEditPageState extends State<MeowEditPage> {
     if (widget.catId == null) return;
     setState(() => _loading = true);
     try {
+      final serverTags = await TypeService.fetchTags();
+      if (serverTags.isNotEmpty) {
+        final labels = serverTags.map((t) => t.label).toList();
+        _tagOptions = labels.where((t) => !_tagOptions.contains(t)).toList();
+      }
       final response = await CatService.fetchCatDetail(widget.catId!);
       final detail = response.data;
       if (detail == null) return;
-      _tagOptions
-          .addAll(detail.tags.where((tag) => !_tagOptions.contains(tag)));
+      _tagOptions.addAll(
+        detail.tags.where((tag) => !_tagOptions.contains(tag)),
+      );
       _applyDetail(detail);
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -160,12 +138,10 @@ class _MeowEditPageState extends State<MeowEditPage> {
     _roleController.text = detail.basicInfo.role;
     _descriptionController.text = detail.description;
     _campus = Campus.values.cast<Campus?>().firstWhere(
-          (item) => item?.name == detail.basicInfo.campus,
-          orElse: () => null,
-        );
-    _status = detail.basicInfo.status.isEmpty
-        ? _statusOptions.first
-        : _statusValueFromApi(detail.basicInfo.status);
+      (item) => item?.name == detail.basicInfo.campus,
+      orElse: () => null,
+    );
+    _status = _statusValueFromApi(detail.basicInfo.status);
     _isNeutered = detail.basicInfo.neutered.isNeutered;
     _neuteredTypeDisplay = detail.basicInfo.neutered.type.isEmpty
         ? _neuteredTypeDisplayOptions.first
@@ -195,41 +171,45 @@ class _MeowEditPageState extends State<MeowEditPage> {
   bool get _isBusy => _loading;
 
   String _genderDisplayFromApi(String value) {
-    if (_genderValueToDisplay.containsKey(value)) {
-      return _genderValueToDisplay[value]!;
-    }
-    if (_genderDisplayToValue.containsKey(value)) {
-      return value;
+    switch (value) {
+      case 'MALE':
+        return '公';
+      case 'FEMALE':
+        return '母';
+      case 'UNKNOWN':
+        return '未知';
     }
     return value;
   }
 
-  String _genderValueFromDisplay(String display) {
-    return _genderDisplayToValue[display] ?? display;
+  int? _genderValueFromDisplay(String display) {
+    return _genderDisplayToValue[display];
   }
 
-  String _statusValueFromApi(String value) {
-    if (_statusDisplayToValue.containsKey(value)) {
-      return _statusDisplayToValue[value]!;
+  String _statusValueFromApi(dynamic value) {
+    if (value is num) return value.toInt().toString();
+    final str = value?.toString() ?? '';
+    if (_statusDisplayToValue.containsKey(str)) {
+      return _statusDisplayToValue[str]!.toString();
     }
-    if (_statusOptions.contains(value)) {
-      return value;
+    if (_statusOptions.contains(str)) {
+      return str;
     }
-    return value;
+    return _statusOptions.first;
   }
 
   String _neuteredTypeDisplayFromApi(String value) {
-    if (_neuteredTypeValueToDisplay.containsKey(value)) {
-      return _neuteredTypeValueToDisplay[value]!;
-    }
-    if (_neuteredTypeDisplayToValue.containsKey(value)) {
-      return value;
+    switch (value) {
+      case 'EAR_CUT':
+        return '剪耳';
+      case 'UNCUT':
+        return '未剪耳';
     }
     return value;
   }
 
-  String _neuteredTypeValueFromDisplay(String display) {
-    return _neuteredTypeDisplayToValue[display] ?? display;
+  int? _neuteredTypeValueFromDisplay(String display) {
+    return _neuteredTypeDisplayToValue[display];
   }
 
   String _healthStatusDisplayFromApi(String value) {
@@ -280,12 +260,11 @@ class _MeowEditPageState extends State<MeowEditPage> {
       'gender': _genderValueFromDisplay(_genderController.text.trim()),
       'campus': _campus?.name ?? '',
       'hauntLocation': _hauntController.text.trim(),
-      'role': _roleController.text.trim(),
       'birthYear': int.tryParse(_birthYearController.text.trim()) ?? 0,
       'admissionDate': _admissionDate == null
           ? ''
           : _admissionDate!.toIso8601String().split('T').first,
-      'status': _status,
+      'status': int.tryParse(_status) ?? 0,
       'healthStatus': _healthStatusValueFromDisplay(_healthStatusDisplay),
       'attributes[friendliness]': _friendliness.toStringAsFixed(1),
       'attributes[gluttony]': _gluttony.toStringAsFixed(1),
@@ -310,30 +289,28 @@ class _MeowEditPageState extends State<MeowEditPage> {
       final files = await Future.wait(
         _imageFiles
             .map(
-              (image) => MultipartFile.fromFile(
-                image.path,
-                filename: image.name,
-              ),
+              (image) =>
+                  MultipartFile.fromFile(image.path, filename: image.name),
             )
             .toList(),
       );
-      payload['images'] = [
-        ...existing,
-        ...files,
-      ];
+      payload['images'] = [...existing, ...files];
     }
     try {
-      var result = await CatService.upsertCat(id: widget.catId, payload: payload);
-      if(mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('保存成功 ${result.data}')),
-        );
+      var result = await CatService.upsertCat(
+        id: widget.catId,
+        payload: payload,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('保存成功 ${result.data}')));
       }
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('保存失败，请稍后重试')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('保存失败，请稍后重试')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -401,17 +378,17 @@ class _MeowEditPageState extends State<MeowEditPage> {
                     Text(
                       '支持上传猫咪展示图，可删除原来的图片',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.grey.shade600,
-                          ),
+                        color: Colors.grey.shade600,
+                      ),
                     ),
                     const SizedBox(height: 12),
-                _ImageGrid(
-                  images: _images,
-                  files: _imageFiles,
-                  onAdd: _pickImages,
-                  onRemoveUrl: (url) => setState(() => _images.remove(url)),
-                  onRemoveFile: _removeImage,
-                ),
+                    _ImageGrid(
+                      images: _images,
+                      files: _imageFiles,
+                      onAdd: _pickImages,
+                      onRemoveUrl: (url) => setState(() => _images.remove(url)),
+                      onRemoveFile: _removeImage,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -437,9 +414,9 @@ class _MeowEditPageState extends State<MeowEditPage> {
                       onChanged: (value) {
                         setState(() {
                           _campus = Campus.values.cast<Campus?>().firstWhere(
-                                (item) => item?.name == value,
-                                orElse: () => null,
-                              );
+                            (item) => item?.name == value,
+                            orElse: () => null,
+                          );
                         });
                       },
                     ),
@@ -454,14 +431,8 @@ class _MeowEditPageState extends State<MeowEditPage> {
                         setState(() {});
                       },
                     ),
-                    _TextFieldTile(
-                      label: '常驻地点',
-                      controller: _hauntController,
-                    ),
-                    _TextFieldTile(
-                      label: '学历/编制',
-                      controller: _roleController,
-                    ),
+                    _TextFieldTile(label: '常驻地点', controller: _hauntController),
+                    _TextFieldTile(label: '学历/编制', controller: _roleController),
                     _TextFieldTile(
                       label: '出生年份',
                       controller: _birthYearController,
@@ -479,8 +450,10 @@ class _MeowEditPageState extends State<MeowEditPage> {
                       value: _healthStatusDisplay,
                       items: _healthStatusDisplayOptions,
                       onChanged: (value) {
-                        setState(() => _healthStatusDisplay =
-                            value ?? _healthStatusDisplay);
+                        setState(
+                          () => _healthStatusDisplay =
+                              value ?? _healthStatusDisplay,
+                        );
                       },
                     ),
                     _StatusPicker(
@@ -549,49 +522,50 @@ class _MeowEditPageState extends State<MeowEditPage> {
                         TextEditingController newTagController =
                             TextEditingController();
                         showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                                  title: const Text('添加新标签'),
-                                  content: TextField(
-                                    controller: newTagController,
-                                    autofocus: true,
-                                    onSubmitted: (value) {
-                                      if (value.trim().isEmpty) return;
-                                      if (!_tagOptions.contains(value.trim())) {
-                                        setState(() =>
-                                            _tagOptions.add(value.trim()));
-                                      }
-                                      Navigator.of(context).pop();
-                                    },
-                                    decoration: const InputDecoration(
-                                      hintText: '输入标签名称',
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(),
-                                      child: const Text('取消'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        final value = newTagController.text;
-                                        if (value.trim().isEmpty) return;
-                                        if (!_tagOptions
-                                            .contains(value.trim())) {
-                                          setState(() =>
-                                              _tagOptions.add(value.trim()));
-                                        }
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: const Text('添加'),
-                                    )
-                                  ],
-                                ));
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('添加新标签'),
+                            content: TextField(
+                              controller: newTagController,
+                              autofocus: true,
+                              onSubmitted: (value) {
+                                if (value.trim().isEmpty) return;
+                                if (!_tagOptions.contains(value.trim())) {
+                                  setState(() => _tagOptions.add(value.trim()));
+                                }
+                                Navigator.of(context).pop();
+                              },
+                              decoration: const InputDecoration(
+                                hintText: '输入标签名称',
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('取消'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  final value = newTagController.text;
+                                  if (value.trim().isEmpty) return;
+                                  if (!_tagOptions.contains(value.trim())) {
+                                    setState(
+                                      () => _tagOptions.add(value.trim()),
+                                    );
+                                  }
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text('添加'),
+                              ),
+                            ],
+                          ),
+                        );
                       },
-                      icon: const Icon(Icons.add_box_outlined,
-                          color: Color(0xFF7BC97F)),
-                    )
+                      icon: const Icon(
+                        Icons.add_box_outlined,
+                        color: Color(0xFF7BC97F),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -611,8 +585,10 @@ class _MeowEditPageState extends State<MeowEditPage> {
                       value: _neuteredTypeDisplay,
                       items: _neuteredTypeDisplayOptions,
                       onChanged: (value) {
-                        setState(() => _neuteredTypeDisplay =
-                            value ?? _neuteredTypeDisplay);
+                        setState(
+                          () => _neuteredTypeDisplay =
+                              value ?? _neuteredTypeDisplay,
+                        );
                       },
                     ),
                     _ActionTile(
@@ -631,7 +607,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                    )
+                    ),
                   ],
                 ),
               ],
@@ -683,8 +659,9 @@ class _AvatarCard extends StatelessWidget {
                 },
                 child: CircleAvatar(
                   radius: 48,
-                  backgroundImage:
-                      avatarUrl.isEmpty ? null : NetworkImage(avatarUrl),
+                  backgroundImage: avatarUrl.isEmpty
+                      ? null
+                      : NetworkImage(avatarUrl),
                   child: avatarUrl.isEmpty
                       ? const Icon(
                           Icons.pets,
@@ -712,10 +689,7 @@ class _AvatarCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            '点击图片更换头像，长按预览',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text('点击图片更换头像，长按预览', style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );
@@ -742,16 +716,10 @@ class _ImageGrid extends StatelessWidget {
     final tiles = [
       _ImageAddTile(onTap: onAdd),
       ...images.map(
-        (url) => _ImageTile(
-          url: url,
-          onRemove: () => onRemoveUrl(url),
-        ),
+        (url) => _ImageTile(url: url, onRemove: () => onRemoveUrl(url)),
       ),
       ...files.map(
-        (file) => _ImageTile(
-          file: file,
-          onRemove: () => onRemoveFile(file),
-        ),
+        (file) => _ImageTile(file: file, onRemove: () => onRemoveFile(file)),
       ),
     ];
 
@@ -763,16 +731,18 @@ class _ImageGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
       children: tiles
-          .map((child) => ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF4F5F7),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: child,
+          .map(
+            (child) => ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF4F5F7),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-              ))
+                child: child,
+              ),
+            ),
+          )
           .toList(),
     );
   }
@@ -790,14 +760,17 @@ class _ImageAddTile extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.add_photo_alternate_outlined,
-              color: Color(0xFF7B8593)),
+          const Icon(
+            Icons.add_photo_alternate_outlined,
+            color: Color(0xFF7B8593),
+          ),
           const SizedBox(height: 6),
-          Text('添加',
-              style: Theme.of(context)
-                  .textTheme
-                  .labelSmall
-                  ?.copyWith(color: const Color(0xFF7B8593))),
+          Text(
+            '添加',
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: const Color(0xFF7B8593)),
+          ),
         ],
       ),
     );
@@ -859,8 +832,10 @@ class _ImageTile extends StatelessWidget {
                 visualDensity: VisualDensity.compact,
                 iconSize: 18,
                 onPressed: onRemove,
-                icon:
-                    const Icon(Icons.delete_outline, color: Color(0xFFE14B4B)),
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: Color(0xFFE14B4B),
+                ),
               ),
             ),
           ),
@@ -888,10 +863,9 @@ class _SectionCard extends StatelessWidget {
         children: [
           Text(
             title,
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
           ...children,
@@ -1007,26 +981,26 @@ class _StatusPicker extends StatelessWidget {
       children: [
         _StatusButton(
           label: '在校',
-          value: 'SCHOOL',
-          selected: status == 'SCHOOL',
+          value: '0',
+          selected: status == '0',
           onTap: onChanged,
         ),
         _StatusButton(
           label: '已毕业',
-          value: 'GRADUATED',
-          selected: status == 'GRADUATED',
+          value: '1',
+          selected: status == '1',
           onTap: onChanged,
         ),
         _StatusButton(
           label: '喵星',
-          value: 'MEOW_STAR',
-          selected: status == 'MEOW_STAR',
+          value: '2',
+          selected: status == '2',
           onTap: onChanged,
         ),
         _StatusButton(
           label: '住院',
-          value: 'HOSPITAL',
-          selected: status == 'HOSPITAL',
+          value: '3',
+          selected: status == '3',
           onTap: onChanged,
         ),
       ],
@@ -1102,12 +1076,7 @@ class _SliderTile extends StatelessWidget {
             inactiveTrackColor: color.withAlpha(51),
             thumbColor: color,
           ),
-          child: Slider(
-            value: value,
-            min: 0,
-            max: 10,
-            onChanged: onChanged,
-          ),
+          child: Slider(value: value, min: 0, max: 10, onChanged: onChanged),
         ),
         const SizedBox(height: 8),
       ],

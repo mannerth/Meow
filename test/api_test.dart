@@ -5,10 +5,7 @@ void main() {
   test('DataResponse 解析 Map 数据', () {
     final res = DataResponse.fromJson({
       'code': 1,
-      'data': {
-        'id': '1',
-        'studentId': '132',
-      },
+      'data': {'id': '1', 'studentId': '132'},
       'msg': '',
     });
 

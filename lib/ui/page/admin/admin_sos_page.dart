@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meow/api/service/admin_sos_service.dart';
+import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/admin_sos.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/ui/widget/image_preview.dart';
@@ -31,6 +32,7 @@ class _AdminSosPageState extends State<AdminSosPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_handleScroll);
+    TypeService.fetchSymptoms();
     _loadSosList(reset: true);
   }
 
@@ -53,7 +55,10 @@ class _AdminSosPageState extends State<AdminSosPage> {
     }
   }
 
-  Future<void> _loadSosList({required bool reset, bool loadMore = false}) async {
+  Future<void> _loadSosList({
+    required bool reset,
+    bool loadMore = false,
+  }) async {
     if (reset) {
       setState(() {
         _isInitialLoading = true;
@@ -126,10 +131,8 @@ class _AdminSosPageState extends State<AdminSosPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => _ResolveSheet(
-        item: item,
-        controller: _replyController,
-      ),
+      builder: (context) =>
+          _ResolveSheet(item: item, controller: _replyController),
     );
     if (selected == null) return;
     await _submitResolve(item, selected.status, selected.reply);
@@ -147,15 +150,15 @@ class _AdminSosPageState extends State<AdminSosPage> {
         reply: reply,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('处理结果已提交')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('处理结果已提交')));
       await _loadSosList(reset: true);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('提交失败，请稍后重试')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('提交失败，请稍后重试')));
     }
   }
 
@@ -163,9 +166,7 @@ class _AdminSosPageState extends State<AdminSosPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
-      appBar: AppBar(
-        title: const Text('SOS处理'),
-      ),
+      appBar: AppBar(title: const Text('SOS处理')),
       body: Column(
         children: [
           _FilterBar(
@@ -196,7 +197,8 @@ class _AdminSosPageState extends State<AdminSosPage> {
                     SliverToBoxAdapter(
                       child: _LoadMoreError(
                         message: _loadMoreError!,
-                        onRetry: () => _loadSosList(reset: false, loadMore: true),
+                        onRetry: () =>
+                            _loadSosList(reset: false, loadMore: true),
                       ),
                     ),
                   if (!_hasMore && _items.isNotEmpty)
@@ -228,10 +230,7 @@ class _AdminSosPageState extends State<AdminSosPage> {
     return SliverList.separated(
       itemBuilder: (context, index) {
         final item = _items[index];
-        return _SosCard(
-          item: item,
-          onResolve: () => _openResolveSheet(item),
-        );
+        return _SosCard(item: item, onResolve: () => _openResolveSheet(item));
       },
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemCount: _items.length,
@@ -269,22 +268,13 @@ class _FilterBar extends StatelessWidget {
                 isDense: true,
               ),
               items: const [
-                DropdownMenuItem<String>(
-                  value: null,
-                  child: Text('全部状态'),
-                ),
-                DropdownMenuItem<String>(
-                  value: 'PENDING',
-                  child: Text('待处理'),
-                ),
+                DropdownMenuItem<String>(value: null, child: Text('全部状态')),
+                DropdownMenuItem<String>(value: 'PENDING', child: Text('待处理')),
                 DropdownMenuItem<String>(
                   value: 'PROCESSING',
                   child: Text('处理中'),
                 ),
-                DropdownMenuItem<String>(
-                  value: 'RESOLVED',
-                  child: Text('已完成'),
-                ),
+                DropdownMenuItem<String>(value: 'RESOLVED', child: Text('已完成')),
               ],
               onChanged: onStatusChanged,
             ),
@@ -330,10 +320,12 @@ class _SosCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final statusChip = _StatusChip(status: item.status);
-    final campusText = item.campus?.name ??
+    final campusText =
+        item.campus?.name ??
         item.campusName ??
         (item.campusCode != null ? '校区 ${item.campusCode}' : '未知校区');
-    final catText = item.catName ?? (item.catId == null ? '未识别猫咪' : '猫咪ID ${item.catId}');
+    final catText =
+        item.catName ?? (item.catId == null ? '未识别猫咪' : '猫咪ID ${item.catId}');
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
       decoration: BoxDecoration(
@@ -356,8 +348,8 @@ class _SosCard extends StatelessWidget {
                 child: Text(
                   catText,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               statusChip,
@@ -376,7 +368,7 @@ class _SosCard extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: item.symptoms
-                  .map((label) => _TagChip(label: label))
+                  .map((s) => _TagChip(label: _symptomLabel(s)))
                   .toList(),
             ),
           ],
@@ -384,10 +376,9 @@ class _SosCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               item.description!,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: const Color(0xFF6B7280)),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: const Color(0xFF6B7280)),
             ),
           ],
           if (item.imageUrls.isNotEmpty) ...[
@@ -427,17 +418,13 @@ class _InfoRow extends StatelessWidget {
             width: 48,
             child: Text(
               label,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: Colors.black54),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.black54),
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            child: Text(value, style: Theme.of(context).textTheme.bodySmall),
           ),
         ],
       ),
@@ -462,10 +449,10 @@ class _StatusChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: Theme.of(context)
-            .textTheme
-            .labelSmall
-            ?.copyWith(color: color, fontWeight: FontWeight.w600),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -508,10 +495,9 @@ class _TagChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: Theme.of(context)
-            .textTheme
-            .labelSmall
-            ?.copyWith(color: const Color(0xFF4B5563)),
+        style: Theme.of(
+          context,
+        ).textTheme.labelSmall?.copyWith(color: const Color(0xFF4B5563)),
       ),
     );
   }
@@ -556,15 +542,11 @@ class _ImageStrip extends StatelessWidget {
   }
 }
 
-
 class _ResolveSheet extends StatefulWidget {
   final AdminSosItem item;
   final TextEditingController controller;
 
-  const _ResolveSheet({
-    required this.item,
-    required this.controller,
-  });
+  const _ResolveSheet({required this.item, required this.controller});
 
   @override
   State<_ResolveSheet> createState() => _ResolveSheetState();
@@ -593,10 +575,9 @@ class _ResolveSheetState extends State<_ResolveSheet> {
               Expanded(
                 child: Text(
                   '处理SOS',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
               IconButton(
@@ -608,10 +589,9 @@ class _ResolveSheetState extends State<_ResolveSheet> {
           const SizedBox(height: 8),
           Text(
             widget.item.catName ?? '未识别猫咪',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: const Color(0xFF6B7280)),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: const Color(0xFF6B7280)),
           ),
           const SizedBox(height: 16),
           _SheetSectionTitle(title: '处理状态'),
@@ -659,14 +639,14 @@ class _ResolveSheetState extends State<_ResolveSheet> {
               onPressed: () {
                 final reply = widget.controller.text.trim();
                 if (reply.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('请填写回复内容')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('请填写回复内容')));
                   return;
                 }
-                Navigator.of(context).pop(
-                  _ResolveResult(status: _status, reply: reply),
-                );
+                Navigator.of(
+                  context,
+                ).pop(_ResolveResult(status: _status, reply: reply));
               },
               child: const Text('提交处理结果'),
             ),
@@ -686,10 +666,9 @@ class _SheetSectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: Theme.of(context)
-          .textTheme
-          .titleSmall
-          ?.copyWith(fontWeight: FontWeight.w600),
+      style: Theme.of(
+        context,
+      ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
     );
   }
 }
@@ -722,10 +701,10 @@ class _StatusOption extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: Theme.of(context)
-              .textTheme
-              .labelMedium
-              ?.copyWith(color: textColor, fontWeight: FontWeight.w600),
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: textColor,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -840,11 +819,20 @@ class _NoMoreIndicator extends StatelessWidget {
       child: Center(
         child: Text(
           '没有更多了',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
         ),
       ),
     );
   }
+}
+
+String _symptomLabel(String value) {
+  final id = int.tryParse(value);
+  if (id != null) {
+    final label = TypeService.symptomLabel(id);
+    if (label.isNotEmpty && label != id.toString()) return label;
+  }
+  return value;
 }

@@ -69,9 +69,9 @@ class _StaticPageState extends ConsumerState<StaticPage> {
               errorMessage: _errorMessage,
               stats: stats,
               onSosTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const AdminSosPage()),
-                );
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const AdminSosPage()));
               },
               onPendingTap: () {
                 Navigator.of(context).push(
@@ -173,16 +173,16 @@ class _HeaderCard extends StatelessWidget {
                 Text(
                   greeting,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1F2A37),
-                      ),
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF1F2A37),
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   dateText,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFF6B7280),
-                      ),
+                    color: const Color(0xFF6B7280),
+                  ),
                 ),
               ],
             ),
@@ -207,7 +207,6 @@ class _HeaderCard extends StatelessWidget {
     );
   }
 }
-
 
 class _StatsGrid extends StatelessWidget {
   final bool isLoading;
@@ -279,12 +278,14 @@ class _StatsGrid extends StatelessWidget {
               label: '猫咪总数',
               footnote: '--',
               footnoteColor: const Color(0xFF43A047),
-              onTap: (){ 
-                ref.read(navigationProvider.notifier).setCurrentIndex(1, controlJump: true);
+              onTap: () {
+                ref
+                    .read(navigationProvider.notifier)
+                    .setCurrentIndex(1, controlJump: true);
               },
             );
           },
-        )
+        ),
       ],
     );
   }
@@ -354,24 +355,24 @@ class _StatCard extends StatelessWidget {
               Text(
                 value,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1F2A37),
-                    ),
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF1F2A37),
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 label,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF6B7280),
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: const Color(0xFF6B7280)),
               ),
               const SizedBox(height: 6),
               Text(
                 footnote,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: footnoteColor,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: footnoteColor,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -390,10 +391,9 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: Theme.of(context)
-          .textTheme
-          .titleMedium
-          ?.copyWith(fontWeight: FontWeight.w700),
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
     );
   }
 }
@@ -444,17 +444,16 @@ class _ActionTile extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: const Color(0xFF6B7280),
-                      ),
+                    color: const Color(0xFF6B7280),
+                  ),
                 ),
               ],
             ),
@@ -550,22 +549,24 @@ class _CampusDistributionCard extends StatelessWidget {
 
   String _campusKeyToLabel(String key) {
     switch (key) {
-      case 'SOFTWARE_PARK':
-        return '软件园校区';
-      case 'CENTRAL':
+      case 'ZHONG_XIN':
         return '中心校区';
-      case 'BAOTUQUAN':
+      case 'BAO_TU_QUAN':
         return '趵突泉校区';
-      case 'HONGJIALOU':
+      case 'HONG_JIA_LOU':
         return '洪家楼校区';
-      case 'QIANFOSHAN':
+      case 'QIAN_FO_SHAN':
         return '千佛山校区';
-      case 'XINGLONGSHAN':
+      case 'XING_LONG_SHAN':
         return '兴隆山校区';
-      case 'QINGDAO':
+      case 'RUAN_JIAN_YUAN':
+        return '软件园校区';
+      case 'QING_DAO':
         return '青岛校区';
-      case 'WEIHAI':
+      case 'WEI_HAI':
         return '威海校区';
+      case 'LONG_SHAN':
+        return '龙山校区';
       default:
         return key;
     }
@@ -602,16 +603,16 @@ class _DistributionRow extends StatelessWidget {
           children: [
             Text(
               item.name,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: const Color(0xFF6B7280),
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: const Color(0xFF6B7280)),
             ),
             Text(
               '${item.count}只 ($percentageLabel)',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF1F2A37),
-                  ),
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1F2A37),
+              ),
             ),
           ],
         ),
@@ -650,10 +651,9 @@ class _ErrorCard extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: const Color(0xFFE14B4B)),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: const Color(0xFFE14B4B)),
             ),
           ),
         ],

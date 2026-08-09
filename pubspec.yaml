@@ -30,6 +30,8 @@ dependencies:
   # JSON 序列化
   json_annotation: ^4.9.0
   flutter_web_auth_2: ^5.0.3
+  # 摘要/签名（COS 上传签名）
+  crypto: ^3.0.0
   # flutter_secure_storage: ^11.0.0
 
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:meow/api/service/cat_service.dart';
+import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
@@ -40,6 +41,8 @@ class _HomePageState extends State<HomePage> {
   String? _selectedColor;
   String? _selectedSort;
 
+  List<_FilterOption> _colorOptions = const [];
+
   int? _totalCount;
   int? _schoolCount;
   int? _graduatedCount;
@@ -47,19 +50,24 @@ class _HomePageState extends State<HomePage> {
   int? _hospitalCount;
   bool _isStatsLoading = true;
   String? _statsError;
-  static const _statusOptions = [
-    'SCHOOL',
-    'GRADUATED',
-    'MEOW_STAR',
-    'HOSPITAL'
-  ];
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_handleScroll);
+    _loadColors();
     _loadCats(reset: true);
     _loadStats();
+  }
+
+  Future<void> _loadColors() async {
+    final colors = await TypeService.fetchColors();
+    if (!mounted) return;
+    setState(() {
+      _colorOptions = colors
+          .map((item) => _FilterOption(item.label, item.id.toString()))
+          .toList();
+    });
   }
 
   @override
@@ -103,9 +111,9 @@ class _HomePageState extends State<HomePage> {
       final response = await CatService.fetchCats(
         page: _page,
         pageSize: _pageSize,
-        campus: _selectedCampus,
-        status: _selectedStatus,
-        color: _selectedColor,
+        campus: int.tryParse(_selectedCampus ?? ''),
+        status: int.tryParse(_selectedStatus ?? ''),
+        color: int.tryParse(_selectedColor ?? ''),
         search: searchText.isEmpty ? null : searchText,
         sort: _selectedSort,
       );
@@ -151,14 +159,10 @@ class _HomePageState extends State<HomePage> {
     try {
       final futures = await Future.wait([
         CatService.fetchCats(page: 1, pageSize: 1),
-        CatService.fetchCats(
-          page: 1,
-          pageSize: 1,
-          status: _statusOptions[0],
-        ),
-        CatService.fetchCats(page: 1, pageSize: 1, status: _statusOptions[1]),
-        CatService.fetchCats(page: 1, pageSize: 1, status: _statusOptions[2]),
-        CatService.fetchCats(page: 1, pageSize: 1, status: _statusOptions[3]),
+        CatService.fetchCats(page: 1, pageSize: 1, status: 0),
+        CatService.fetchCats(page: 1, pageSize: 1, status: 1),
+        CatService.fetchCats(page: 1, pageSize: 1, status: 2),
+        CatService.fetchCats(page: 1, pageSize: 1, status: 3),
       ]);
       final total = futures[0].data?.total ?? 0;
       final graduated = futures[2].data?.total ?? 0;
@@ -185,10 +189,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _refresh() async {
-    await Future.wait([
-      _loadCats(reset: true),
-      _loadStats(),
-    ]);
+    await Future.wait([_loadCats(reset: true), _loadStats()]);
   }
 
   void _applyFilters() {
@@ -235,8 +236,7 @@ class _HomePageState extends State<HomePage> {
                           subtitle: '谁是校宠No.1？',
                           height: 180,
                           width: 177,
-                          backgroundColor:
-                              Colors.orangeAccent.withAlpha(150),
+                          backgroundColor: Colors.orangeAccent.withAlpha(150),
                           icon: SvgPicture.asset('assets/icons/ranking.svg'),
                           destination: const LeaderboardPage(),
                         ),
@@ -249,8 +249,9 @@ class _HomePageState extends State<HomePage> {
                                 subtitle: '伤病快速上报',
                                 height: 84,
                                 width: 177,
-                                backgroundColor:
-                                    Colors.redAccent.withAlpha(178),
+                                backgroundColor: Colors.redAccent.withAlpha(
+                                  178,
+                                ),
                                 icon: const Icon(
                                   Icons.warning,
                                   color: Colors.white70,
@@ -264,8 +265,12 @@ class _HomePageState extends State<HomePage> {
                                 subtitle: '给咪一个家',
                                 height: 84,
                                 width: 177,
-                                backgroundColor:
-                                    const Color.fromARGB(198, 255, 162, 216),
+                                backgroundColor: const Color.fromARGB(
+                                  198,
+                                  255,
+                                  162,
+                                  216,
+                                ),
                                 icon: const Icon(
                                   Icons.favorite_border,
                                   color: Colors.white,
@@ -320,7 +325,7 @@ class _HomePageState extends State<HomePage> {
                         _FilterDropdown(
                           hint: '花色',
                           value: _selectedColor,
-                          options: _FilterOptions.color,
+                          options: _colorOptions,
                           onChanged: (value) {
                             setState(() => _selectedColor = value);
                             _applyFilters();
@@ -380,23 +385,18 @@ class _HomePageState extends State<HomePage> {
     }
 
     return SliverGrid(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          final cat = _items[index];
-          return CatCard(
-            cat: cat,
-            onImageLongPress: () => showNetworkImagePreview(context, cat.avatar),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => CatDetailPage(catId: cat.id),
-                ),
-              );
-            },
-          );
-        },
-        childCount: _items.length,
-      ),
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final cat = _items[index];
+        return CatCard(
+          cat: cat,
+          onImageLongPress: () => showNetworkImagePreview(context, cat.avatar),
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => CatDetailPage(catId: cat.id)),
+            );
+          },
+        );
+      }, childCount: _items.length),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         mainAxisSpacing: 12,
@@ -411,10 +411,7 @@ class _FilterSearchBox extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onSearch;
 
-  const _FilterSearchBox({
-    required this.controller,
-    required this.onSearch,
-  });
+  const _FilterSearchBox({required this.controller, required this.onSearch});
 
   @override
   Widget build(BuildContext context) {
@@ -428,9 +425,7 @@ class _FilterSearchBox extends StatelessWidget {
         decoration: InputDecoration(
           hintText: '搜索',
           prefixIcon: const Icon(Icons.search, size: 18),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(horizontal: 10),
         ),
@@ -463,9 +458,7 @@ class _FilterDropdown extends StatelessWidget {
         decoration: InputDecoration(
           hintText: hint,
           isDense: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 10,
             vertical: 8,
@@ -495,29 +488,18 @@ class _FilterOption {
 }
 
 class _FilterOptions {
-  static final campus = Campus.values
-      .map((c) => _FilterOption(c.name, c.code.toString()))
-      .toList()
-    ..add(_FilterOption('全部校区', null));
+  static final campus =
+      Campus.values
+          .map((c) => _FilterOption(c.name, c.code.toString()))
+          .toList()
+        ..add(_FilterOption('全部校区', null));
 
   static const status = [
     _FilterOption('全部状态', null),
-    _FilterOption('在校', 'SCHOOL'),
-    _FilterOption('毕业', 'GRADUATED'),
-    _FilterOption('喵星', 'MEOW_STAR'),
-    _FilterOption('住院', 'HOSPITAL'),
-  ];
-
-  static const color = [
-    _FilterOption('全部花色', null),
-    _FilterOption('橘猫', 'ORANGE'),
-    _FilterOption('狸花', 'TABBY'),
-    _FilterOption('奶牛', 'COW'),
-    _FilterOption('三花', 'CALICO'),
-    _FilterOption('玳瑁', 'TORTIE'),
-    _FilterOption('纯白', 'WHITE'),
-    _FilterOption('纯黑', 'BLACK'),
-    _FilterOption('其他', 'OTHER'),
+    _FilterOption('在校', '0'),
+    _FilterOption('毕业', '1'),
+    _FilterOption('喵星', '2'),
+    _FilterOption('住院', '3'),
   ];
 
   static const sort = [
@@ -633,9 +615,9 @@ class _NoMoreIndicator extends StatelessWidget {
       child: Center(
         child: Text(
           '没有更多了',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
         ),
       ),
     );
@@ -668,16 +650,13 @@ class _StatsCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/images/猫猫图鉴-logo.png'), 
+          image: AssetImage('assets/images/猫猫图鉴-logo.png'),
           fit: BoxFit.fitHeight,
-          alignment: Alignment.centerRight
+          alignment: Alignment.centerRight,
         ),
         borderRadius: BorderRadius.circular(20),
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFFBFF6E1),
-            Color(0xFF7BE8F1),
-          ],
+          colors: [Color(0xFFBFF6E1), Color(0xFF7BE8F1)],
           begin: Alignment.centerLeft,
           end: Alignment.centerRight,
         ),
@@ -727,14 +706,8 @@ class _StatsCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _StatsItem(
-                  label: '总数',
-                  value: _formatCount(total, isLoading),
-                ),
-                _StatsItem(
-                  label: '在校',
-                  value: _formatCount(school, isLoading),
-                ),
+                _StatsItem(label: '总数', value: _formatCount(total, isLoading)),
+                _StatsItem(label: '在校', value: _formatCount(school, isLoading)),
                 _StatsItem(
                   label: '毕业',
                   value: _formatCount(graduate, isLoading),
@@ -758,11 +731,7 @@ class _StatsCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(
-                  Icons.favorite,
-                  size: 16,
-                  color: Color(0xFF2F6F6F),
-                ),
+                const Icon(Icons.favorite, size: 16, color: Color(0xFF2F6F6F)),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -791,10 +760,7 @@ class _StatsItem extends StatelessWidget {
   final String label;
   final String value;
 
-  const _StatsItem({
-    required this.label,
-    required this.value,
-  });
+  const _StatsItem({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {

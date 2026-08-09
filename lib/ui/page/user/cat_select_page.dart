@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meow/api/service/cat_service.dart';
+import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/ui/page/user/cat_detail_page.dart';
@@ -34,11 +35,24 @@ class _CatSelectPageState extends State<CatSelectPage> {
   String? _selectedColor;
   String? _selectedSort;
 
+  List<_FilterOption> _colorOptions = const [];
+
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_handleScroll);
+    _loadColors();
     _loadCats(reset: true);
+  }
+
+  Future<void> _loadColors() async {
+    final colors = await TypeService.fetchColors();
+    if (!mounted) return;
+    setState(() {
+      _colorOptions = colors
+          .map((item) => _FilterOption(item.label, item.id.toString()))
+          .toList();
+    });
   }
 
   @override
@@ -82,9 +96,9 @@ class _CatSelectPageState extends State<CatSelectPage> {
       final response = await CatService.fetchCats(
         page: _page,
         pageSize: _pageSize,
-        campus: _selectedCampus,
-        status: _selectedStatus,
-        color: _selectedColor,
+        campus: int.tryParse(_selectedCampus ?? ''),
+        status: int.tryParse(_selectedStatus ?? ''),
+        color: int.tryParse(_selectedColor ?? ''),
         search: searchText.isEmpty ? null : searchText,
         sort: _selectedSort,
       );
@@ -176,7 +190,7 @@ class _CatSelectPageState extends State<CatSelectPage> {
                         _FilterDropdown(
                           hint: '花色',
                           value: _selectedColor,
-                          options: _FilterOptions.color,
+                          options: _colorOptions,
                           onChanged: (value) {
                             setState(() => _selectedColor = value);
                             _applyFilters();
@@ -236,27 +250,22 @@ class _CatSelectPageState extends State<CatSelectPage> {
     }
 
     return SliverGrid(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          final cat = _items[index];
-          return CatCard(
-            cat: cat,
-            onImageLongPress: () => showNetworkImagePreview(context, cat.avatar),
-            onTap: () {
-              if (widget.selectable) {
-                Navigator.of(context).pop(cat);
-                return;
-              }
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => CatDetailPage(catId: cat.id),
-                ),
-              );
-            },
-          );
-        },
-        childCount: _items.length,
-      ),
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final cat = _items[index];
+        return CatCard(
+          cat: cat,
+          onImageLongPress: () => showNetworkImagePreview(context, cat.avatar),
+          onTap: () {
+            if (widget.selectable) {
+              Navigator.of(context).pop(cat);
+              return;
+            }
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => CatDetailPage(catId: cat.id)),
+            );
+          },
+        );
+      }, childCount: _items.length),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         mainAxisSpacing: 12,
@@ -271,10 +280,7 @@ class _FilterSearchBox extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onSearch;
 
-  const _FilterSearchBox({
-    required this.controller,
-    required this.onSearch,
-  });
+  const _FilterSearchBox({required this.controller, required this.onSearch});
 
   @override
   Widget build(BuildContext context) {
@@ -288,9 +294,7 @@ class _FilterSearchBox extends StatelessWidget {
         decoration: InputDecoration(
           hintText: '搜索',
           prefixIcon: const Icon(Icons.search, size: 18),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(horizontal: 10),
         ),
@@ -323,9 +327,7 @@ class _FilterDropdown extends StatelessWidget {
         decoration: InputDecoration(
           hintText: hint,
           isDense: true,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 10,
             vertical: 8,
@@ -355,29 +357,18 @@ class _FilterOption {
 }
 
 class _FilterOptions {
-  static final campus = Campus.values
-      .map((c) => _FilterOption(c.name, c.code.toString()))
-      .toList()
-    ..add(const _FilterOption('全部校区', null));
+  static final campus =
+      Campus.values
+          .map((c) => _FilterOption(c.name, c.code.toString()))
+          .toList()
+        ..add(const _FilterOption('全部校区', null));
 
   static const status = [
     _FilterOption('全部状态', null),
-    _FilterOption('在校', 'SCHOOL'),
-    _FilterOption('毕业', 'GRADUATED'),
-    _FilterOption('喵星', 'MEOW_STAR'),
-    _FilterOption('住院', 'HOSPITAL'),
-  ];
-
-  static const color = [
-    _FilterOption('全部花色', null),
-    _FilterOption('橘猫', 'ORANGE'),
-    _FilterOption('狸花', 'TABBY'),
-    _FilterOption('奶牛', 'COW'),
-    _FilterOption('三花', 'CALICO'),
-    _FilterOption('玳瑁', 'TORTIE'),
-    _FilterOption('纯白', 'WHITE'),
-    _FilterOption('纯黑', 'BLACK'),
-    _FilterOption('其他', 'OTHER'),
+    _FilterOption('在校', '0'),
+    _FilterOption('毕业', '1'),
+    _FilterOption('喵星', '2'),
+    _FilterOption('住院', '3'),
   ];
 
   static const sort = [
@@ -493,9 +484,9 @@ class _NoMoreIndicator extends StatelessWidget {
       child: Center(
         child: Text(
           '没有更多了',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
         ),
       ),
     );

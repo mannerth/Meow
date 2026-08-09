@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class NavigateCard extends StatelessWidget {
   const NavigateCard({
-    super.key, 
+    super.key,
     this.height = 100,
     this.width = 100,
     required this.title,
@@ -24,9 +24,9 @@ class NavigateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => destination),
-        );
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (context) => destination));
       },
       child: Container(
         width: width,
@@ -53,21 +53,14 @@ class NavigateCard extends StatelessWidget {
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
               ),
             ),
-            Positioned(
-              right: 8,
-              bottom: 8,
-              child: icon,
-            )
+            Positioned(right: 8, bottom: 8, child: icon),
           ],
-        )
+        ),
       ),
     );
   }

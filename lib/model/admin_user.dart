@@ -12,12 +12,13 @@ class AdminUserListItem {
   });
 
   factory AdminUserListItem.fromJson(Map<String, dynamic> json) {
+    final statusValue = json['status'];
     return AdminUserListItem(
       id: _stringValue(json['id'] ?? json['uid']),
       name: _stringValue(
         json['name'] ?? json['nickname'] ?? json['userName'] ?? json['email'],
       ),
-      status: _stringValue(json['status'] ?? 'NORMAL'),
+      status: _statusFromDynamic(statusValue),
     );
   }
 }
@@ -55,11 +56,12 @@ class AdminUserStats {
 
   factory AdminUserStats.fromJson(Map<String, dynamic> json) {
     final foundValue = json['found'] ?? json['foundNewCatCount'];
+    final momentValue = json['postCount'] ?? json['momentCount'];
     return AdminUserStats(
       feedCount: _intValue(json['feedCount']) ?? 0,
       foundCount: _intValue(foundValue) ?? 0,
       receivedLikes: _intValue(json['receivedLikes']) ?? 0,
-      momentCount: _intValue(json['momentCount']) ?? 0,
+      momentCount: _intValue(momentValue) ?? 0,
     );
   }
 }
@@ -120,6 +122,7 @@ Campus? _campusFromDynamic(dynamic value) {
   if (value is String && value.isNotEmpty) {
     for (final campus in Campus.values) {
       if (campus.name == value ||
+          campus.apiKey == value ||
           campus.name.toLowerCase() == value.toLowerCase()) {
         return campus;
       }
@@ -137,6 +140,16 @@ int? _intValue(dynamic value) {
 String _stringValue(dynamic value) {
   if (value == null) return '';
   return value.toString();
+}
+
+/// 封禁状态（0正常 1封禁，或 NORMAL/BANNED 字符串）
+String _statusFromDynamic(dynamic value) {
+  if (value is num) {
+    return value.toInt() == 1 ? 'BANNED' : 'NORMAL';
+  }
+  final str = _stringValue(value ?? 'NORMAL').toUpperCase();
+  if (str == '1' || str == 'BANNED') return 'BANNED';
+  return 'NORMAL';
 }
 
 String? _nullableString(dynamic value) {

@@ -4,8 +4,9 @@ import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 import 'package:meow/api/service/cat_service.dart';
+import 'package:meow/model/cat.dart';
 import 'package:meow/model/cat_detail.dart';
-import 'package:meow/model/moment.dart';
+import 'package:meow/model/post.dart';
 import 'package:meow/util/time_tool.dart';
 
 class CatDetailPage extends StatefulWidget {
@@ -19,15 +20,15 @@ class CatDetailPage extends StatefulWidget {
 
 class _CatDetailPageState extends State<CatDetailPage> {
   late Future<CatDetail> _detailFuture;
-  late Future<MomentPage> _momentFuture;
-  final List<Moment> _momentItems = [];
-  bool _momentLoading = false;
+  late Future<PostPage> _postFuture;
+  final List<Post> _postItems = [];
+  bool _postLoading = false;
 
   @override
   void initState() {
     super.initState();
     _detailFuture = _fetchDetail();
-    _momentFuture = _fetchMoments();
+    _postFuture = _fetchPosts();
   }
 
   Future<CatDetail> _fetchDetail() async {
@@ -39,77 +40,76 @@ class _CatDetailPageState extends State<CatDetailPage> {
     return detail;
   }
 
-  Future<MomentPage> _fetchMoments() async {
-    final response = await CatService.fetchCatMoments(catId: widget.catId);
+  Future<PostPage> _fetchPosts() async {
+    final response = await CatService.fetchCatPosts(catId: widget.catId);
     final data = response.data;
     if (data == null) {
       throw Exception('未获取到猫咪动态');
     }
-    _momentItems
+    _postItems
       ..clear()
       ..addAll(data.items);
     return data;
   }
 
-  Future<void> _toggleLike(Moment moment) async {
-    if (_momentLoading) return;
-    setState(() => _momentLoading = true);
+  Future<void> _toggleLike(Post post) async {
+    if (_postLoading) return;
+    setState(() => _postLoading = true);
     try {
-      final response = moment.isLiked
-          ? await CatService.unlikeMoment(moment.id)
-          : await CatService.likeMoment(moment.id);
+      final response = post.isLiked
+          ? await CatService.unlikePost(post.id)
+          : await CatService.likePost(post.id);
       final result = response.data;
       if (result == null) return;
-      final index = _momentItems.indexWhere((item) => item.id == moment.id);
+      final index = _postItems.indexWhere((item) => item.id == post.id);
       if (index == -1) return;
-      final updated = Moment(
-        id: moment.id,
-        content: moment.content,
-        media: moment.media,
-        user: moment.user,
-        relatedCats: moment.relatedCats,
+      final updated = Post(
+        id: post.id,
+        content: post.content,
+        media: post.media,
+        user: post.user,
         likeCount: result.likeCount,
         isLiked: result.isLiked,
-        createTime: moment.createTime,
+        createTime: post.createTime,
       );
       setState(() {
-        _momentItems[index] = updated;
+        _postItems[index] = updated;
       });
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('操作失败，请稍后重试')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('操作失败，请稍后重试')));
     } finally {
-      if (mounted) setState(() => _momentLoading = false);
+      if (mounted) setState(() => _postLoading = false);
     }
   }
 
-  Future<void> _deleteMoment(Moment moment) async {
-    if (_momentLoading) return;
+  Future<void> _deletePost(Post post) async {
+    if (_postLoading) return;
     final confirmed = await _showConfirmDialog(
       context,
       title: '删除动态',
       message: '确认删除这条动态吗？删除后不可恢复。',
     );
     if (confirmed != true) return;
-    setState(() => _momentLoading = true);
+    setState(() => _postLoading = true);
     try {
-      await CatService.deleteMoment(moment.id);
+      await CatService.deletePost(post.id);
       if (!mounted) return;
       setState(() {
-        _momentItems.removeWhere((item) => item.id == moment.id);
+        _postItems.removeWhere((item) => item.id == post.id);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('已删除动态')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('已删除动态')));
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('删除失败，请稍后重试')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('删除失败，请稍后重试')));
     } finally {
-      if (mounted) setState(() => _momentLoading = false);
+      if (mounted) setState(() => _postLoading = false);
     }
   }
 
@@ -118,16 +118,16 @@ class _CatDetailPageState extends State<CatDetailPage> {
       final response = await CatService.feedCat(widget.catId);
       final currency = response.data?.userCurrency ?? 0;
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('投喂成功，剩余小鱼干 $currency')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('投喂成功，剩余小鱼干 $currency')));
       ref.read(authStateProvider.notifier).decrementCurrency(1);
       _detailFuture = _fetchDetail();
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('投喂失败，请稍后重试')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('投喂失败，请稍后重试')));
     }
   }
 
@@ -142,11 +142,13 @@ class _CatDetailPageState extends State<CatDetailPage> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return _DetailError(onRetry: () {
-              setState(() {
-                _detailFuture = _fetchDetail();
-              });
-            });
+            return _DetailError(
+              onRetry: () {
+                setState(() {
+                  _detailFuture = _fetchDetail();
+                });
+              },
+            );
           }
 
           final detail = snapshot.data!;
@@ -155,9 +157,7 @@ class _CatDetailPageState extends State<CatDetailPage> {
               CustomScrollView(
                 slivers: [
                   _DetailHeader(images: detail.images, avatar: detail.avatar),
-                  SliverToBoxAdapter(
-                    child: _DetailInfoCard(detail: detail),
-                  ),
+                  SliverToBoxAdapter(child: _DetailInfoCard(detail: detail)),
                   SliverToBoxAdapter(
                     child: _RelationSection(
                       relations: detail.relationship,
@@ -170,21 +170,19 @@ class _CatDetailPageState extends State<CatDetailPage> {
                       },
                     ),
                   ),
-                   SliverToBoxAdapter(
-                     child: _MomentSection(
-                       momentFuture: _momentFuture,
-                       moments: _momentItems,
-                       onRetry: () {
-                         _momentFuture = _fetchMoments();
-                         setState(() {});
-                       },
-                       onLikeToggle: _toggleLike,
-                       onDelete: _deleteMoment,
-                     ),
-                   ),
-                  const SliverPadding(
-                    padding: EdgeInsets.only(bottom: 120),
+                  SliverToBoxAdapter(
+                    child: _PostSection(
+                      postFuture: _postFuture,
+                      posts: _postItems,
+                      onRetry: () {
+                        _postFuture = _fetchPosts();
+                        setState(() {});
+                      },
+                      onLikeToggle: _toggleLike,
+                      onDelete: _deletePost,
+                    ),
                   ),
+                  const SliverPadding(padding: EdgeInsets.only(bottom: 120)),
                 ],
               ),
               Positioned(
@@ -192,11 +190,13 @@ class _CatDetailPageState extends State<CatDetailPage> {
                 bottom: 32,
                 right: 20,
                 child: Consumer(
-                  builder:(context, ref, _){
-                    return _FeedButton(onPressed: (){
-                      _feedCat(ref);
-                    });
-                  } 
+                  builder: (context, ref, _) {
+                    return _FeedButton(
+                      onPressed: () {
+                        _feedCat(ref);
+                      },
+                    );
+                  },
                 ),
               ),
             ],
@@ -207,16 +207,16 @@ class _CatDetailPageState extends State<CatDetailPage> {
   }
 }
 
-class _MomentSection extends StatelessWidget {
-  final Future<MomentPage> momentFuture;
-  final List<Moment> moments;
+class _PostSection extends StatelessWidget {
+  final Future<PostPage> postFuture;
+  final List<Post> posts;
   final VoidCallback onRetry;
-  final ValueChanged<Moment> onLikeToggle;
-  final ValueChanged<Moment> onDelete;
+  final ValueChanged<Post> onLikeToggle;
+  final ValueChanged<Post> onDelete;
 
-  const _MomentSection({
-    required this.momentFuture,
-    required this.moments,
+  const _PostSection({
+    required this.postFuture,
+    required this.posts,
     required this.onRetry,
     required this.onLikeToggle,
     required this.onDelete,
@@ -231,35 +231,35 @@ class _MomentSection extends StatelessWidget {
         children: [
           Text(
             '喵喵动态',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
-          FutureBuilder<MomentPage>(
-            future: momentFuture,
+          FutureBuilder<PostPage>(
+            future: postFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const _MomentSkeleton();
+                return const _PostSkeleton();
               }
               if (snapshot.hasError) {
-                return _MomentError(onRetry: onRetry);
+                return _PostError(onRetry: onRetry);
               }
               final page = snapshot.data;
-              final items =
-                  moments.isNotEmpty ? moments : (page?.items ?? <Moment>[]);
+              final items = posts.isNotEmpty
+                  ? posts
+                  : (page?.items ?? <Post>[]);
               if (items.isEmpty) {
-                return const _EmptyMomentCard();
+                return const _EmptyPostCard();
               }
               final displayItems = items.isEmpty ? [] : items;
               return Column(
                 children: displayItems
                     .map(
-                      (moment) => _MomentCard(
-                        moment: moment,
-                        onLikeToggle: () => onLikeToggle(moment),
-                        onDelete: () => onDelete(moment),
+                      (post) => _PostCard(
+                        post: post,
+                        onLikeToggle: () => onLikeToggle(post),
+                        onDelete: () => onDelete(post),
                       ),
                     )
                     .toList(),
@@ -351,7 +351,7 @@ class _DetailInfoCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  _StatusChip(text: detail.basicInfo.status),
+                  _StatusChip(text: catStatusLabel(detail.basicInfo.status)),
                   const Spacer(),
                   const CircleAvatar(
                     radius: 18,
@@ -473,10 +473,9 @@ class _RelationSection extends StatelessWidget {
         children: [
           Text(
             '喵际关系',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
           Container(
@@ -503,22 +502,20 @@ class _RelationSection extends StatelessWidget {
                                 ),
                                 child: CircleAvatar(
                                   radius: 26,
-                                  backgroundImage: NetworkImage(relation.avatar),
+                                  backgroundImage: NetworkImage(
+                                    relation.avatar,
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 6),
                               Text(
                                 relation.name,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
+                                style: Theme.of(context).textTheme.labelLarge
                                     ?.copyWith(fontWeight: FontWeight.w700),
                               ),
                               Text(
                                 relation.relation,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
+                                style: Theme.of(context).textTheme.labelSmall
                                     ?.copyWith(color: Colors.grey.shade600),
                               ),
                             ],
@@ -536,13 +533,13 @@ class _RelationSection extends StatelessWidget {
   }
 }
 
-class _MomentCard extends StatelessWidget {
-  final Moment moment;
+class _PostCard extends StatelessWidget {
+  final Post post;
   final VoidCallback onLikeToggle;
   final VoidCallback? onDelete;
 
-  const _MomentCard({
-    required this.moment,
+  const _PostCard({
+    required this.post,
     required this.onLikeToggle,
     this.onDelete,
   });
@@ -550,9 +547,9 @@ class _MomentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final timeText = _formatMomentTime(moment.createTime);
+    final timeText = _formatPostTime(post.createTime);
     final isAdmin = _isAdmin(context);
-    final canDelete = isAdmin || _isOwner(context, moment);
+    final canDelete = isAdmin || _isOwner(context, post);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
@@ -575,17 +572,17 @@ class _MomentCard extends StatelessWidget {
             children: [
               GestureDetector(
                 onTap: () {
-                  if (moment.user.avatar.isNotEmpty) {
-                    showNetworkImagePreview(context, moment.user.avatar);
+                  if (post.user.avatar.isNotEmpty) {
+                    showNetworkImagePreview(context, post.user.avatar);
                   }
                 },
                 child: CircleAvatar(
                   radius: 18,
                   backgroundColor: const Color(0xFFF4F5F7),
-                  backgroundImage: moment.user.avatar.isEmpty
+                  backgroundImage: post.user.avatar.isEmpty
                       ? null
-                      : NetworkImage(moment.user.avatar),
-                  child: moment.user.avatar.isEmpty
+                      : NetworkImage(post.user.avatar),
+                  child: post.user.avatar.isEmpty
                       ? const Icon(Icons.person, color: Color(0xFFB0B4BA))
                       : null,
                 ),
@@ -596,7 +593,7 @@ class _MomentCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      moment.user.name.isEmpty ? '匿名用户' : moment.user.name,
+                      post.user.name.isEmpty ? '匿名用户' : post.user.name,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -611,9 +608,9 @@ class _MomentCard extends StatelessWidget {
                   ],
                 ),
               ),
-              _MomentLikeButton(
-                isLiked: moment.isLiked,
-                likeCount: moment.likeCount,
+              _PostLikeButton(
+                isLiked: post.isLiked,
+                likeCount: post.likeCount,
                 onTap: onLikeToggle,
               ),
               if (canDelete) ...[
@@ -632,12 +629,12 @@ class _MomentCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            moment.content,
+            post.content,
             style: theme.textTheme.bodyMedium?.copyWith(height: 1.4),
           ),
-          if (moment.media.isNotEmpty) ...[
+          if (post.media.isNotEmpty) ...[
             const SizedBox(height: 12),
-            _MomentMediaGrid(media: moment.media),
+            _PostMediaGrid(media: post.media),
           ],
         ],
       ),
@@ -645,10 +642,10 @@ class _MomentCard extends StatelessWidget {
   }
 }
 
-class _MomentMediaGrid extends StatelessWidget {
+class _PostMediaGrid extends StatelessWidget {
   final List<String> media;
 
-  const _MomentMediaGrid({required this.media});
+  const _PostMediaGrid({required this.media});
 
   @override
   Widget build(BuildContext context) {
@@ -680,12 +677,12 @@ class _MomentMediaGrid extends StatelessWidget {
   }
 }
 
-class _MomentLikeButton extends StatelessWidget {
+class _PostLikeButton extends StatelessWidget {
   final bool isLiked;
   final int likeCount;
   final VoidCallback onTap;
 
-  const _MomentLikeButton({
+  const _PostLikeButton({
     required this.isLiked,
     required this.likeCount,
     required this.onTap,
@@ -710,10 +707,10 @@ class _MomentLikeButton extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               likeCount.toString(),
-              style: Theme.of(context)
-                  .textTheme
-                  .labelSmall
-                  ?.copyWith(color: color, fontWeight: FontWeight.w600),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -722,8 +719,8 @@ class _MomentLikeButton extends StatelessWidget {
   }
 }
 
-class _MomentSkeleton extends StatelessWidget {
-  const _MomentSkeleton();
+class _PostSkeleton extends StatelessWidget {
+  const _PostSkeleton();
 
   @override
   Widget build(BuildContext context) {
@@ -743,7 +740,9 @@ class _MomentSkeleton extends StatelessWidget {
               Row(
                 children: [
                   const CircleAvatar(
-                      radius: 18, backgroundColor: Color(0xFFE6E7EB)),
+                    radius: 18,
+                    backgroundColor: Color(0xFFE6E7EB),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -779,10 +778,10 @@ class _MomentSkeleton extends StatelessWidget {
   }
 }
 
-class _MomentError extends StatelessWidget {
+class _PostError extends StatelessWidget {
   final VoidCallback onRetry;
 
-  const _MomentError({required this.onRetry});
+  const _PostError({required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -803,8 +802,8 @@ class _MomentError extends StatelessWidget {
   }
 }
 
-class _EmptyMomentCard extends StatelessWidget {
-  const _EmptyMomentCard();
+class _EmptyPostCard extends StatelessWidget {
+  const _EmptyPostCard();
 
   @override
   Widget build(BuildContext context) {
@@ -820,10 +819,9 @@ class _EmptyMomentCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             '还没有动态，快来发布第一条吧',
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(color: Colors.grey.shade600),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
           ),
         ],
       ),
@@ -831,7 +829,7 @@ class _EmptyMomentCard extends StatelessWidget {
   }
 }
 
-String _formatMomentTime(String source) {
+String _formatPostTime(String source) {
   if (source.isEmpty) return '';
   final parsed = DateTime.tryParse(source);
   if (parsed == null) return source;
@@ -854,9 +852,9 @@ class _StatusChip extends StatelessWidget {
       child: Text(
         text.isEmpty ? '在校' : text,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: const Color(0xFF24A15B),
-              fontWeight: FontWeight.w600,
-            ),
+          color: const Color(0xFF24A15B),
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -892,15 +890,15 @@ class _InfoTile extends StatelessWidget {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: const Color(0xFF7B8593),
-                      ),
+                    color: const Color(0xFF7B8593),
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value.isEmpty ? '--' : value,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ],
             ),
@@ -950,9 +948,9 @@ class _AttributeRow extends StatelessWidget {
             child: Text(
               value.toStringAsFixed(1),
               textAlign: TextAlign.right,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: const Color(0xFF7B8593),
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: const Color(0xFF7B8593)),
             ),
           ),
         ],
@@ -984,9 +982,9 @@ class _FeedButton extends StatelessWidget {
               Text(
                 '投喂',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: Colors.black,
-                    ),
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
+                ),
               ),
             ],
           ),
@@ -1022,11 +1020,11 @@ bool _isAdmin(BuildContext context) {
   return role == RoleType.admin;
 }
 
-bool _isOwner(BuildContext context, Moment moment) {
+bool _isOwner(BuildContext context, Post post) {
   final container = ProviderScope.containerOf(context, listen: false);
   final user = container.read(authStateProvider).user;
   final userId = user?.id.toString() ?? '';
-  return userId.isNotEmpty && userId == moment.user.id;
+  return userId.isNotEmpty && userId == post.user.id;
 }
 
 Future<bool?> _showConfirmDialog(

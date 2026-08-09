@@ -100,13 +100,22 @@ int? _campusCodeFromDynamic(dynamic value) {
   if (value is String) {
     final parsed = int.tryParse(value);
     if (parsed != null) return parsed;
+    for (final item in Campus.values) {
+      if (item.apiKey == value || item.name == value) return item.code;
+    }
   }
   return null;
 }
 
 String? _campusNameFromDynamic(dynamic value) {
   if (value == null) return null;
-  if (value is String) return value.isEmpty ? null : value;
+  if (value is String) {
+    if (value.isEmpty) return null;
+    for (final item in Campus.values) {
+      if (item.apiKey == value) return item.name;
+    }
+    return value;
+  }
   return null;
 }
 

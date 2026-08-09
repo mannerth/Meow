@@ -37,18 +37,18 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() => _loading = true);
     try {
       await AuthRepository().sendVerificationCode(email);
-      if(mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("验证码已发送，请查收邮箱")));
+          context,
+        ).showSnackBar(const SnackBar(content: Text("验证码已发送，请查收邮箱")));
       }
       _startCountDown();
     } catch (e) {
       debugPrint('验证码发送失败: $e');
-      if(mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("验证码发送失败：${e.toString()}")));
+          context,
+        ).showSnackBar(SnackBar(content: Text("验证码发送失败：${e.toString()}")));
       }
     } finally {
       setState(() => _loading = false);

@@ -64,11 +64,9 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
 
   void _openDetail(LeaderboardItem item) {
     if (item.catId.isEmpty) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => CatDetailPage(catId: item.catId),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => CatDetailPage(catId: item.catId)));
   }
 
   @override
@@ -76,9 +74,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
     final theme = Theme.of(context);
     final type = _types[_currentIndex];
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('全校封神榜'),
-      ),
+      appBar: AppBar(title: const Text('全校封神榜')),
       body: Column(
         children: [
           const SizedBox(height: 8),
@@ -88,9 +84,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
             onChanged: _onTabChanged,
           ),
           const SizedBox(height: 12),
-          Expanded(
-            child: _buildContent(theme, type),
-          ),
+          Expanded(child: _buildContent(theme, type)),
         ],
       ),
     );
@@ -98,9 +92,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
 
   Widget _buildContent(ThemeData theme, _LeaderboardType type) {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
     if (_errorMessage != null) {
       return Center(
@@ -118,13 +110,13 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
       );
     }
     if (_items.isEmpty) {
-      return const Center(
-        child: Text('暂无排行榜数据'),
-      );
+      return const Center(child: Text('暂无排行榜数据'));
     }
 
     final topItems = _items.take(3).toList();
-    final restItems = _items.length > 3 ? _items.sublist(3) : <LeaderboardItem>[];
+    final restItems = _items.length > 3
+        ? _items.sublist(3)
+        : <LeaderboardItem>[];
 
     return RefreshIndicator(
       onRefresh: _loadLeaderboard,
@@ -306,10 +298,7 @@ class _TopThreeAvatar extends StatelessWidget {
                 height: size,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: badgeColor,
-                    width: 3,
-                  ),
+                  border: Border.all(color: badgeColor, width: 3),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withAlpha(30),
@@ -319,10 +308,8 @@ class _TopThreeAvatar extends StatelessWidget {
                   ],
                 ),
                 child: GestureDetector(
-                  onTap: () => showNetworkImagePreview(
-                    context,
-                    _vaildUrl(item!.avatar),
-                  ),
+                  onTap: () =>
+                      showNetworkImagePreview(context, _vaildUrl(item!.avatar)),
                   child: ClipOval(
                     child: Image.network(
                       _vaildUrl(item!.avatar),
@@ -335,11 +322,7 @@ class _TopThreeAvatar extends StatelessWidget {
                 Positioned(
                   top: -16,
                   left: size / 2 - 16,
-                  child: Icon(
-                    Icons.emoji_events,
-                    color: badgeColor,
-                    size: 28,
-                  ),
+                  child: Icon(Icons.emoji_events, color: badgeColor, size: 28),
                 ),
             ],
           ),
@@ -370,10 +353,7 @@ class _RankBadge extends StatelessWidget {
   final int rank;
   final Color color;
 
-  const _RankBadge({
-    required this.rank,
-    required this.color,
-  });
+  const _RankBadge({required this.rank, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -446,10 +426,8 @@ class _LeaderboardListItem extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             GestureDetector(
-              onTap: () => showNetworkImagePreview(
-                context,
-                _vaildUrl(item.avatar),
-              ),
+              onTap: () =>
+                  showNetworkImagePreview(context, _vaildUrl(item.avatar)),
               child: ClipOval(
                 child: Image.network(
                   _vaildUrl(item.avatar),
@@ -509,8 +487,12 @@ String _formatValue(int value) {
   return buffer.toString().split('').reversed.join();
 }
 
-String _vaildUrl(String url){
-  if(!url.startsWith('http')) return 'https://image.foofish.work/i/2026/03/03/69a6ae395343b-1772531257.jpg';
-  if(url.startsWith('https://example.com')) return 'https://image.foofish.work/i/2026/03/03/69a6ae395343b-1772531257.jpg';
+String _vaildUrl(String url) {
+  if (!url.startsWith('http')) {
+    return 'https://image.foofish.work/i/2026/03/03/69a6ae395343b-1772531257.jpg';
+  }
+  if (url.startsWith('https://example.com')) {
+    return 'https://image.foofish.work/i/2026/03/03/69a6ae395343b-1772531257.jpg';
+  }
   return url;
 }

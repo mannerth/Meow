@@ -59,9 +59,9 @@ class _AdminAdoptionDetailPageState extends State<AdminAdoptionDetailPage> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -69,9 +69,7 @@ class _AdminAdoptionDetailPageState extends State<AdminAdoptionDetailPage> {
     final timeText = _formatTime(_item.createTime);
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
-      appBar: AppBar(
-        title: Text(_item.id),
-      ),
+      appBar: AppBar(title: Text(_item.id)),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [
@@ -172,8 +170,8 @@ class _ApplicantCard extends StatelessWidget {
               CircleAvatar(
                 radius: 22,
                 backgroundColor: const Color(0xFFE5E7EB),
-                backgroundImage: item.userAvatar != null &&
-                        item.userAvatar!.isNotEmpty
+                backgroundImage:
+                    item.userAvatar != null && item.userAvatar!.isNotEmpty
                     ? NetworkImage(item.userAvatar!)
                     : null,
                 child: item.userAvatar == null || item.userAvatar!.isEmpty
@@ -187,10 +185,9 @@ class _ApplicantCard extends StatelessWidget {
                   children: [
                     Text(
                       item.userName,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -207,8 +204,7 @@ class _ApplicantCard extends StatelessWidget {
           _InfoRow(label: '学号', value: item.userStudentId ?? '—'),
           _InfoRow(label: '联系方式', value: item.contact?.phone ?? '—'),
           _InfoRow(label: '微信号', value: item.contact?.wechat ?? '—'),
-          if (timeText != null)
-            _InfoRow(label: '申请时间', value: timeText!),
+          if (timeText != null) _InfoRow(label: '申请时间', value: timeText!),
         ],
       ),
     );
@@ -255,7 +251,10 @@ class _CatCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   item.userCampus ?? '校区未知',
-                  style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
+                  style: const TextStyle(
+                    color: Color(0xFF9CA3AF),
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
@@ -296,7 +295,7 @@ class _DetailCard extends StatelessWidget {
         children: [
           const _SectionTitle(title: '申请详情'),
           const SizedBox(height: 10),
-          _InfoRow(label: '居住情况', value: _housingLabel(info?.housing)),
+          _InfoRow(label: '居住情况', value: adoptionHousingLabel(info?.housing)),
           _InfoRow(label: '养猫经验', value: _experienceLabel(info?.experience)),
           _InfoRow(label: '目前宠物', value: info == null ? '—' : '无'),
           if (info?.plan != null && info!.plan.isNotEmpty) ...[
@@ -316,21 +315,6 @@ class _DetailCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _housingLabel(String? value) {
-    switch (value) {
-      case 'OWN_HOUSE':
-        return '自有住房';
-      case 'SHARE':
-        return '整租/合租';
-      case 'DORM':
-        return '校内宿舍';
-      case 'WITH_PARENT':
-        return '与父母同住';
-      default:
-        return '—';
-    }
   }
 
   String _experienceLabel(String? value) {
@@ -356,10 +340,9 @@ class _SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: Theme.of(context)
-          .textTheme
-          .titleSmall
-          ?.copyWith(fontWeight: FontWeight.w700),
+      style: Theme.of(
+        context,
+      ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
     );
   }
 }
@@ -383,9 +366,7 @@ class _InfoRow extends StatelessWidget {
               style: const TextStyle(color: Color(0xFF9CA3AF)),
             ),
           ),
-          Expanded(
-            child: Text(value),
-          ),
+          Expanded(child: Text(value)),
         ],
       ),
     );

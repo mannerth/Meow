@@ -59,7 +59,7 @@ class SafeNetworkImage extends StatelessWidget {
     if (raw == null) return '';
     final value = raw.trim();
     if (value.isEmpty) return '';
-    if( value.startsWith('https://example.com')) return '';
+    if (value.startsWith('https://example.com')) return '';
     final uri = Uri.tryParse(value);
     if (uri == null) return '';
     if (!uri.hasScheme || uri.host.isEmpty) return '';

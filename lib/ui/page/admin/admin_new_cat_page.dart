@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meow/api/service/admin_new_cat_service.dart';
+import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/admin_new_cat.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
@@ -29,6 +30,7 @@ class _AdminNewCatPageState extends State<AdminNewCatPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_handleScroll);
+    TypeService.fetchColors();
     _loadNewCats(reset: true);
   }
 
@@ -51,7 +53,10 @@ class _AdminNewCatPageState extends State<AdminNewCatPage> {
     }
   }
 
-  Future<void> _loadNewCats({required bool reset, bool loadMore = false}) async {
+  Future<void> _loadNewCats({
+    required bool reset,
+    bool loadMore = false,
+  }) async {
     if (reset) {
       setState(() {
         _isInitialLoading = true;
@@ -124,10 +129,8 @@ class _AdminNewCatPageState extends State<AdminNewCatPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => _ApproveSheet(
-        item: item,
-        controller: _nameController,
-      ),
+      builder: (context) =>
+          _ApproveSheet(item: item, controller: _nameController),
     );
     if (selected == null) return;
     await _submitApprove(item, selected);
@@ -140,15 +143,15 @@ class _AdminNewCatPageState extends State<AdminNewCatPage> {
         officialName: officialName,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('已转正并创建档案')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('已转正并创建档案')));
       await _loadNewCats(reset: true);
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('转正失败，请稍后重试')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('转正失败，请稍后重试')));
     }
   }
 
@@ -156,9 +159,7 @@ class _AdminNewCatPageState extends State<AdminNewCatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
-      appBar: AppBar(
-        title: const Text('待审核 - 新猫线索'),
-      ),
+      appBar: AppBar(title: const Text('待审核 - 新猫线索')),
       body: Column(
         children: [
           _FilterBar(
@@ -245,28 +246,14 @@ class _FilterBar extends StatelessWidget {
         initialValue: selectedStatus,
         decoration: InputDecoration(
           hintText: '筛选状态',
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           isDense: true,
         ),
         items: const [
-          DropdownMenuItem<String>(
-            value: null,
-            child: Text('全部状态'),
-          ),
-          DropdownMenuItem<String>(
-            value: 'PENDING',
-            child: Text('待审核'),
-          ),
-          DropdownMenuItem<String>(
-            value: 'APPROVED',
-            child: Text('已转正'),
-          ),
-          DropdownMenuItem<String>(
-            value: 'REJECTED',
-            child: Text('已驳回'),
-          ),
+          DropdownMenuItem<String>(value: null, child: Text('全部状态')),
+          DropdownMenuItem<String>(value: 'PENDING', child: Text('待审核')),
+          DropdownMenuItem<String>(value: 'APPROVED', child: Text('已转正')),
+          DropdownMenuItem<String>(value: 'REJECTED', child: Text('已驳回')),
         ],
         onChanged: onStatusChanged,
       ),
@@ -284,12 +271,11 @@ class _NewCatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final campusText = item.campus?.name ??
+    final campusText =
+        item.campus?.name ??
         item.campusName ??
         (item.campusCode != null ? '校区 ${item.campusCode}' : '未知校区');
-    final title = item.tempName?.isNotEmpty == true
-        ? item.tempName!
-        : '未命名新猫';
+    final title = item.tempName?.isNotEmpty == true ? item.tempName! : '未命名新猫';
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
       decoration: BoxDecoration(
@@ -312,8 +298,8 @@ class _NewCatCard extends StatelessWidget {
                 child: Text(
                   title,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               _StatusChip(status: item.status),
@@ -324,6 +310,8 @@ class _NewCatCard extends StatelessWidget {
           _InfoRow(label: '校区', value: campusText),
           if (item.color != null && item.color!.isNotEmpty)
             _InfoRow(label: '花色', value: item.color!),
+          if (item.colorId != null)
+            _InfoRow(label: '花色', value: TypeService.colorLabel(item.colorId)),
           if (item.location != null && item.location!.isNotEmpty)
             _InfoRow(label: '位置', value: item.location!),
           if (item.createTime != null && item.createTime!.isNotEmpty)
@@ -365,17 +353,13 @@ class _InfoRow extends StatelessWidget {
             width: 48,
             child: Text(
               label,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: Colors.black54),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.black54),
             ),
           ),
           Expanded(
-            child: Text(
-              value,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            child: Text(value, style: Theme.of(context).textTheme.bodySmall),
           ),
         ],
       ),
@@ -400,10 +384,10 @@ class _StatusChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: Theme.of(context)
-            .textTheme
-            .labelSmall
-            ?.copyWith(color: color, fontWeight: FontWeight.w600),
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
@@ -474,10 +458,7 @@ class _ApproveSheet extends StatefulWidget {
   final AdminNewCatItem item;
   final TextEditingController controller;
 
-  const _ApproveSheet({
-    required this.item,
-    required this.controller,
-  });
+  const _ApproveSheet({required this.item, required this.controller});
 
   @override
   State<_ApproveSheet> createState() => _ApproveSheetState();
@@ -498,10 +479,9 @@ class _ApproveSheetState extends State<_ApproveSheet> {
               Expanded(
                 child: Text(
                   '转正建档',
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
               IconButton(
@@ -515,10 +495,9 @@ class _ApproveSheetState extends State<_ApproveSheet> {
             widget.item.tempName?.isNotEmpty == true
                 ? '临时名：${widget.item.tempName}'
                 : '临时名：未命名',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: const Color(0xFF6B7280)),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: const Color(0xFF6B7280)),
           ),
           const SizedBox(height: 16),
           _SheetSectionTitle(title: '正式名称'),
@@ -539,9 +518,9 @@ class _ApproveSheetState extends State<_ApproveSheet> {
               onPressed: () {
                 final name = widget.controller.text.trim();
                 if (name.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('请填写正式名称')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('请填写正式名称')));
                   return;
                 }
                 Navigator.of(context).pop(name);
@@ -564,10 +543,9 @@ class _SheetSectionTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       title,
-      style: Theme.of(context)
-          .textTheme
-          .titleSmall
-          ?.copyWith(fontWeight: FontWeight.w600),
+      style: Theme.of(
+        context,
+      ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
     );
   }
 }
@@ -673,9 +651,9 @@ class _NoMoreIndicator extends StatelessWidget {
       child: Center(
         child: Text(
           '没有更多了',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade600,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
         ),
       ),
     );

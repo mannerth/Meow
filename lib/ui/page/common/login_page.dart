@@ -28,14 +28,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _loading = true);
     try {
       final res = await FlutterWebAuth2.authenticate(
-        url: 'https://meow.sduonline.cn/auth/login?platform=android', 
+        url: 'https://meow.sduonline.cn/auth/login?platform=android',
         callbackUrlScheme: 'meow',
-        options: const FlutterWebAuth2Options(
-          useWebview: false
-        )
+        options: const FlutterWebAuth2Options(useWebview: false),
       );
 
-      if ( res.isNotEmpty ){
+      if (res.isNotEmpty) {
         debugPrint(res);
       } else {
         debugPrint('返回了空信息');
@@ -43,14 +41,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
       Uri uri = Uri.parse(res);
       final param = uri.queryParameters;
-      final String token = param['meow_token']?? '';
-      final String refresh_token = param['meow_refresh_token']?? '';
+      final String token = param['meow_token'] ?? '';
+      final String refreshToken = param['meow_refresh_token'] ?? '';
 
-      if(token.isEmpty || refresh_token.isEmpty){
+      if (token.isEmpty || refreshToken.isEmpty) {
         throw Exception('获取的token为空');
       }
 
-      Http().setToken(token);
+      Http().setTokens(token, refreshToken);
 
       User user = await AuthRepository.getMe();
       ref.read(authStateProvider.notifier).update(user);
@@ -59,16 +57,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       //Store().setString('roleType', result.user.roleType.toString());
 
       //ref.read(authStateProvider.notifier).update(result.user, result.token);
-      
-      if(widget.popAfterLogin) {
+
+      if (widget.popAfterLogin) {
         Navigator.of(context).pop();
       }
       // 不需要 Navigator，MyApp 会自动切到 MainPage
     } catch (e) {
-      if(mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('登录失败：$e')));
+          context,
+        ).showSnackBar(SnackBar(content: Text('登录失败：$e')));
       }
       debugPrint('Login error: $e');
     } finally {
@@ -95,7 +93,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
     ref.read(authStateProvider.notifier).update(user, '');
     Store().setString('roleType', RoleType.guest.toString());
-    if(widget.popAfterLogin) {
+    if (widget.popAfterLogin) {
       Navigator.of(context).pop();
     }
   }
@@ -105,9 +103,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     super.initState();
     if (widget.showLoginExpired) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('登录状态已过期，请重新登录')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('登录状态已过期，请重新登录')));
       });
     }
   }
@@ -157,9 +155,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        SizedBox(
-                          height: 20,
-                        ),
+                        SizedBox(height: 20),
                         SizedBox(
                           width: double.infinity,
                           height: 48,

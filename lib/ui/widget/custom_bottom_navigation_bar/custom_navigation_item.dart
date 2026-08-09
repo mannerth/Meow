@@ -35,7 +35,8 @@ class CustomNavigationItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final activeIcon = data.activeIcon ?? data.icon;
-    final backgroundColor = data.activeBackgroundColor ??
+    final backgroundColor =
+        data.activeBackgroundColor ??
         Theme.of(context).primaryColor.withValues(alpha: 0.15);
 
     return GestureDetector(

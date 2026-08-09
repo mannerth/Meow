@@ -23,10 +23,7 @@ class AdoptionService {
     int size = 20,
     String? status,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'size': size,
-    };
+    final params = <String, dynamic>{'page': page, 'size': size};
     if (status != null && status.isNotEmpty) {
       params['status'] = status;
     }
@@ -35,10 +32,7 @@ class AdoptionService {
       queryParameters: params,
     );
     final json = response.data as Map<String, dynamic>;
-    return DataResponse.fromJson(
-      json,
-      (object) => _parseAdminList(object),
-    );
+    return DataResponse.fromJson(json, (object) => _parseAdminList(object));
   }
 
   static Future<DataResponse<void>> auditAdoption({
@@ -46,10 +40,7 @@ class AdoptionService {
     required String status,
     required String reason,
   }) async {
-    final payload = <String, dynamic>{
-      'status': status,
-      'reason': reason,
-    };
+    final payload = <String, dynamic>{'status': status, 'reason': reason};
     final response = await Http().post(
       '/admin/adoptions/$id/audit',
       data: payload,
@@ -63,22 +54,13 @@ class AdoptionService {
     int size = 20,
     String? status,
   }) async {
-    final params = <String, dynamic>{
-      'page': page,
-      'size': size,
-    };
+    final params = <String, dynamic>{'page': page, 'size': size};
     if (status != null && status.isNotEmpty) {
       params['status'] = status;
     }
-    final response = await Http().get(
-      '/adoptions/my',
-      queryParameters: params,
-    );
+    final response = await Http().get('/adoptions/my', queryParameters: params);
     final json = response.data as Map<String, dynamic>;
-    return DataResponse.fromJson(
-      json,
-      (object) => _parseUserList(object),
-    );
+    return DataResponse.fromJson(json, (object) => _parseUserList(object));
   }
 
   static AdminAdoptionListPage _parseAdminList(Object? object) {

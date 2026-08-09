@@ -73,54 +73,57 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
   void _save() async {
     final campusEnum = Campus.values.cast<Campus?>().firstWhere(
-          (item) => item?.name == campus,
-          orElse: () => null,
-        );
+      (item) => item?.name == campus,
+      orElse: () => null,
+    );
     final success = await AuthRepository.updateUserInfo(
       nickname: _nicknameCtrl.text.trim().isEmpty ? null : _nicknameCtrl.text,
-      campus: campusEnum?.index.toString(),
+      campus: campusEnum,
       phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text,
       wechat: _wechatCtrl.text.trim().isEmpty ? null : _wechatCtrl.text,
       avatar: _pickedImage,
+      currentAvatar: user.avatar,
     );
     if (!success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("更新失败，请稍后重试")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("更新失败，请稍后重试")));
       return;
     }
-    final RoleType role = ref.read(authStateProvider).user?.roleType?? RoleType.student;
-    final newUser = await AuthRepository.getMe()..roleType = role;
+    final RoleType role =
+        ref.read(authStateProvider).user?.roleType ?? RoleType.student;
+    final newUser = await AuthRepository.getMe()
+      ..roleType = role;
     ref.read(authStateProvider.notifier).update(newUser);
     Navigator.pop(context);
   }
 
   // 顶部导航栏
   AppBar _buildAppBar() => AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text(
-            "取消",
-            style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+    backgroundColor: Colors.transparent,
+    elevation: 0,
+    leading: TextButton(
+      onPressed: () => Navigator.pop(context),
+      child: const Text(
+        "取消",
+        style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),
+      ),
+    ),
+    title: const Text("编辑资料", style: TextStyle(color: Colors.black87)),
+    actions: [
+      TextButton(
+        onPressed: _save,
+        child: const Text(
+          "保存",
+          style: TextStyle(
+            color: Color.fromARGB(255, 43, 184, 223),
+            fontWeight: FontWeight.bold,
           ),
         ),
-        title: const Text("编辑资料", style: TextStyle(color: Colors.black87)),
-        actions: [
-          TextButton(
-            onPressed: _save,
-            child: const Text(
-              "保存",
-              style: TextStyle(
-                color: Color.fromARGB(255, 43, 184, 223),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-        centerTitle: true,
-      );
+      ),
+    ],
+    centerTitle: true,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -148,8 +151,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       child: CircleAvatar(
                         radius: 48,
                         backgroundImage: _pickedImage != null
-                          ? FileImage(File(_pickedImage!.path)) :
-                            user.avatar != null
+                            ? FileImage(File(_pickedImage!.path))
+                            : user.avatar != null
                             ? NetworkImage(user.avatar!)
                             : null,
                         backgroundColor: Colors.grey[400],
@@ -167,7 +170,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       right: 2,
                       child: GestureDetector(
                         onTap: () async {
-                          _pickedImage = await ImagePicker().pickImage(source: ImageSource.gallery);
+                          _pickedImage = await ImagePicker().pickImage(
+                            source: ImageSource.gallery,
+                          );
                           setState(() {});
                         },
                         child: Container(

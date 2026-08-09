@@ -42,13 +42,13 @@ class NavigationConfigRegistry {
   /// 所有可用的导航项配置
   /// 按显示顺序排列，新增导航项只需在此添加
   static List<NavigationItemConfig> get allConfigs => [
-        _staticConfig,
-        _meowConfig,
-        _homeConfig,
-        _shareConfig,
-        _adminConfig,
-        _userConfig,
-      ];
+    _staticConfig,
+    _meowConfig,
+    _homeConfig,
+    _shareConfig,
+    _adminConfig,
+    _userConfig,
+  ];
 
   // ========== 管理员统计页 =======
   static final _staticConfig = NavigationItemConfig(

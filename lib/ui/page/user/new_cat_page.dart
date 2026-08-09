@@ -1,10 +1,11 @@
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meow/api/http.dart';
+import 'package:meow/api/service/cos_service.dart';
+import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/widget/image_preview.dart';
@@ -18,25 +19,17 @@ class NewCatPage extends ConsumerStatefulWidget {
 
 class _NewCatPageState extends ConsumerState<NewCatPage> {
   final TextEditingController _tempNameController = TextEditingController();
-  final TextEditingController _colorController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
 
   final List<XFile> _images = [];
-  final List<String> _selectedTraits = [];
+  final List<int> _selectedTagIds = [];
+  List<TypeItem> _colorOptions = [];
+  List<TypeItem> _tagOptions = [];
+  int? _selectedColorId;
   Campus? _selectedCampus;
 
   bool _submitting = false;
-
-  static const List<String> _traitOptions = [
-    '亲人',
-    '怕人',
-    '给撸',
-    '凶猛/哈气',
-    '贪吃',
-    '受伤',
-    '剪耳(绝育)',
-  ];
 
   bool get _isBusy => _submitting;
 
@@ -44,12 +37,22 @@ class _NewCatPageState extends ConsumerState<NewCatPage> {
   void initState() {
     super.initState();
     _selectedCampus = ref.read(authStateProvider).user?.campus;
+    _loadOptions();
+  }
+
+  Future<void> _loadOptions() async {
+    final colors = await TypeService.fetchColors();
+    final tags = await TypeService.fetchTags();
+    if (!mounted) return;
+    setState(() {
+      _colorOptions = colors;
+      _tagOptions = tags;
+    });
   }
 
   @override
   void dispose() {
     _tempNameController.dispose();
-    _colorController.dispose();
     _locationController.dispose();
     super.dispose();
   }
@@ -143,37 +146,32 @@ class _NewCatPageState extends ConsumerState<NewCatPage> {
     setState(() => _images.remove(image));
   }
 
-  void _toggleTrait(String label) {
+  void _toggleTrait(int id) {
     setState(() {
-      if (_selectedTraits.contains(label)) {
-        _selectedTraits.remove(label);
+      if (_selectedTagIds.contains(id)) {
+        _selectedTagIds.remove(id);
       } else {
-        _selectedTraits.add(label);
+        _selectedTagIds.add(id);
       }
     });
   }
 
   Future<void> _submit() async {
-      final tempName = _tempNameController.text.trim();
-      final color = _colorController.text.trim();
-      final location = _locationController.text.trim();
+    final tempName = _tempNameController.text.trim();
+    final location = _locationController.text.trim();
 
-      if (color.isEmpty) {
-        _showMessage('请填写猫咪毛色');
-        return;
-      }
-      if (color.length > 12) {
-        _showMessage('毛色最多输入 12 个字');
-        return;
-      }
-      if (tempName.length > 12) {
-        _showMessage('拟定花名最多 12 个字');
-        return;
-      }
-      if (location.length > 40) {
-        _showMessage('位置描述过长，请精简');
-        return;
-      }
+    if (_selectedColorId == null) {
+      _showMessage('请选择猫咪毛色');
+      return;
+    }
+    if (tempName.length > 12) {
+      _showMessage('拟定花名最多 12 个字');
+      return;
+    }
+    if (location.length > 40) {
+      _showMessage('位置描述过长，请精简');
+      return;
+    }
     if (_selectedCampus == null) {
       _showMessage('请选择发现校区');
       return;
@@ -189,36 +187,25 @@ class _NewCatPageState extends ConsumerState<NewCatPage> {
 
     setState(() => _submitting = true);
     try {
-      final files = <MultipartFile>[];
-      for (final image in _images) {
-        files.add(
-          await MultipartFile.fromFile(
-            image.path,
-            filename: image.name,
-          ),
-        );
-      }
-      final formData = FormData.fromMap({
-        'color': color,
-        'campus': _selectedCampus!.code.toString(),
+      final files = _images.map((image) => File(image.path)).toList();
+      final keys = await CosUploadService.uploadImages(files);
+      final payload = <String, dynamic>{
+        'color': _selectedColorId,
+        'images': keys,
+        'campus': _selectedCampus!.code,
         'location': location,
-        'tags': _selectedTraits,
-        'images': files,
+        'tags': _selectedTagIds,
         if (tempName.isNotEmpty) 'tempName': tempName,
-      });
-      await Http().post(
-        '/new-cats',
-        data: formData,
-        options: Options(contentType: 'multipart/form-data'),
-      );
+      };
+      await Http().post('/new-cats', data: payload);
       if (!mounted) return;
       _showMessage('提交成功，等待审核');
       _tempNameController.clear();
-      _colorController.clear();
       _locationController.clear();
       setState(() {
         _images.clear();
-        _selectedTraits.clear();
+        _selectedTagIds.clear();
+        _selectedColorId = null;
       });
       if (Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
@@ -232,9 +219,9 @@ class _NewCatPageState extends ConsumerState<NewCatPage> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -280,8 +267,10 @@ class _NewCatPageState extends ConsumerState<NewCatPage> {
                             child: const Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.photo_camera_outlined,
-                                    color: Color(0xFFB0B4BA)),
+                                Icon(
+                                  Icons.photo_camera_outlined,
+                                  color: Color(0xFFB0B4BA),
+                                ),
                                 SizedBox(height: 8),
                                 Text(
                                   '上传大头照',
@@ -314,7 +303,7 @@ class _NewCatPageState extends ConsumerState<NewCatPage> {
                   ),
                   if (_images.isNotEmpty) ...[
                     const SizedBox(height: 12),
-                  _ImageGrid(images: _images, onRemove: _removeImage),
+                    _ImageGrid(images: _images, onRemove: _removeImage),
                   ],
                 ],
               ),
@@ -335,12 +324,19 @@ class _NewCatPageState extends ConsumerState<NewCatPage> {
               _SectionCard(
                 children: [
                   const _FieldTitle(title: '毛色分类', required: true),
-                  TextField(
-                    controller: _colorController,
-                    decoration: const InputDecoration(
-                      hintText: '例如：橘猫、三花、奶牛、狸花',
-                      border: InputBorder.none,
-                    ),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: _colorOptions
+                        .map(
+                          (item) => _TraitChip(
+                            label: item.label,
+                            selected: _selectedColorId == item.id,
+                            onTap: () =>
+                                setState(() => _selectedColorId = item.id),
+                          ),
+                        )
+                        .toList(),
                   ),
                 ],
               ),
@@ -373,8 +369,11 @@ class _NewCatPageState extends ConsumerState<NewCatPage> {
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              const Icon(Icons.expand_more,
-                                  size: 18, color: Color(0xFFB16A00)),
+                              const Icon(
+                                Icons.expand_more,
+                                size: 18,
+                                color: Color(0xFFB16A00),
+                              ),
                             ],
                           ),
                         ),
@@ -397,19 +396,27 @@ class _NewCatPageState extends ConsumerState<NewCatPage> {
               _SectionCard(
                 children: [
                   const _FieldTitle(title: '初见性格'),
-                  Wrap(
-                    spacing: 10,
-                    runSpacing: 10,
-                    children: _traitOptions
-                        .map(
-                          (label) => _TraitChip(
-                            label: label,
-                            selected: _selectedTraits.contains(label),
-                            onTap: () => _toggleTrait(label),
-                          ),
-                        )
-                        .toList(),
-                  ),
+                  if (_tagOptions.isEmpty)
+                    Text(
+                      '暂无可选标签',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey,
+                      ),
+                    )
+                  else
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: _tagOptions
+                          .map(
+                            (item) => _TraitChip(
+                              label: item.label,
+                              selected: _selectedTagIds.contains(item.id),
+                              onTap: () => _toggleTrait(item.id),
+                            ),
+                          )
+                          .toList(),
+                    ),
                 ],
               ),
               const SizedBox(height: 20),
@@ -463,10 +470,9 @@ class _FieldTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final baseStyle = Theme.of(context)
-        .textTheme
-        .bodyMedium
-        ?.copyWith(fontWeight: FontWeight.w600);
+    final baseStyle = Theme.of(
+      context,
+    ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -526,7 +532,9 @@ class _TraitChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final background = selected ? const Color(0xFFF6C14D) : Colors.white;
     final textColor = selected ? Colors.black87 : const Color(0xFF6F7681);
-    final borderColor = selected ? const Color(0xFFF6C14D) : const Color(0xFFE4E6EB);
+    final borderColor = selected
+        ? const Color(0xFFF6C14D)
+        : const Color(0xFFE4E6EB);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(18),
@@ -539,10 +547,10 @@ class _TraitChip extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: Theme.of(context)
-              .textTheme
-              .labelMedium
-              ?.copyWith(color: textColor, fontWeight: FontWeight.w600),
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: textColor,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
