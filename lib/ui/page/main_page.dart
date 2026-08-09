@@ -41,7 +41,6 @@ class _MainPageState extends ConsumerState<MainPage> {
         daliyCheckIn();
       },
     );
-    WidgetsBinding.instance.addObserver(_lifecycleListener);
   }
 
   void daliyCheckIn() async {

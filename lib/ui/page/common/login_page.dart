@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
+import 'package:meow/api/http.dart';
 import 'package:meow/api/service/auth_repository.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/util/store.dart';
-import 'register_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   final bool popAfterLogin;
@@ -20,39 +21,44 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  final _idCtrl = TextEditingController(text: '202400300169');
-  final _pwdCtrl = TextEditingController(text: '123456');
   bool _loading = false;
-  bool _isAdmin = true; // 是否管理员登录
+  //bool _isAdmin = true; // 是否管理员登录
 
   Future<void> _doLogin() async {
-    final email = '${_idCtrl.text.trim()}@mail.sdu.edu.cn';
-    final pwd = _pwdCtrl.text;
-    if (!email.contains(RegExp(r'^[0-9]+@mail\.sdu\.edu\.cn$'))) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('请输入有效的山大邮箱')));
-      return;
-    }
-    if (pwd.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('请输入密码')));
-      return;
-    }
-
     setState(() => _loading = true);
     try {
-      final repo = AuthRepository();
-      final result = await repo.login(
-        email: email,
-        password: pwd,
-        isAdmin: _isAdmin,
+      final res = await FlutterWebAuth2.authenticate(
+        url: 'https://meow.sduonline.cn/auth/login?platform=android', 
+        callbackUrlScheme: 'meow',
+        options: const FlutterWebAuth2Options(
+          useWebview: false
+        )
       );
 
-      Store().setString('roleType', result.user.roleType.toString());
+      if ( res.isNotEmpty ){
+        debugPrint(res);
+      } else {
+        debugPrint('返回了空信息');
+      }
 
-      ref.read(authStateProvider.notifier).update(result.user, result.token);
+      Uri uri = Uri.parse(res);
+      final param = uri.queryParameters;
+      final String token = param['meow_token']?? '';
+      final String refresh_token = param['meow_refresh_token']?? '';
+
+      if(token.isEmpty || refresh_token.isEmpty){
+        throw Exception('获取的token为空');
+      }
+
+      Http().setToken(token);
+
+      User user = await AuthRepository.getMe();
+      ref.read(authStateProvider.notifier).update(user);
+
+      // TODO 检查这个逻辑怎么改
+      //Store().setString('roleType', result.user.roleType.toString());
+
+      //ref.read(authStateProvider.notifier).update(result.user, result.token);
       
       if(widget.popAfterLogin) {
         Navigator.of(context).pop();
@@ -151,33 +157,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _idCtrl,
-                                decoration: const InputDecoration(
-                                  labelText: '山大邮箱',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                            ),
-                            Text(
-                              '@mail.sdu.edu.cn',
-                              style: TextStyle(color: Colors.black54),
-                            ),
-                          ],
+                        SizedBox(
+                          height: 20,
                         ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _pwdCtrl,
-                          obscureText: true,
-                          decoration: const InputDecoration(
-                            labelText: '密码',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
                         SizedBox(
                           width: double.infinity,
                           height: 48,
@@ -201,7 +183,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 : const Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text('立即登录'),
+                                      Text('统一认证登录'),
                                       SizedBox(width: 6),
                                       Icon(Icons.arrow_forward),
                                     ],
@@ -219,7 +201,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 const SizedBox(height: 12),
 
-                // 游客访问/忘记密码
+                // 游客访问
                 Column(
                   children: [
                     Row(
@@ -228,18 +210,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         TextButton(
                           onPressed: _doGuestLogin,
                           child: const Text('游客访问'),
-                        ),
-                        const Text(
-                          ' | ',
-                          style: TextStyle(color: Colors.black54),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => RegisterPage()),
-                            );
-                          },
-                          child: const Text('注册账号'),
                         ),
                       ],
                     ),
@@ -258,20 +228,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     // ),
                   ],
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Checkbox(
-                      value: _isAdmin,
-                      onChanged: (val) {
-                        setState(() {
-                          _isAdmin = val ?? false;
-                        });
-                      },
-                    ),
-                    const Text('管理员登录'),
-                  ],
-                ),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   children: [
+                //     Checkbox(
+                //       value: _isAdmin,
+                //       onChanged: (val) {
+                //         setState(() {
+                //           _isAdmin = val ?? false;
+                //         });
+                //       },
+                //     ),
+                //     const Text('管理员登录'),
+                //   ],
+                // ),
               ],
             ),
           ),
