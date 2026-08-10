@@ -304,7 +304,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('保存成功 ${result.data}')));
+        ).showSnackBar(SnackBar(content: Text('保存成功 ${result.msg}')));
       }
     } catch (error) {
       if (!mounted) return;

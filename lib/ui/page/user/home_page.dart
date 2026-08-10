@@ -135,7 +135,7 @@ class _HomePageState extends State<HomePage> {
         _errorMessage = null;
       });
     } catch (error) {
-      setState(() {
+      if(mounted) setState(() {
         if (reset) {
           _errorMessage = '加载失败，请稍后重试';
         } else {
@@ -143,7 +143,7 @@ class _HomePageState extends State<HomePage> {
         }
       });
     } finally {
-      setState(() {
+      if(mounted) setState(() {
         _isInitialLoading = false;
         _isLoadingMore = false;
       });
@@ -169,22 +169,28 @@ class _HomePageState extends State<HomePage> {
       final meowStar = futures[3].data?.total ?? 0;
       final hospital = futures[4].data?.total ?? 0;
 
-      setState(() {
-        _totalCount = total;
-        _schoolCount = futures[1].data?.total ?? 0;
-        _graduatedCount = graduated;
-        _meowStarCount = meowStar;
-        _hospitalCount = hospital;
-        _statsError = null;
-      });
+      if( mounted ) {  
+        setState(() {
+          _totalCount = total;
+          _schoolCount = futures[1].data?.total ?? 0;
+          _graduatedCount = graduated;
+          _meowStarCount = meowStar;
+          _hospitalCount = hospital;
+          _statsError = null;
+        });
+      }
     } catch (error) {
-      setState(() {
+      if(mounted) {
+        setState(() {
         _statsError = '数据加载失败';
       });
+      }
     } finally {
-      setState(() {
-        _isStatsLoading = false;
-      });
+      if(mounted) {
+        setState(() {
+          _isStatsLoading = false;
+        });
+      }
     }
   }
 

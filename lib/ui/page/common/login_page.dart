@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
+import 'package:meow/api/Urls.dart';
 import 'package:meow/api/http.dart';
 import 'package:meow/api/service/auth_repository.dart';
 import 'package:meow/model/user.dart';
@@ -22,13 +23,14 @@ class LoginPage extends ConsumerStatefulWidget {
 
 class _LoginPageState extends ConsumerState<LoginPage> {
   bool _loading = false;
-  //bool _isAdmin = true; // 是否管理员登录
+  int _count = 0;   //点击计数
+  bool _isAdmin = false; // 是否管理员登录
 
   Future<void> _doLogin() async {
     setState(() => _loading = true);
     try {
       final res = await FlutterWebAuth2.authenticate(
-        url: 'https://meow.sduonline.cn/auth/login?platform=android',
+        url: _isAdmin? Urls.Auth_Admin: Urls.Auth,
         callbackUrlScheme: 'meow',
         options: const FlutterWebAuth2Options(useWebview: false),
       );
@@ -51,12 +53,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       Http().setTokens(token, refreshToken);
 
       User user = await AuthRepository.getMe();
+      if(_isAdmin){
+        user.roleType = RoleType.admin;
+      }
       ref.read(authStateProvider.notifier).update(user);
 
-      // TODO 检查这个逻辑怎么改
-      //Store().setString('roleType', result.user.roleType.toString());
-
-      //ref.read(authStateProvider.notifier).update(result.user, result.token);
+      Store().setString('roleType', user.roleType.toString());
 
       if (widget.popAfterLogin) {
         Navigator.of(context).pop();
@@ -122,17 +124,32 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(height: 24),
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFFE066),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.pets,
-                    color: Colors.black87,
-                    size: 32,
+                GestureDetector(
+                  onTap: () {
+                    ++_count;
+                  },
+                  onLongPress: () {
+                    if( _count >= 3 ){
+                      _isAdmin = !_isAdmin;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(
+                          '已切换为${_isAdmin? '管理员': '用户'}登录'
+                        ))
+                      );
+                    }
+                  },
+                  child: Container(
+                    width: 64,
+                    height: 64,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFFFE066),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.pets,
+                      color: Colors.black87,
+                      size: 32,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),

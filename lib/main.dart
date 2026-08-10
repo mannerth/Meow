@@ -31,6 +31,7 @@ void main() async {
     Store().user = user;
   } catch (e) {
     Store().remove('token');
+    Store().remove('refreshToken');
   } finally {
     Http.hasInit = true;
   }
