@@ -151,6 +151,7 @@ class _MeowPageState extends State<MeowPage> {
         onRefresh: () => _loadCats(reset: true),
         child: CustomScrollView(
           controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),

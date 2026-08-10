@@ -6,6 +6,7 @@ import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/custom_bottom_navigation_bar.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_items_provider.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_provider.dart';
+import 'package:meow/ui/widget/keep_alive_wrapper.dart';
 
 // 使用RiverPod的ConsumerStatefulWidget，可以使用ref来监听和读取Provider
 // 同时也有StatefulWidget的setState功能
@@ -95,7 +96,7 @@ class _MainPageState extends ConsumerState<MainPage> {
               ref.read(navigationProvider.notifier).setCurrentIndex(index);
             },
             itemBuilder: (context, index) {
-              return pages[index];
+              return KeepAliveWrapper(child: pages[index]);
             },
           ),
           // 自定义悬浮导航栏
