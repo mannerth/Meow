@@ -6,6 +6,7 @@ import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/page/admin/admin_adoptions_page.dart';
 import 'package:meow/ui/page/admin/admin_new_cat_page.dart';
 import 'package:meow/ui/page/admin/admin_sos_page.dart';
+import 'package:meow/ui/page/admin/announcements_page.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_provider.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
@@ -87,11 +88,16 @@ class _StaticPageState extends ConsumerState<StaticPage> {
             const SizedBox(height: 18),
             _SectionTitle(title: '官方公告管理'),
             const SizedBox(height: 12),
-            const _ActionTile(
+            _ActionTile(
               iconBackground: Color(0xFFEFF2FF),
               icon: Icons.campaign_outlined,
               title: '发布新公告',
               subtitle: '向全校用户推送最新通知或招募信息',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AnnouncementsPage()),
+                );
+              },
             ),
             const SizedBox(height: 16),
             _SectionTitle(title: '科普文章管理'),
@@ -403,63 +409,72 @@ class _ActionTile extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
+  final VoidCallback? onTap;
 
   const _ActionTile({
     required this.iconBackground,
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 14,
-            offset: Offset(0, 8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0F000000),
+                blurRadius: 14,
+                offset: Offset(0, 8),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: iconBackground,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: const Color(0xFF1F2A37)),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: iconBackground,
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: const Color(0xFF6B7280),
-                  ),
+                child: Icon(icon, color: const Color(0xFF1F2A37)),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              const Icon(Icons.chevron_right),
+            ],
           ),
-          const Icon(Icons.chevron_right),
-        ],
+        ),
       ),
     );
   }

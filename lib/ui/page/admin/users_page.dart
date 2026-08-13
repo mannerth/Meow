@@ -91,7 +91,7 @@ class _UsersPageState extends State<UsersPage> {
         _errorMessage = null;
       });
     } catch (error) {
-      setState(() {
+      if(mounted) setState(() {
         if (reset) {
           _errorMessage = '加载失败，请稍后重试';
         } else {
@@ -99,7 +99,7 @@ class _UsersPageState extends State<UsersPage> {
         }
       });
     } finally {
-      setState(() {
+      if(mounted) setState(() {
         _isInitialLoading = false;
         _isLoadingMore = false;
       });

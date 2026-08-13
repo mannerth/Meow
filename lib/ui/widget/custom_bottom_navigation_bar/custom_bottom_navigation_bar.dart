@@ -53,21 +53,28 @@ class CustomBottomNavigationBar extends StatelessWidget {
               width: 1.5,
             ),
           ),
-          child: Row(
-            //mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(items.length, (index) {
-              return CustomNavigationItem(
-                data: items[index],
-                isSelected: currentIndex == index,
-                animationDuration: animationDuration,
-                onTap: () {
-                  if (onIndexChanged != null && currentIndex != index) {
-                    onIndexChanged!(index);
-                  }
-                },
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final useCompactLayout =
+                  items.length > 4 || constraints.maxWidth / items.length < 72;
+
+              return Row(
+                children: List.generate(items.length, (index) {
+                  final item = CustomNavigationItem(
+                    data: items[index],
+                    isSelected: currentIndex == index,
+                    compact: useCompactLayout,
+                    animationDuration: animationDuration,
+                    onTap: () {
+                      if (onIndexChanged != null && currentIndex != index) {
+                        onIndexChanged!(index);
+                      }
+                    },
+                  );
+                  return useCompactLayout ? Expanded(child: item) : item;
+                }),
               );
-            }),
+            },
           ),
         ),
       ),

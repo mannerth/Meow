@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 class NavigateCard extends StatelessWidget {
   const NavigateCard({
     super.key,
-    this.height = 100,
-    this.width = 100,
+    this.height,
+    this.width,
     required this.title,
     this.subtitle = '',
     required this.destination,
@@ -17,8 +17,8 @@ class NavigateCard extends StatelessWidget {
   final Widget destination;
   final Color backgroundColor;
   final Widget icon;
-  final double width;
-  final double height;
+  final double? width;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {

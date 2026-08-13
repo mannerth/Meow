@@ -21,6 +21,7 @@ class CustomNavigationItemData {
 class CustomNavigationItem extends StatelessWidget {
   final CustomNavigationItemData data;
   final bool isSelected;
+  final bool compact;
   final VoidCallback onTap;
   final Duration animationDuration;
 
@@ -29,6 +30,7 @@ class CustomNavigationItem extends StatelessWidget {
     required this.data,
     required this.isSelected,
     required this.onTap,
+    this.compact = false,
     this.animationDuration = const Duration(milliseconds: 300),
   });
 
@@ -38,72 +40,95 @@ class CustomNavigationItem extends StatelessWidget {
     final backgroundColor =
         data.activeBackgroundColor ??
         Theme.of(context).primaryColor.withValues(alpha: 0.15);
+    final icon = AnimatedSwitcher(
+      duration: animationDuration,
+      switchInCurve: Curves.easeIn,
+      switchOutCurve: Curves.easeOut,
+      child: IconTheme(
+        key: ValueKey(isSelected),
+        data: IconThemeData(
+          color: isSelected
+              ? Theme.of(context).primaryColor
+              : Colors.grey.shade600,
+          size: compact ? 22 : 24,
+        ),
+        child: isSelected ? activeIcon : data.icon,
+      ),
+    );
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: animationDuration,
-        curve: Curves.easeOutCubic,
-        padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 16.0 : 12.0,
-          vertical: 10.0,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? backgroundColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(24.0),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // 图标 - 动画切换
-            AnimatedSwitcher(
-              duration: animationDuration,
-              switchInCurve: Curves.easeIn,
-              switchOutCurve: Curves.easeOut,
-              child: isSelected
-                  ? IconTheme(
-                      key: const ValueKey('active'),
-                      data: IconThemeData(
-                        color: Theme.of(context).primaryColor,
-                        size: 24,
-                      ),
-                      child: activeIcon,
-                    )
-                  : IconTheme(
-                      key: const ValueKey('inactive'),
-                      data: IconThemeData(
-                        color: Colors.grey.shade600,
-                        size: 24,
-                      ),
-                      child: data.icon,
-                    ),
-            ),
-            // 文字 - 动画展开/收起
-            AnimatedSize(
-              duration: animationDuration,
-              curve: Curves.easeOutCubic,
-              child: AnimatedOpacity(
-                duration: animationDuration,
-                opacity: isSelected ? 1.0 : 0.0,
-                child: isSelected
-                    ? Padding(
-                        padding: const EdgeInsets.only(left: 8.0),
-                        child: Text(
-                          data.label,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).primaryColor,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: data.label,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: animationDuration,
+          curve: Curves.easeOutCubic,
+          padding: compact
+              ? const EdgeInsets.symmetric(vertical: 5)
+              : EdgeInsets.symmetric(
+                  horizontal: isSelected ? 16.0 : 12.0,
+                  vertical: 10.0,
+                ),
+          decoration: BoxDecoration(
+            color: isSelected ? backgroundColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(compact ? 16.0 : 24.0),
+          ),
+          child: compact
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    icon,
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        data.label,
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                          color: isSelected
+                              ? Theme.of(context).primaryColor
+                              : Colors.grey.shade600,
                         ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ),
-          ],
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    icon,
+                    AnimatedSize(
+                      duration: animationDuration,
+                      curve: Curves.easeOutCubic,
+                      child: AnimatedOpacity(
+                        duration: animationDuration,
+                        opacity: isSelected ? 1.0 : 0.0,
+                        child: isSelected
+                            ? Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
+                                child: Text(
+                                  data.label,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              )
+                            : const SizedBox.shrink(),
+                      ),
+                    ),
+                  ],
+                ),
         ),
       ),
     );

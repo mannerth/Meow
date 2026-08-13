@@ -9,6 +9,7 @@ import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/page/user/cat_detail_page.dart';
 import 'package:meow/ui/page/user/adoption_apply_page.dart';
 import 'package:meow/ui/page/user/leaderboard_page.dart';
+import 'package:meow/ui/page/user/notifications_page.dart';
 import 'package:meow/ui/page/user/sos_page.dart';
 import 'package:meow/ui/widget/cat_card.dart';
 import 'package:meow/ui/widget/image_preview.dart';
@@ -135,18 +136,20 @@ class _HomePageState extends State<HomePage> {
         _errorMessage = null;
       });
     } catch (error) {
-      if(mounted) setState(() {
-        if (reset) {
-          _errorMessage = '加载失败，请稍后重试';
-        } else {
-          _loadMoreError = '加载失败，点击重试';
-        }
-      });
+      if (mounted)
+        setState(() {
+          if (reset) {
+            _errorMessage = '加载失败，请稍后重试';
+          } else {
+            _loadMoreError = '加载失败，点击重试';
+          }
+        });
     } finally {
-      if(mounted) setState(() {
-        _isInitialLoading = false;
-        _isLoadingMore = false;
-      });
+      if (mounted)
+        setState(() {
+          _isInitialLoading = false;
+          _isLoadingMore = false;
+        });
     }
   }
 
@@ -169,7 +172,7 @@ class _HomePageState extends State<HomePage> {
       final meowStar = futures[3].data?.total ?? 0;
       final hospital = futures[4].data?.total ?? 0;
 
-      if( mounted ) {  
+      if (mounted) {
         setState(() {
           _totalCount = total;
           _schoolCount = futures[1].data?.total ?? 0;
@@ -180,13 +183,13 @@ class _HomePageState extends State<HomePage> {
         });
       }
     } catch (error) {
-      if(mounted) {
+      if (mounted) {
         setState(() {
-        _statsError = '数据加载失败';
-      });
+          _statsError = '数据加载失败';
+        });
       }
     } finally {
-      if(mounted) {
+      if (mounted) {
         setState(() {
           _isStatsLoading = false;
         });
@@ -212,6 +215,17 @@ class _HomePageState extends State<HomePage> {
             return Text(ref.watch(authStateProvider).user?.campus?.name ?? '喵');
           },
         ),
+        actions: [
+          IconButton(
+            tooltip: '通知',
+            icon: const Icon(Icons.notifications_outlined),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationsPage()),
+              );
+            },
+          ),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _refresh,
@@ -234,60 +248,67 @@ class _HomePageState extends State<HomePage> {
                       hospital: _hospitalCount,
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        NavigateCard(
-                          title: '封神榜',
-                          subtitle: '谁是校宠No.1？',
-                          height: 180,
-                          width: 177,
-                          backgroundColor: Colors.orangeAccent.withAlpha(150),
-                          icon: SvgPicture.asset('assets/icons/ranking.svg'),
-                          destination: const LeaderboardPage(),
-                        ),
-                        SizedBox(
-                          width: 177,
-                          child: Column(
-                            children: [
-                              NavigateCard(
-                                title: '紧急SOS',
-                                subtitle: '伤病快速上报',
-                                height: 84,
-                                width: 177,
-                                backgroundColor: Colors.redAccent.withAlpha(
-                                  178,
-                                ),
-                                icon: const Icon(
-                                  Icons.warning,
-                                  color: Colors.white70,
-                                  size: 40,
-                                ),
-                                destination: const SosPage(),
+                    AspectRatio(
+                      aspectRatio: 2,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: NavigateCard(
+                              title: '封神榜',
+                              subtitle: '谁是校宠No.1？',
+                              backgroundColor: Colors.orangeAccent.withAlpha(
+                                150,
                               ),
-                              const SizedBox(height: 12),
-                              NavigateCard(
-                                title: '申请领养',
-                                subtitle: '给咪一个家',
-                                height: 84,
-                                width: 177,
-                                backgroundColor: const Color.fromARGB(
-                                  198,
-                                  255,
-                                  162,
-                                  216,
-                                ),
-                                icon: const Icon(
-                                  Icons.favorite_border,
-                                  color: Colors.white,
-                                  size: 40,
-                                ),
-                                destination: const AdoptionApplyPage(),
+                              icon: SvgPicture.asset(
+                                'assets/icons/ranking.svg',
                               ),
-                            ],
+                              destination: const LeaderboardPage(),
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: NavigateCard(
+                                    title: '紧急SOS',
+                                    subtitle: '伤病快速上报',
+                                    backgroundColor: Colors.redAccent.withAlpha(
+                                      178,
+                                    ),
+                                    icon: const Icon(
+                                      Icons.warning,
+                                      color: Colors.white70,
+                                      size: 40,
+                                    ),
+                                    destination: const SosPage(),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Expanded(
+                                  child: NavigateCard(
+                                    title: '申请领养',
+                                    subtitle: '给咪一个家',
+                                    backgroundColor: const Color.fromARGB(
+                                      198,
+                                      255,
+                                      162,
+                                      216,
+                                    ),
+                                    icon: const Icon(
+                                      Icons.favorite_border,
+                                      color: Colors.white,
+                                      size: 40,
+                                    ),
+                                    destination: const AdoptionApplyPage(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
