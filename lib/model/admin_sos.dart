@@ -145,12 +145,18 @@ List<String> _stringList(dynamic value) {
 
 List<String> _imageList(dynamic value) {
   if (value is List) {
-    return value.map((item) {
-      if (item is Map<String, dynamic> && item['url'] != null) {
-        return item['url'].toString();
-      }
-      return item.toString();
-    }).toList();
+    return value
+        .map(_imageUrl)
+        .where((url) => url.isNotEmpty)
+        .toList(growable: false);
   }
   return const [];
+}
+
+String _imageUrl(dynamic value) {
+  if (value is Map) {
+    final url = value['url'] ?? value['imageUrl'] ?? value['imageURL'];
+    return url?.toString() ?? '';
+  }
+  return value?.toString() ?? '';
 }

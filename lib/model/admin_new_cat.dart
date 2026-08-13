@@ -61,7 +61,11 @@ class AdminNewCatItem {
 
   factory AdminNewCatItem.fromJson(Map<String, dynamic> json) {
     final campusValue = json['campus'];
-    final imagesValue = json['images'] ?? json['imageUrls'] ?? json['media'];
+    final imagesValue =
+        json['images'] ??
+        json['imageURLs'] ??
+        json['imageUrls'] ??
+        json['media'];
     final colorValue = json['color'];
     return AdminNewCatItem(
       id: _stringValue(json['id']),
@@ -122,12 +126,18 @@ String? _nullableString(dynamic value) {
 
 List<String> _imageList(dynamic value) {
   if (value is List) {
-    return value.map((item) {
-      if (item is Map<String, dynamic> && item['url'] != null) {
-        return item['url'].toString();
-      }
-      return item.toString();
-    }).toList();
+    return value
+        .map(_imageUrl)
+        .where((url) => url.isNotEmpty)
+        .toList(growable: false);
   }
   return const [];
+}
+
+String _imageUrl(dynamic value) {
+  if (value is Map) {
+    final url = value['url'] ?? value['imageUrl'] ?? value['imageURL'];
+    return url?.toString() ?? '';
+  }
+  return value?.toString() ?? '';
 }

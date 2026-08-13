@@ -100,25 +100,28 @@ class AuthRepository {
     }
   }
 
-  // 更新用户信息（头像若更换，先上传 COS 后提交 key）
+  // 更新用户信息；头像使用专用接口，避免把 COS key 混入资料更新请求。
   static Future<bool> updateUserInfo({
     String? nickname,
     Campus? campus,
     String? phone,
     String? wechat,
     XFile? avatar,
-    String? currentAvatar,
   }) async {
     try {
-      String? avatarKey;
       if (avatar != null) {
         final keys = await CosUploadService.uploadImages([File(avatar.path)]);
-        if (keys.isNotEmpty) avatarKey = keys.first;
+        if (keys.isEmpty) return false;
+        final avatarResponse = await Http().put(
+          '/users/me/avatar',
+          queryParameters: {'key': keys.first},
+        );
+        final avatarCode = avatarResponse.data['code'];
+        if (avatarCode != 0 && avatarCode != 200) return false;
       }
 
       final payload = <String, dynamic>{
         'nickname': nickname ?? '',
-        'avatar': avatarKey ?? currentAvatar ?? '',
         'campus': campus?.code ?? 0,
         'contact': {'wechat': wechat ?? '', 'phone': phone ?? ''},
       };

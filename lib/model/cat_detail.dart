@@ -137,14 +137,14 @@ class CatBasicInfo {
       color: _colorLabel(json['color']),
       gender: catGenderLabel(json['gender']),
       campus: campusLabel(json['campus']),
-      hauntLocation: json['hauntLocation'] as String? ?? '',
-      role: json['role'] as String? ?? '',
+      hauntLocation: (json['hauntLocation'] ?? '').toString(),
+      role: (json['role'] ?? '').toString(),
       birthYear: (json['birthYear'] as num?)?.toInt() ?? 0,
       admissionDate: json['admissionDate'] as String? ?? '',
       status: statusValue is num
           ? statusValue.toInt()
           : (catStatusToCode((statusValue ?? '').toString()) ?? 0),
-      healthStatus: json['healthStatus'] as String? ?? '',
+      healthStatus: (json['healthStatus'] ?? '').toString(),
       lastSeenTime: json['lastSeenTime'] as String? ?? '',
       furLength: json['furLength'] as String? ?? '',
       neutered: CatNeutered.fromJson(

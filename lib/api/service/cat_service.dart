@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:meow/api/data_response.dart';
 import 'package:meow/api/http.dart';
 import 'package:meow/model/cat.dart';
@@ -126,18 +125,9 @@ class CatService {
     String? id,
     required Map<String, dynamic> payload,
   }) async {
-    final formData = FormData.fromMap(payload);
     final response = id == null
-        ? await Http().post(
-            '/admin/cats',
-            data: formData,
-            options: Options(contentType: 'multipart/form-data'),
-          )
-        : await Http().put(
-            '/admin/cats/$id',
-            data: formData,
-            options: Options(contentType: 'multipart/form-data'),
-          );
+        ? await Http().post('/admin/cats', data: payload)
+        : await Http().put('/admin/cats/$id', data: payload);
     final json = response.data as Map<String, dynamic>;
     return DataResponse.fromJson(json, (object) {
       if (object is String) return object;
@@ -148,9 +138,35 @@ class CatService {
     });
   }
 
+  /// 编辑页需要持久的 COS key；详情接口返回的图片 URL 可能是临时签名地址。
+  static Future<CatImageKeys> fetchImageKeys(String id) async {
+    final response = await Http().get('/admin/cats/$id/image-keys');
+    final json = response.data as Map<String, dynamic>;
+    final result = DataResponse.fromJson(json, (object) {
+      if (object is Map<String, dynamic>) return CatImageKeys.fromJson(object);
+      return const CatImageKeys();
+    });
+    return result.data ?? const CatImageKeys();
+  }
+
   static Future<DataResponse<void>> deleteCat(String id) async {
     final response = await Http().delete('/admin/cats/$id');
     final json = response.data as Map<String, dynamic>;
     return DataResponse.fromJson(json, (_) {});
   }
+}
+
+class CatImageKeys {
+  final String avatar;
+  final List<String> images;
+
+  const CatImageKeys({this.avatar = '', this.images = const []});
+
+  factory CatImageKeys.fromJson(Map<String, dynamic> json) => CatImageKeys(
+    avatar: (json['avatarKey'] ?? json['avatar'] ?? '').toString(),
+    images:
+        ((json['imageKeys'] ?? json['images']) as List<dynamic>? ?? const [])
+            .map((value) => value.toString())
+            .toList(),
+  );
 }

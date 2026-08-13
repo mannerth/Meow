@@ -82,7 +82,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       phone: _phoneCtrl.text.trim().isEmpty ? null : _phoneCtrl.text,
       wechat: _wechatCtrl.text.trim().isEmpty ? null : _wechatCtrl.text,
       avatar: _pickedImage,
-      currentAvatar: user.avatar,
     );
     if (!success) {
       ScaffoldMessenger.of(

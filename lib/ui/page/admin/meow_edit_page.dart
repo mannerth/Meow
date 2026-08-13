@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meow/api/service/cat_service.dart';
+import 'package:meow/api/service/cos_service.dart';
 import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat_detail.dart';
 import 'package:meow/model/user.dart';
@@ -25,8 +25,6 @@ class _MeowEditPageState extends State<MeowEditPage> {
   late TextEditingController _avatarController;
   late TextEditingController _colorController;
   late TextEditingController _genderController;
-  late TextEditingController _hauntController;
-  late TextEditingController _roleController;
   late TextEditingController _birthYearController;
   late TextEditingController _descriptionController;
   Campus? _campus;
@@ -37,15 +35,21 @@ class _MeowEditPageState extends State<MeowEditPage> {
   String _neuteredTypeDisplay = '剪耳';
   DateTime? _neuteredDate;
   DateTime? _admissionDate;
-  String _healthStatusDisplay = '健康';
+  int _healthStatus = 0;
+  int? _hauntLocationId;
+  int? _roleId;
 
   double _friendliness = 9.0;
   double _gluttony = 9.5;
   double _fight = 1.0;
   double _appearance = 10.0;
 
-  List<String> _selectedTags = [];
+  List<TypeItem> _colorOptions = const [];
+  List<TypeItem> _locationOptions = const [];
+  List<TypeItem> _roleOptions = const [];
   List<String> _images = [];
+  String _avatarKey = '';
+  List<String> _imageKeys = [];
   XFile? _avatarFile;
   final List<XFile> _imageFiles = [];
   bool _loading = false;
@@ -54,32 +58,11 @@ class _MeowEditPageState extends State<MeowEditPage> {
   static const _campusOptions = <Campus?>[null, ...Campus.values];
   static const _genderDisplayOptions = ['公', '母', '未知'];
   static const _neuteredTypeDisplayOptions = ['剪耳', '未剪耳'];
-  static const _healthStatusDisplayOptions = ['健康', '生病', '恢复中'];
-  List<String> _tagOptions = [
-    '亲人',
-    '吃货',
-    '话痨',
-    '高冷',
-    '霸主',
-    '学霸',
-    '安静',
-    '粘人',
-    '胆小',
-  ];
 
   static const _genderDisplayToValue = {'公': 1, '母': 2, '未知': 0};
   static const _statusDisplayToValue = {'在校': 0, '已毕业': 1, '喵星': 2, '住院': 3};
   static const _neuteredTypeDisplayToValue = {'剪耳': 0, '未剪耳': 1};
-  static const _healthStatusDisplayToValue = {
-    '健康': 'HEALTHY',
-    '生病': 'SICK',
-    '恢复中': 'RECOVERING',
-  };
-  static const _healthStatusValueToDisplay = {
-    'HEALTHY': '健康',
-    'SICK': '生病',
-    'RECOVERING': '恢复中',
-  };
+  static const _healthStatusOptions = ['健康', '生病', '恢复中'];
 
   @override
   void initState() {
@@ -88,8 +71,6 @@ class _MeowEditPageState extends State<MeowEditPage> {
     _avatarController = TextEditingController();
     _colorController = TextEditingController();
     _genderController = TextEditingController();
-    _hauntController = TextEditingController();
-    _roleController = TextEditingController();
     _birthYearController = TextEditingController();
     _descriptionController = TextEditingController();
     _loadDetail();
@@ -101,29 +82,30 @@ class _MeowEditPageState extends State<MeowEditPage> {
     _avatarController.dispose();
     _colorController.dispose();
     _genderController.dispose();
-    _hauntController.dispose();
-    _roleController.dispose();
     _birthYearController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
 
   Future<void> _loadDetail() async {
-    if (widget.catId == null) return;
     setState(() => _loading = true);
     try {
-      final serverTags = await TypeService.fetchTags();
-      if (serverTags.isNotEmpty) {
-        final labels = serverTags.map((t) => t.label).toList();
-        _tagOptions = labels.where((t) => !_tagOptions.contains(t)).toList();
-      }
+      final results = await Future.wait([
+        TypeService.fetchColors(),
+        TypeService.fetchLocations(),
+        TypeService.fetchRoles(),
+      ]);
+      _colorOptions = results[0];
+      _locationOptions = results[1];
+      _roleOptions = results[2];
+      if (widget.catId == null) return;
       final response = await CatService.fetchCatDetail(widget.catId!);
       final detail = response.data;
       if (detail == null) return;
-      _tagOptions.addAll(
-        detail.tags.where((tag) => !_tagOptions.contains(tag)),
-      );
+      final imageKeys = await CatService.fetchImageKeys(widget.catId!);
       _applyDetail(detail);
+      _avatarKey = imageKeys.avatar;
+      _imageKeys = imageKeys.images;
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -134,8 +116,11 @@ class _MeowEditPageState extends State<MeowEditPage> {
     _avatarController.text = detail.avatar;
     _colorController.text = detail.basicInfo.color;
     _genderController.text = _genderDisplayFromApi(detail.basicInfo.gender);
-    _hauntController.text = detail.basicInfo.hauntLocation;
-    _roleController.text = detail.basicInfo.role;
+    _hauntLocationId = _typeIdForValue(
+      detail.basicInfo.hauntLocation,
+      _locationOptions,
+    );
+    _roleId = _typeIdForValue(detail.basicInfo.role, _roleOptions);
     _descriptionController.text = detail.description;
     _campus = Campus.values.cast<Campus?>().firstWhere(
       (item) => item?.name == detail.basicInfo.campus,
@@ -153,8 +138,9 @@ class _MeowEditPageState extends State<MeowEditPage> {
     _gluttony = detail.attributes.gluttony;
     _fight = detail.attributes.fight;
     _appearance = detail.attributes.appearance;
-    _selectedTags = detail.tags;
     _images = List<String>.from(detail.images);
+    _imageKeys = [];
+    _avatarKey = '';
     _imageFiles.clear();
     _birthYearController.text = detail.basicInfo.birthYear == 0
         ? ''
@@ -162,13 +148,29 @@ class _MeowEditPageState extends State<MeowEditPage> {
     _admissionDate = detail.basicInfo.admissionDate.isEmpty
         ? null
         : DateTime.tryParse(detail.basicInfo.admissionDate);
-    _healthStatusDisplay = detail.basicInfo.healthStatus.isEmpty
-        ? _healthStatusDisplayOptions.first
-        : _healthStatusDisplayFromApi(detail.basicInfo.healthStatus);
+    _healthStatus = _healthStatusFromApi(detail.basicInfo.healthStatus);
     if (mounted) setState(() {});
   }
 
   bool get _isBusy => _loading;
+
+  int? _colorIdForValue(String value) {
+    final directId = int.tryParse(value);
+    if (directId != null) return directId;
+    for (final color in _colorOptions) {
+      if (color.label == value) return color.id;
+    }
+    return null;
+  }
+
+  int? _typeIdForValue(String value, List<TypeItem> options) {
+    final directId = int.tryParse(value);
+    if (directId != null) return directId;
+    for (final option in options) {
+      if (option.label == value) return option.id;
+    }
+    return null;
+  }
 
   String _genderDisplayFromApi(String value) {
     switch (value) {
@@ -212,18 +214,14 @@ class _MeowEditPageState extends State<MeowEditPage> {
     return _neuteredTypeDisplayToValue[display];
   }
 
-  String _healthStatusDisplayFromApi(String value) {
-    if (_healthStatusValueToDisplay.containsKey(value)) {
-      return _healthStatusValueToDisplay[value]!;
-    }
-    if (_healthStatusDisplayToValue.containsKey(value)) {
-      return value;
-    }
-    return value;
-  }
-
-  String _healthStatusValueFromDisplay(String display) {
-    return _healthStatusDisplayToValue[display] ?? display;
+  int _healthStatusFromApi(String value) {
+    final code = int.tryParse(value);
+    if (code != null) return code;
+    return switch (value) {
+      'SICK' => 1,
+      'RECOVERING' => 2,
+      _ => 0,
+    };
   }
 
   Future<void> _pickNeuteredDate() async {
@@ -252,51 +250,62 @@ class _MeowEditPageState extends State<MeowEditPage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    final colorId = _colorIdForValue(_colorController.text.trim());
+    if (colorId == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请选择类型列表中的花色')));
+      return;
+    }
+    if (_hauntLocationId == null || _roleId == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('请选择常驻地点和角色类型')));
+      return;
+    }
     setState(() => _loading = true);
-    final payload = <String, dynamic>{
-      'name': _nameController.text.trim(),
-      'aliases': <String>[],
-      'color': _colorController.text.trim(),
-      'gender': _genderValueFromDisplay(_genderController.text.trim()),
-      'campus': _campus?.name ?? '',
-      'hauntLocation': _hauntController.text.trim(),
-      'birthYear': int.tryParse(_birthYearController.text.trim()) ?? 0,
-      'admissionDate': _admissionDate == null
-          ? ''
-          : _admissionDate!.toIso8601String().split('T').first,
-      'status': int.tryParse(_status) ?? 0,
-      'healthStatus': _healthStatusValueFromDisplay(_healthStatusDisplay),
-      'attributes[friendliness]': _friendliness.toStringAsFixed(1),
-      'attributes[gluttony]': _gluttony.toStringAsFixed(1),
-      'attributes[fight]': _fight.toStringAsFixed(1),
-      'attributes[appearance]': _appearance.toStringAsFixed(1),
-      'isNeutered': _isNeutered,
-      'neuteredDate': _neuteredDate?.toIso8601String().split('T').first,
-      'neuteredType': _neuteredTypeValueFromDisplay(_neuteredTypeDisplay),
-      'description': _descriptionController.text.trim(),
-      'tags': _selectedTags,
-    };
-    if (_avatarFile != null) {
-      payload['avatar'] = await MultipartFile.fromFile(
-        _avatarFile!.path,
-        filename: _avatarFile!.name,
-      );
-    } else if (_avatarController.text.trim().isNotEmpty) {
-      payload['avatar'] = _avatarController.text.trim();
-    }
-    if (_imageFiles.isNotEmpty || _images.isNotEmpty) {
-      final existing = _images.map((url) => url).toList();
-      final files = await Future.wait(
-        _imageFiles
-            .map(
-              (image) =>
-                  MultipartFile.fromFile(image.path, filename: image.name),
-            )
-            .toList(),
-      );
-      payload['images'] = [...existing, ...files];
-    }
     try {
+      String avatar = _avatarKey;
+      if (_avatarFile != null) {
+        avatar = (await CosUploadService.uploadImages([
+          File(_avatarFile!.path),
+        ])).first;
+      }
+      final images = <String>[..._imageKeys];
+      if (_imageFiles.isNotEmpty) {
+        images.addAll(
+          await CosUploadService.uploadImages(
+            _imageFiles.map((image) => File(image.path)).toList(),
+          ),
+        );
+      }
+      final payload = <String, dynamic>{
+        'name': _nameController.text.trim(),
+        'aliases': <String>[],
+        'color': colorId,
+        'avatar': avatar,
+        'images': images,
+        'gender': _genderValueFromDisplay(_genderController.text.trim()),
+        'campus': _campus?.code ?? 0,
+        'hauntLocation': _hauntLocationId,
+        'role': _roleId,
+        'birthYear': int.tryParse(_birthYearController.text.trim()) ?? 0,
+        'admissionDate': _admissionDate == null
+            ? ''
+            : _admissionDate!.toIso8601String().split('T').first,
+        'status': int.tryParse(_status) ?? 0,
+        'healthStatus': _healthStatus,
+        'attributes': {
+          'friendliness': _friendliness,
+          'gluttony': _gluttony,
+          'fight': _fight,
+          'appearance': _appearance,
+        },
+        'isNeutered': _isNeutered,
+        'neuteredDate': _neuteredDate?.toIso8601String().split('T').first,
+        'neuteredType': _neuteredTypeValueFromDisplay(_neuteredTypeDisplay),
+        'description': _descriptionController.text.trim(),
+      };
       var result = await CatService.upsertCat(
         id: widget.catId,
         payload: payload,
@@ -307,6 +316,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
         ).showSnackBar(SnackBar(content: Text('保存成功 ${result.msg}')));
       }
     } catch (error) {
+      debugPrint('保存猫咪档案失败: $error');
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -331,6 +341,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
   void _removeAvatar() {
     _avatarController.text = '';
     _avatarFile = null;
+    _avatarKey = '';
     setState(() {});
   }
 
@@ -386,7 +397,12 @@ class _MeowEditPageState extends State<MeowEditPage> {
                       images: _images,
                       files: _imageFiles,
                       onAdd: _pickImages,
-                      onRemoveUrl: (url) => setState(() => _images.remove(url)),
+                      onRemoveUrl: (index) => setState(() {
+                        _images.removeAt(index);
+                        if (index < _imageKeys.length) {
+                          _imageKeys.removeAt(index);
+                        }
+                      }),
                       onRemoveFile: _removeImage,
                     ),
                   ],
@@ -400,10 +416,16 @@ class _MeowEditPageState extends State<MeowEditPage> {
                       controller: _nameController,
                       requiredField: true,
                     ),
-                    _TextFieldTile(
+                    _DropdownTile(
                       label: '花色/品种',
-                      controller: _colorController,
-                      requiredField: true,
+                      value: _colorController.text.isEmpty
+                          ? null
+                          : _colorController.text,
+                      items: _colorOptions.map((item) => item.label).toList(),
+                      onChanged: (value) {
+                        _colorController.text = value ?? '';
+                        setState(() {});
+                      },
                     ),
                     _DropdownTile(
                       label: '所在校区',
@@ -431,8 +453,33 @@ class _MeowEditPageState extends State<MeowEditPage> {
                         setState(() {});
                       },
                     ),
-                    _TextFieldTile(label: '常驻地点', controller: _hauntController),
-                    _TextFieldTile(label: '学历/编制', controller: _roleController),
+                    _DropdownTile(
+                      label: '常驻地点',
+                      value: _locationOptions
+                          .where((item) => item.id == _hauntLocationId)
+                          .map((item) => item.label)
+                          .firstOrNull,
+                      items: _locationOptions
+                          .map((item) => item.label)
+                          .toList(),
+                      onChanged: (value) => setState(() {
+                        _hauntLocationId = _typeIdForValue(
+                          value ?? '',
+                          _locationOptions,
+                        );
+                      }),
+                    ),
+                    _DropdownTile(
+                      label: '角色',
+                      value: _roleOptions
+                          .where((item) => item.id == _roleId)
+                          .map((item) => item.label)
+                          .firstOrNull,
+                      items: _roleOptions.map((item) => item.label).toList(),
+                      onChanged: (value) => setState(() {
+                        _roleId = _typeIdForValue(value ?? '', _roleOptions);
+                      }),
+                    ),
                     _TextFieldTile(
                       label: '出生年份',
                       controller: _birthYearController,
@@ -447,13 +494,14 @@ class _MeowEditPageState extends State<MeowEditPage> {
                     ),
                     _DropdownTile(
                       label: '健康状态',
-                      value: _healthStatusDisplay,
-                      items: _healthStatusDisplayOptions,
+                      value: _healthStatusOptions[_healthStatus.clamp(0, 2)],
+                      items: _healthStatusOptions,
                       onChanged: (value) {
-                        setState(
-                          () => _healthStatusDisplay =
-                              value ?? _healthStatusDisplay,
-                        );
+                        setState(() {
+                          _healthStatus = _healthStatusOptions.indexOf(
+                            value ?? _healthStatusOptions.first,
+                          );
+                        });
                       },
                     ),
                     _StatusPicker(
@@ -490,81 +538,6 @@ class _MeowEditPageState extends State<MeowEditPage> {
                       value: _appearance,
                       color: const Color(0xFFFF8EB2),
                       onChanged: (value) => setState(() => _appearance = value),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _SectionCard(
-                  title: '特点标签',
-                  children: [
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _tagOptions.map((tag) {
-                        final selected = _selectedTags.contains(tag);
-                        return ChoiceChip(
-                          label: Text(tag),
-                          selected: selected,
-                          onSelected: (value) {
-                            setState(() {
-                              if (value) {
-                                _selectedTags.add(tag);
-                              } else {
-                                _selectedTags.remove(tag);
-                              }
-                            });
-                          },
-                        );
-                      }).toList(),
-                    ),
-                    IconButton(
-                      onPressed: () {
-                        TextEditingController newTagController =
-                            TextEditingController();
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('添加新标签'),
-                            content: TextField(
-                              controller: newTagController,
-                              autofocus: true,
-                              onSubmitted: (value) {
-                                if (value.trim().isEmpty) return;
-                                if (!_tagOptions.contains(value.trim())) {
-                                  setState(() => _tagOptions.add(value.trim()));
-                                }
-                                Navigator.of(context).pop();
-                              },
-                              decoration: const InputDecoration(
-                                hintText: '输入标签名称',
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(context).pop(),
-                                child: const Text('取消'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  final value = newTagController.text;
-                                  if (value.trim().isEmpty) return;
-                                  if (!_tagOptions.contains(value.trim())) {
-                                    setState(
-                                      () => _tagOptions.add(value.trim()),
-                                    );
-                                  }
-                                  Navigator.of(context).pop();
-                                },
-                                child: const Text('添加'),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      icon: const Icon(
-                        Icons.add_box_outlined,
-                        color: Color(0xFF7BC97F),
-                      ),
                     ),
                   ],
                 ),
@@ -700,7 +673,7 @@ class _ImageGrid extends StatelessWidget {
   final List<String> images;
   final List<XFile> files;
   final VoidCallback onAdd;
-  final ValueChanged<String> onRemoveUrl;
+  final ValueChanged<int> onRemoveUrl;
   final ValueChanged<XFile> onRemoveFile;
 
   const _ImageGrid({
@@ -715,8 +688,9 @@ class _ImageGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final tiles = [
       _ImageAddTile(onTap: onAdd),
-      ...images.map(
-        (url) => _ImageTile(url: url, onRemove: () => onRemoveUrl(url)),
+      ...images.indexed.map(
+        (entry) =>
+            _ImageTile(url: entry.$2, onRemove: () => onRemoveUrl(entry.$1)),
       ),
       ...files.map(
         (file) => _ImageTile(file: file, onRemove: () => onRemoveFile(file)),

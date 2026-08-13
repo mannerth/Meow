@@ -72,10 +72,12 @@ class CosUploadService {
     final startTime = now - 60;
     final endTime = now + _expireBuffer;
 
+    final contentType = _contentTypeForKey(key);
     final headers = <String, String>{
       'host': host,
       'x-cos-security-token': sessionToken,
       'content-length': bytes.length.toString(),
+      'content-type': contentType,
     };
 
     final authorization = _sign(
@@ -91,7 +93,10 @@ class CosUploadService {
     final response = await Dio().put(
       'https://$host$path',
       data: bytes,
-      options: Options(headers: {'Authorization': authorization, ...headers}),
+      options: Options(
+        contentType: contentType,
+        headers: {'Authorization': authorization, ...headers},
+      ),
     );
     if (response.statusCode != null &&
         (response.statusCode! < 200 || response.statusCode! >= 300)) {
@@ -162,6 +167,18 @@ class CosUploadService {
         c == '_' ||
         c == '.' ||
         c == '~';
+  }
+
+  static String _contentTypeForKey(String key) {
+    final extension = key.split('.').last.toLowerCase();
+    return switch (extension) {
+      'jpg' || 'jpeg' => 'image/jpeg',
+      'png' => 'image/png',
+      'gif' => 'image/gif',
+      'webp' => 'image/webp',
+      'heic' || 'heif' => 'image/heic',
+      _ => 'application/octet-stream',
+    };
   }
 }
 

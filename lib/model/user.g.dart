@@ -8,7 +8,7 @@ part of 'user.dart';
 
 User _$UserFromJson(Map<String, dynamic> json) => User(
   id: (json['uid'] as num).toInt(),
-  studentId: json['sid'] as String,
+  studentId: json['sid'] as String? ?? '',
   nickname: json['nickname'] as String?,
   realName: json['realName'] as String?,
   avatar: json['avatar'] as String?,
@@ -16,11 +16,11 @@ User _$UserFromJson(Map<String, dynamic> json) => User(
       $enumDecodeNullable(_$RoleTypeEnumMap, json['roleType']) ??
       RoleType.student,
   campus: $enumDecodeNullable(_$CampusEnumMap, json['campus']),
-  currency: (json['currency'] as num).toInt(),
-  level: (json['level'] as num).toInt(),
+  currency: (json['currency'] as num?)?.toInt() ?? 0,
+  level: (json['level'] as num?)?.toInt() ?? 0,
   levelTitle: json['title'] as String?,
-  experience: (json['exp'] as num).toInt(),
-  nextLevelExp: (json['nextExp'] as num).toInt(),
+  experience: (json['exp'] as num?)?.toInt() ?? 0,
+  nextLevelExp: (json['nextExp'] as num?)?.toInt() ?? 0,
   createTime: json['createTime'] == null
       ? null
       : DateTime.parse(json['createTime'] as String),

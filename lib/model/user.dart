@@ -9,7 +9,7 @@ class User {
   @JsonKey(name: 'uid')
   int id;
   // 学号
-  @JsonKey(name: 'sid')
+  @JsonKey(name: 'sid', defaultValue: '')
   String studentId;
   // 昵称
   String? nickname;
@@ -22,17 +22,19 @@ class User {
   // 校区
   Campus? campus;
   // 小鱼干余额
+  @JsonKey(defaultValue: 0)
   int currency;
   // 等级
+  @JsonKey(defaultValue: 0)
   int level;
   // 等级头衔
   @JsonKey(name: 'title')
   String? levelTitle;
   // 当前经验值
-  @JsonKey(name: 'exp')
+  @JsonKey(name: 'exp', defaultValue: 0)
   int experience;
   // 升级所需经验值
-  @JsonKey(name: 'nextExp')
+  @JsonKey(name: 'nextExp', defaultValue: 0)
   int nextLevelExp;
   // 注册时间
   DateTime? createTime;

@@ -23,14 +23,14 @@ class LoginPage extends ConsumerStatefulWidget {
 
 class _LoginPageState extends ConsumerState<LoginPage> {
   bool _loading = false;
-  int _count = 0;   //点击计数
+  int _count = 0; //点击计数
   bool _isAdmin = false; // 是否管理员登录
 
   Future<void> _doLogin() async {
     setState(() => _loading = true);
     try {
       final res = await FlutterWebAuth2.authenticate(
-        url: _isAdmin? Urls.Auth_Admin: Urls.Auth,
+        url: _isAdmin ? Urls.Auth_Admin : Urls.Auth,
         callbackUrlScheme: 'meow',
         options: const FlutterWebAuth2Options(useWebview: false),
       );
@@ -53,7 +53,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       Http().setTokens(token, refreshToken);
 
       User user = await AuthRepository.getMe();
-      if(_isAdmin){
+      if (_isAdmin) {
         user.roleType = RoleType.admin;
       }
       ref.read(authStateProvider.notifier).update(user);
@@ -129,12 +129,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ++_count;
                   },
                   onLongPress: () {
-                    if( _count >= 3 ){
+                    if (_count >= 3) {
                       _isAdmin = !_isAdmin;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(
-                          '已切换为${_isAdmin? '管理员': '用户'}登录'
-                        ))
+                        SnackBar(
+                          content: Text('已切换为${_isAdmin ? '管理员' : '用户'}登录'),
+                        ),
                       );
                     }
                   },
