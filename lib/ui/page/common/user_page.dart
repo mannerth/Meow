@@ -302,7 +302,7 @@ class _UserCenterDetailPage extends StatelessWidget {
                     child: _ServiceCard(
                       icon: Icons.emoji_events,
                       label: "荣誉勋章",
-                      desc: "没做",
+                      desc: "暂未实现，敬请期待",
                     ),
                   ),
                 ],
@@ -339,7 +339,8 @@ class _UserCenterDetailPage extends StatelessWidget {
                 },
               ),
             ),
-            const SizedBox(height: 40),
+            // 留白，防止悬浮导航栏遮挡
+            const SizedBox(height: 140),
           ],
         ),
       ),

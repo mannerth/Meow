@@ -100,31 +100,6 @@
         "security": []
       }
     },
-    "/auth/admin-login": {
-      "get": {
-        "summary": "redirectToAdminLogin",
-        "deprecated": false,
-        "description": "# 管理员端的cas登录",
-        "tags": [
-          "AuthController"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {}
-                }
-              }
-            }
-          }
-        },
-        "security": []
-      }
-    },
     "/cats": {
       "get": {
         "summary": "listCats",
@@ -239,7 +214,7 @@
             "in": "path",
             "description": "",
             "required": true,
-            "example": "660e8400-e29b-41d4-a716-446655440001",
+            "example": "b332c5658cca58c183431314fa9eeb68",
             "schema": {
               "type": "string"
             }
@@ -275,7 +250,7 @@
             "in": "path",
             "description": "",
             "required": true,
-            "example": "660e8400-e29b-41d4-a716-446655440001",
+            "example": "b332c5658cca58c183431314fa9eeb68",
             "schema": {
               "type": "string"
             }
@@ -356,17 +331,16 @@
                 ]
               },
               "example": {
-                "catId": "fe3b06fc43dede196d4d51321a2512dc",
+                "catId": "b332c5658cca58c183431314fa9eeb68",
                 "campus": 0,
-                "location": "食堂门口",
+                "location": 0,
                 "symptoms": [
-                  "流血",
-                  "外伤"
+                  1,
+                  2
                 ],
                 "description": "腹部出血",
-                "media": [
-                  "https://example.com/121",
-                  "https://example.com/121"
+                "medium": [
+                  "meow/3/2026-08-14/xxx.jpg"
                 ]
               }
             }
@@ -410,10 +384,15 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
-        "security": []
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
       }
     },
     "/sos/my": {
@@ -505,10 +484,15 @@
                   "msg": "获取用户SOS列表成功"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
-        "security": []
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
       }
     },
     "/posts": {
@@ -576,10 +560,41 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreatePostDTO",
-                "description": ""
+                "description": "",
+                "type": "object",
+                "properties": {
+                  "content": {
+                    "type": "string",
+                    "description": ""
+                  },
+                  "media": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": ""
+                  },
+                  "catId": {
+                    "type": "string",
+                    "description": ""
+                  },
+                  "location": {
+                    "type": "string",
+                    "description": ""
+                  }
+                },
+                "required": [
+                  "catId"
+                ]
               },
-              "examples": {}
+              "example": {
+                "catId": "b332c5658cca58c183431314fa9eeb68",
+                "content": "今天遇到了小猫",
+                "media": [
+                  "meow/3/2026-08-14/xxx.jpg"
+                ],
+                "location": "中心校区"
+              }
             }
           }
         },
@@ -758,7 +773,7 @@
       }
     },
     "/users/send-verification-code": {
-      "get": {
+      "post": {
         "summary": "sendVerificationCode",
         "deprecated": false,
         "description": "# 请求验证码\n\n## 麻烦客户端添加60s限制\n## 验证码有效时间为10分钟",
@@ -766,6 +781,19 @@
           "UserController"
         ],
         "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendVerificationCodeReqDTO",
+                "description": ""
+              },
+              "example": {
+                "email": "202400300000@mail.sdu.edu.cn"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "",
@@ -775,22 +803,17 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            },
-            "headers": {}
+            }
           }
         },
-        "security": [
-          {
-            "双TOKEN鉴权": []
-          }
-        ]
+        "security": []
       }
     },
     "/users/register": {
       "post": {
-        "summary": "bind-email",
+        "summary": "register",
         "deprecated": false,
-        "description": "# 用户邮箱绑定",
+        "description": "# 用户注册",
         "tags": [
           "UserController"
         ],
@@ -799,10 +822,11 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/BindEmailReqDTO",
+                "$ref": "#/components/schemas/RegisterReqDTO",
                 "description": ""
               },
               "example": {
+                "email": "202400300000@mail.sdu.edu.cn",
                 "password": "123456",
                 "code": "666666"
               }
@@ -818,22 +842,17 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            },
-            "headers": {}
+            }
           }
         },
-        "security": [
-          {
-            "双TOKEN鉴权": []
-          }
-        ]
+        "security": []
       }
     },
     "/users/login": {
       "post": {
         "summary": "login",
-        "deprecated": false,
-        "description": "# 用户登录\n## 支持绑定邮箱后的用户使用邮箱登录",
+        "deprecated": true,
+        "description": "# 用户登录",
         "tags": [
           "UserController"
         ],
@@ -861,8 +880,7 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            },
-            "headers": {}
+            }
           }
         },
         "security": []
@@ -871,7 +889,7 @@
     "/users/change-password": {
       "post": {
         "summary": "changePassword",
-        "deprecated": false,
+        "deprecated": true,
         "description": "# 修改密码",
         "tags": [
           "UserController"
@@ -1163,65 +1181,9 @@
         ]
       }
     },
-    "/admin/announcements": {
-      "get": {
-        "summary": "listAnnouncements",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "description": "",
-            "required": true,
-            "example": 1,
-            "schema": {
-              "type": "integer"
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "description": "",
-            "required": true,
-            "example": 20,
-            "schema": {
-              "type": "integer"
-            }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "description": " DRAFT :DRAFT\nPUBLISHED :PUBLISHED",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "双TOKEN鉴权": []
-          }
-        ]
-      },
+    "/admin/cats": {
       "post": {
-        "summary": "createAnnouncement",
+        "summary": "createCat",
         "deprecated": false,
         "description": "",
         "tags": [
@@ -1232,58 +1194,39 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateAnnouncementDTO",
+                "$ref": "#/components/schemas/CreateCatReqDTO",
                 "description": ""
               },
-              "examples": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": [
-          {
-            "双TOKEN鉴权": []
-          }
-        ]
-      }
-    },
-    "/admin/announcements/{id}": {
-      "put": {
-        "summary": "updateAnnouncement",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateAnnouncementDTO",
-                "description": ""
+              "example": {
+                "name": "小白",
+                "aliases": [
+                  "白白",
+                  "小雪"
+                ],
+                "color": 1,
+                "avatar": "cats/avatar/example.jpg",
+                "images": [
+                  "cats/images/example-1.jpg",
+                  "cats/images/example-2.jpg"
+                ],
+                "gender": 2,
+                "campus": 0,
+                "hauntLocation": 1,
+                "role": 1,
+                "birthYear": 2024,
+                "admissionDate": "2025-09-01",
+                "status": 0,
+                "healthStatus": 0,
+                "attributes": {
+                  "friendliness": 8,
+                  "gluttony": 7,
+                  "fight": 3,
+                  "appearance": 9
+                },
+                "isNeutered": true,
+                "neuteredDate": "2025-10-01",
+                "neuteredType": 0,
+                "description": "经常出现在教学楼附近"
               }
             }
           }
@@ -1295,42 +1238,11 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "双TOKEN鉴权": []
-          }
-        ]
-      },
-      "delete": {
-        "summary": "deleteAnnouncement",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
+                },
+                "example": {
+                  "code": 0,
+                  "data": {},
+                  "msg": ""
                 }
               }
             }
@@ -1346,8 +1258,8 @@
     "/admin/login": {
       "post": {
         "summary": "adminLogin",
-        "deprecated": false,
-        "description": "# 管理员端登录\n## 允许在账号绑定邮箱后使用邮箱登录",
+        "deprecated": true,
+        "description": "# 管理员端登录",
         "tags": [
           "AdminController"
         ],
@@ -1382,6 +1294,135 @@
                     "email": "202400300000@mail.sdu.edu.cn"
                   },
                   "msg": "管理员登录成功"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      }
+    },
+    "/admin/cats/{id}": {
+      "put": {
+        "summary": "updateCat",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "c8daf32a67462d10779bc99aaf2819e5",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCatReqDTO",
+                "description": ""
+              },
+              "example": {
+                "name": "头像测试",
+                "aliases": [],
+                "color": 4,
+                "avatar": "meow/4/2026-08-14/avatar.jpg",
+                "imageActions": {
+                  "keep": [
+                    "meow/4/2026-08-14/old-1.jpg"
+                  ],
+                  "delete": [
+                    "meow/4/2026-08-14/old-2.jpg"
+                  ],
+                  "add": [
+                    "meow/4/2026-08-14/new-1.jpg"
+                  ]
+                },
+                "gender": 2,
+                "campus": 1,
+                "hauntLocation": 3,
+                "role": 5,
+                "birthYear": 2024,
+                "admissionDate": "2026-01-01",
+                "status": 0,
+                "healthStatus": 0,
+                "attributes": {
+                  "friendliness": 5,
+                  "gluttony": 5,
+                  "fight": 5,
+                  "appearance": 5
+                },
+                "isNeutered": false,
+                "description": "猫咪介绍",
+                "tags": [
+                  1,
+                  2
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                },
+                "example": {
+                  "code": 0,
+                  "data": {},
+                  "msg": ""
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "deleteCat",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "5e47de3144e9fada7ed2607093414c5c",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
             },
@@ -1511,6 +1552,102 @@
         ]
       }
     },
+    "/admin/announcements": {
+      "get": {
+        "summary": "listAnnouncements",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "",
+            "required": true,
+            "example": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "",
+            "required": true,
+            "example": 20,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": " DRAFT :DRAFT\nPUBLISHED :PUBLISHED",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "createAnnouncement",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAnnouncementDTO",
+                "description": ""
+              },
+              "examples": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      }
+    },
     "/admin/sos/{id}/resolve": {
       "post": {
         "summary": "resolveSOS",
@@ -1525,6 +1662,7 @@
             "in": "path",
             "description": "",
             "required": true,
+            "example": "4091bcf6-7cf0-4534-9d08-e13db65c49ae",
             "schema": {
               "type": "string"
             }
@@ -1538,7 +1676,7 @@
                 "description": ""
               },
               "example": {
-                "status": "RESOLVED",
+                "status": 1,
                 "reply": "已收到，正在处理中..."
               }
             }
@@ -1553,10 +1691,15 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
-        "security": []
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
       }
     },
     "/admin/adoptions/{id}/audit": {
@@ -1573,7 +1716,7 @@
             "in": "path",
             "description": "",
             "required": true,
-            "example": "a51a4216-9191-43c6-86aa-92cdcee4c694",
+            "example": "a2d95e3e-cae5-4ab2-a323-04ddf95e23dc",
             "schema": {
               "type": "string"
             }
@@ -1587,8 +1730,8 @@
                 "description": ""
               },
               "example": {
-                "status": "INTERVIEW",
-                "reason": "sed incididunt"
+                "status": 0,
+                "reason": "原因"
               }
             }
           }
@@ -1602,10 +1745,109 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      }
+    },
+    "/admin/announcements/{id}": {
+      "put": {
+        "summary": "updateAnnouncement",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "6a7e9b84e2fe46f0d0718a38",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAnnouncementDTO",
+                "description": ""
+              },
+              "example": {
+                "title": "可用性嗯从摊飞",
+                "content": "Ut eiusmod aliquip in",
+                "summary": "sunt eiusmod",
+                "coverImage": "https://loremflickr.com/400/400?lock=6114969047724788",
+                "type": "FEEDING",
+                "status": "PUBLISHED"
+              }
             }
           }
         },
-        "security": []
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "deleteAnnouncement",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
       }
     },
     "/admin/adoptions": {
@@ -1664,10 +1906,15 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
-        "security": []
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
       }
     },
     "/admin/users": {
@@ -1726,50 +1973,15 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
-        "security": []
-      }
-    },
-    "/admin/dashboard/stats": {
-      "get": {
-        "summary": "getDashboardStats",
-        "deprecated": false,
-        "description": "# 管理员仪表盘",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                },
-                "example": {
-                  "code": 200,
-                  "data": {
-                    "adoptApplications": 0,
-                    "totalCats": 31,
-                    "pendingSOS": 0,
-                    "campusDistribution": [
-                      {
-                        "campus": 0,
-                        "percentage": 100,
-                        "count": 1
-                      }
-                    ]
-                  },
-                  "msg": "获取仪表盘统计数据成功"
-                }
-              }
-            }
+        "security": [
+          {
+            "双TOKEN鉴权": []
           }
-        },
-        "security": []
+        ]
       }
     },
     "/admin/users/{id}": {
@@ -1801,10 +2013,15 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
-        "security": []
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
       }
     },
     "/admin/users/{id}/ban": {
@@ -1840,172 +2057,46 @@
                   "data": null
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
-        "security": []
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
       }
     },
-    "/admin/cats": {
+    "/admin/new-cats/{id}/approve": {
       "post": {
-        "summary": "createCat",
+        "summary": "approveNewCat",
         "deprecated": false,
         "description": "",
         "tags": [
           "AdminController"
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "0d848517e8e9691086db62b2b4e68e1b",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "description": "",
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "",
-                    "title": "名字"
-                  },
-                  "aliases": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "description": "",
-                    "title": "曾用名/别名"
-                  },
-                  "color": {
-                    "type": "string",
-                    "description": "• ORANGE：橘猫\n• TABBY：狸花\n• COW：奶牛\n• CALICO：三花\n• TORTIE：玳瑁\n• WHITE：纯白\n• BLACK：纯黑\n• OTHER：其他",
-                    "title": "花色"
-                  },
-                  "avatar": {
-                    "type": "string",
-                    "description": "",
-                    "title": "头像"
-                  },
-                  "images": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "description": "",
-                    "title": "轮播图/相册"
-                  },
-                  "gender": {
-                    "type": "string",
-                    "description": "",
-                    "title": "性别"
-                  },
-                  "campus": {
-                    "type": "string",
-                    "description": "",
-                    "title": "所在校区"
-                  },
-                  "hauntLocation": {
-                    "type": "string",
-                    "description": "",
-                    "title": "常驻/出没地点"
-                  },
-                  "birthYear": {
-                    "type": "integer",
-                    "description": "",
-                    "title": "出生年份"
-                  },
-                  "admissionDate": {
-                    "type": "string",
-                    "description": "",
-                    "title": "入园/入学时间"
-                  },
-                  "status": {
-                    "type": "string",
-                    "description": "SCHOOL(在校),  GRADUATED(毕业/被领养), MEOW_STAR(喵星), HOSPITAL(住院)\n",
-                    "title": "状态"
-                  },
-                  "healthStatus": {
-                    "type": "string",
-                    "description": "HEALTHY, SICK, RECOVERING",
-                    "title": "健康状态"
-                  },
-                  "attributes": {
-                    "$ref": "#/components/schemas/MapDouble",
-                    "description": "",
-                    "title": "属性打分 (1.0-10.0)"
-                  },
-                  "isNeutered": {
-                    "type": "boolean",
-                    "description": "",
-                    "title": "是否绝育"
-                  },
-                  "neuteredDate": {
-                    "type": "string",
-                    "description": "",
-                    "title": "绝育日期"
-                  },
-                  "neuteredType": {
-                    "type": "string",
-                    "description": "EAR_CUT(剪耳), UNCUT(未剪耳)",
-                    "title": "绝育类型"
-                  },
-                  "description": {
-                    "type": "string",
-                    "description": "",
-                    "title": "详细描述/备注"
-                  },
-                  "tags": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "description": "",
-                    "title": "标签"
-                  }
-                },
-                "required": [
-                  "name",
-                  "avatar",
-                  "color",
-                  "gender",
-                  "campus",
-                  "status",
-                  "isNeutered",
-                  "attributes"
-                ]
+                "$ref": "#/components/schemas/ApproveNewCatReqDTO",
+                "description": ""
               },
               "example": {
-                "name": "麻薯",
-                "aliases": [
-                  "小麻",
-                  "三花"
-                ],
-                "color": "三花",
-                "avatar": "url...",
-                "images": [
-                  "url1",
-                  "url2"
-                ],
-                "gender": "FEMALE",
-                "campus": "软件园校区",
-                "hauntLocation": "食堂",
-                "birthYear": 2022,
-                "admissionDate": "2023-08-01",
-                "status": "SCHOOL",
-                "healthStatus": "HEALTHY",
-                "attributes": {
-                  "friendliness": 9,
-                  "gluttony": 9.5,
-                  "fight": 4,
-                  "appearance": 10
-                },
-                "isNeutered": true,
-                "neuteredDate": "2023-11-13",
-                "neuteredType": "EAR_CUT",
-                "description": "...",
-                "tags": [
-                  "亲人",
-                  "吃货"
-                ]
+                "officialName": "艾菲"
               }
             }
           }
@@ -2028,171 +2119,6 @@
             "双TOKEN鉴权": []
           }
         ]
-      }
-    },
-    "/admin/cats/{id}": {
-      "put": {
-        "summary": "updateCat",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "example": "25805e387ae620c50882d77a5596f170",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "example": "kk"
-                  },
-                  "aliases": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "color": {
-                    "type": "string",
-                    "example": "纯白"
-                  },
-                  "gender": {
-                    "type": "string",
-                    "example": "FEMALE"
-                  },
-                  "campus": {
-                    "type": "string",
-                    "example": "0"
-                  },
-                  "hauntLocation": {
-                    "type": "string",
-                    "example": "教学楼"
-                  },
-                  "birthYear": {
-                    "type": "integer",
-                    "example": 2025
-                  },
-                  "admissionDate": {
-                    "type": "string",
-                    "example": "2025-01-01"
-                  },
-                  "status": {
-                    "type": "string",
-                    "example": "SCHOOL"
-                  },
-                  "healthStatus": {
-                    "type": "string",
-                    "example": "HEALTHY"
-                  },
-                  "attributes.key": {
-                    "type": ""
-                  },
-                  "isNeutered": {
-                    "type": "boolean",
-                    "example": "false"
-                  },
-                  "neuteredDate": {
-                    "type": "string"
-                  },
-                  "neuteredType": {
-                    "type": "string"
-                  },
-                  "description": {
-                    "type": "string"
-                  },
-                  "tags": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "avatar": {
-                    "example": "",
-                    "type": "string",
-                    "format": "binary"
-                  },
-                  "images": {
-                    "type": "string",
-                    "format": "binary"
-                  }
-                }
-              },
-              "example": {
-                "name": "kk",
-                "color": "纯白",
-                "gender": "FEMALE",
-                "campus": "0",
-                "hauntLocation": "教学楼",
-                "birthYear": 2025,
-                "admissionDate": "2025-01-01",
-                "status": "SCHOOL",
-                "healthStatus": "HEALTHY",
-                "isNeutered": "false",
-                "avatar": ""
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            }
-          }
-        },
-        "security": []
-      },
-      "delete": {
-        "summary": "deleteCat",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "example": "5e47de3144e9fada7ed2607093414c5c",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            }
-          }
-        },
-        "security": []
       }
     },
     "/admin/new-cats": {
@@ -2241,45 +2167,26 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
-        "security": []
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
       }
     },
-    "/admin/new-cats/{id}/approve": {
-      "post": {
-        "summary": "approveNewCat",
+    "/admin/dashboard/stats": {
+      "get": {
+        "summary": "getDashboardStats",
         "deprecated": false,
-        "description": "",
+        "description": "# 管理员仪表盘",
         "tags": [
           "AdminController"
         ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "example": "0d848517e8e9691086db62b2b4e68e1b",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ApproveNewCatReqDTO",
-                "description": ""
-              },
-              "example": {
-                "officialName": "艾菲"
-              }
-            }
-          }
-        },
+        "parameters": [],
         "responses": {
           "200": {
             "description": "",
@@ -2287,44 +2194,26 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseEntityResult"
+                },
+                "example": {
+                  "code": 200,
+                  "data": {
+                    "adoptApplications": 0,
+                    "totalCats": 31,
+                    "pendingSOS": 0,
+                    "campusDistribution": [
+                      {
+                        "campus": 0,
+                        "percentage": 100,
+                        "count": 1
+                      }
+                    ]
+                  },
+                  "msg": "获取仪表盘统计数据成功"
                 }
               }
-            }
-          }
-        },
-        "security": []
-      }
-    },
-    "/admin/promotion/{sid}": {
-      "get": {
-        "summary": "用户权限升级",
-        "deprecated": false,
-        "description": "# 暂用",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [
-          {
-            "name": "sid",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {}
-                }
-              }
-            }
+            },
+            "headers": {}
           }
         },
         "security": [
@@ -2389,7 +2278,7 @@
                 "$ref": "#/components/schemas/AdoptionApplyDTO",
                 "description": ""
               },
-              "example": "{                                                                                              \r\n    \"catId\": \"660e8400-e29b-41d4-a716-446655440001\",                                             \r\n    \"info\": {                                                                                    \r\n      \"housing\": \"RENT_WHOLE\",                                                                   \r\n      \"experience\": \"EXPERIENCED\",                                                               \r\n      \"plan\": \"承诺科学喂养...\"                                                                  \r\n    },                                                                                           \r\n    \"contact\": {                                                                                 \r\n      \"phone\": \"13800000000\",                                                                    \r\n      \"wechat\": \"wx_test\"                                                                        \r\n    }                                                                                            \r\n  }    \r\n}"
+              "example": "{                                                                                              \r\n    \"catId\": \"b332c5658cca58c183431314fa9eeb68\",                                             \r\n    \"info\": {                                                                                    \r\n      \"housing\": 0,                                                                   \r\n      \"experience\": 0,                                                               \r\n      \"plan\": \"承诺科学喂养...\"                                                                  \r\n    },                                                                                           \r\n    \"contact\": {                                                                                 \r\n      \"phone\": \"13800000000\",                                                                    \r\n      \"wechat\": \"wx_test\"                                                                        \r\n    }                                                                                            \r\n  }    \r\n}"
             }
           }
         },
@@ -2402,10 +2291,15 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
-        "security": []
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
       }
     },
     "/adoptions/my": {
@@ -2484,10 +2378,15 @@
                   "msg": "获取我的领养申请列表成功"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
-        "security": []
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
       }
     },
     "/stats/public": {
@@ -2569,17 +2468,16 @@
                 "title": "暂定名称"
               },
               "example": {
-                "tempName": "庾蒙",
-                "color": "ORANGE",
+                "tempName": "橘子",
+                "color": 4,
                 "images": [
-                  "https://loremflickr.com/400/400?lock=8351335682210789",
-                  "https://loremflickr.com/400/400?lock=3752139673092941",
-                  "https://loremflickr.com/400/400?lock=4297276881926224"
+                  "meow/3/2026-08-14/xxx.jpg"
                 ],
                 "campus": 0,
-                "location": "路口",
+                "location": "食堂门口",
                 "tags": [
-                  "可爱啊"
+                  1,
+                  2
                 ]
               }
             }
@@ -3045,7 +2943,16 @@
                 },
                 "description": ""
               },
-              "examples": {}
+              "example": [
+                "亲人",
+                "怕生",
+                "活泼",
+                "安静",
+                "贪吃",
+                "黏人",
+                "警惕",
+                "可抱"
+              ]
             }
           }
         },
@@ -4024,6 +3931,23 @@
           }
         }
       },
+      "RegisterReqDTO": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": ""
+          },
+          "code": {
+            "type": "string",
+            "description": ""
+          },
+          "password": {
+            "type": "string",
+            "description": ""
+          }
+        }
+      },
       "LoginDTO": {
         "type": "object",
         "properties": {
@@ -4411,18 +4335,273 @@
           }
         }
       },
-      "BindEmailReqDTO": {
+      "ImageActionsDTO": {
         "type": "object",
         "properties": {
-          "code": {
-            "type": "string",
+          "keep": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
             "description": ""
           },
-          "password": {
-            "type": "string",
+          "delete": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          "add": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
             "description": ""
           }
         }
+      },
+      "UpdateCatReqDTO": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": ""
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          "color": {
+            "type": "integer",
+            "description": ""
+          },
+          "avatar": {
+            "type": "string",
+            "description": ""
+          },
+          "imageActions": {
+            "$ref": "#/components/schemas/ImageActionsDTO",
+            "description": ""
+          },
+          "gender": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "MALE",
+              "FEMALE",
+              "UNKNOWN"
+            ]
+          },
+          "campus": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "ZHONG_XIN",
+              "BAO_TU_QUAN",
+              "HONG_JIA_LOU",
+              "QIAN_FO_SHAN",
+              "XING_LONG_SHAN",
+              "RUAN_JIAN_YUAN",
+              "QING_DAO",
+              "WEI_HAI"
+            ]
+          },
+          "hauntLocation": {
+            "type": "integer",
+            "description": ""
+          },
+          "role": {
+            "type": "integer",
+            "description": ""
+          },
+          "birthYear": {
+            "type": "integer",
+            "description": ""
+          },
+          "admissionDate": {
+            "type": "string",
+            "description": ""
+          },
+          "status": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "SCHOOL",
+              "GRADUATED",
+              "MEOW_STAR",
+              "HOSPITAL"
+            ]
+          },
+          "healthStatus": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "HEALTHY",
+              "SICK",
+              "RECOVERING"
+            ]
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/MapDouble",
+            "description": ""
+          },
+          "isNeutered": {
+            "type": "boolean",
+            "description": ""
+          },
+          "neuteredDate": {
+            "type": "string",
+            "description": ""
+          },
+          "neuteredType": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "EAR_CUT",
+              "UNCUT"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "description": ""
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": ""
+          }
+        }
+      },
+      "CreateCatReqDTO": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": ""
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          "color": {
+            "type": "integer",
+            "description": ""
+          },
+          "avatar": {
+            "type": "string",
+            "description": ""
+          },
+          "images": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": ""
+          },
+          "gender": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "MALE",
+              "FEMALE",
+              "UNKNOWN"
+            ]
+          },
+          "campus": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "ZHONG_XIN",
+              "BAO_TU_QUAN",
+              "HONG_JIA_LOU",
+              "QIAN_FO_SHAN",
+              "XING_LONG_SHAN",
+              "RUAN_JIAN_YUAN",
+              "QING_DAO",
+              "WEI_HAI"
+            ]
+          },
+          "hauntLocation": {
+            "type": "integer",
+            "description": ""
+          },
+          "role": {
+            "type": "integer",
+            "description": ""
+          },
+          "birthYear": {
+            "type": "integer",
+            "description": ""
+          },
+          "admissionDate": {
+            "type": "string",
+            "description": ""
+          },
+          "status": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "SCHOOL",
+              "GRADUATED",
+              "MEOW_STAR",
+              "HOSPITAL"
+            ]
+          },
+          "healthStatus": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "HEALTHY",
+              "SICK",
+              "RECOVERING"
+            ]
+          },
+          "attributes": {
+            "$ref": "#/components/schemas/MapDouble",
+            "description": ""
+          },
+          "isNeutered": {
+            "type": "boolean",
+            "description": ""
+          },
+          "neuteredDate": {
+            "type": "string",
+            "description": ""
+          },
+          "neuteredType": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "EAR_CUT",
+              "UNCUT"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "description": ""
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": ""
+          }
+        },
+        "required": [
+          "name",
+          "color",
+          "avatar"
+        ]
       }
     },
     "responses": {},

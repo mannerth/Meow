@@ -126,10 +126,6 @@ class _SharePageState extends ConsumerState<SharePage> {
       _showMessage('请填写内容');
       return;
     }
-    if (_images.isEmpty) {
-      _showMessage('请上传图片');
-      return;
-    }
     setState(() => _publishing = true);
     try {
       final files = _images.map((image) => File(image.path)).toList();

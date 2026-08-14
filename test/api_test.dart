@@ -1,6 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meow/api/data_response.dart';
+import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/model/admin_new_cat.dart';
+import 'package:meow/model/admin_sos.dart';
+import 'package:meow/model/adoption.dart';
+import 'package:meow/model/cat.dart';
 import 'package:meow/model/user.dart';
 
 void main() {
@@ -38,5 +42,62 @@ void main() {
     });
 
     expect(item.images, ['https://example.com/meow/4/2026-08-14/example.jpg']);
+  });
+
+  test('管理员猫咪图片接口从对象中提取持久 key', () {
+    final keys = CatImageKeys.fromJson({
+      'avatar': {
+        'key': 'meow/4/2026-08-14/avatar.jpg',
+        'url': 'https://example.com/avatar.jpg',
+      },
+      'images': [
+        {
+          'key': 'meow/4/2026-08-14/image.jpg',
+          'url': 'https://example.com/image.jpg',
+        },
+      ],
+    });
+
+    expect(keys.avatar, 'meow/4/2026-08-14/avatar.jpg');
+    expect(keys.images, ['meow/4/2026-08-14/image.jpg']);
+  });
+
+  test('SOS 整数状态解析为页面状态名', () {
+    final item = AdminSosItem.fromJson({'id': 'sos-1', 'status': 1});
+
+    expect(item.status, 'PROCESSING');
+    expect(sosStatusCode('RESOLVED'), 2);
+  });
+
+  test('领养整数状态解析和请求编码正确', () {
+    final item = AdminAdoptionItem.fromJson({
+      'id': 'adoption-1',
+      'catId': 'cat-1',
+      'catName': '小白',
+      'status': 0,
+    });
+
+    expect(item.status, 'PENDING');
+    expect(adoptionStatusCode('REJECTED'), 3);
+  });
+
+  test('猫咪列表整数类型保留 ID 且不直接展示数字字符串', () {
+    final cat = Cat.fromJson({
+      'id': 'cat-1',
+      'name': '小白',
+      'avatar': '',
+      'color': 4,
+      'campus': 1,
+      'location': 3,
+      'role': 5,
+      'status': 0,
+    });
+
+    expect(cat.colorId, 4);
+    expect(cat.locationId, 3);
+    expect(cat.roleId, 5);
+    expect(cat.color, isEmpty);
+    expect(cat.locationName, isEmpty);
+    expect(cat.roleName, isEmpty);
   });
 }

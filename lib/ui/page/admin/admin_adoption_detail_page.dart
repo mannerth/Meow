@@ -41,7 +41,7 @@ class _AdminAdoptionDetailPageState extends State<AdminAdoptionDetailPage> {
     try {
       await AdoptionService.auditAdoption(
         id: _item.id,
-        status: status,
+        status: adoptionStatusCode(status)!,
         reason: reason,
       );
       if (!mounted) return;

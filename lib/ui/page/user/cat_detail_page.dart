@@ -68,7 +68,7 @@ class _CatDetailPageState extends State<CatDetailPage> {
         content: post.content,
         media: post.media,
         user: post.user,
-        likeCount: result.likeCount,
+        likeCount: post.likeCount+ (post.isLiked? -1: 1), //乐观更新 
         isLiked: result.isLiked,
         createTime: post.createTime,
       );

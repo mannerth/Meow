@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_handleScroll);
-    _loadColors();
+    _loadTypeOptions();
     _loadCats(reset: true);
     _loadStats();
   }
@@ -69,6 +69,16 @@ class _HomePageState extends State<HomePage> {
           .map((item) => _FilterOption(item.label, item.id.toString()))
           .toList();
     });
+  }
+
+  Future<void> _loadTypeOptions() async {
+    await Future.wait([
+      _loadColors(),
+      TypeService.fetchLocations(),
+      TypeService.fetchRoles(),
+      TypeService.fetchTags(),
+    ]);
+    if (mounted) setState(() {});
   }
 
   @override

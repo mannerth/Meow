@@ -1,5 +1,33 @@
 import 'package:meow/model/user.dart';
 
+/// SOS 状态采用整数传输：0 待处理、1 处理中、2 已完成。
+String sosStatusName(dynamic value) {
+  if (value is num) {
+    return switch (value.toInt()) {
+      0 => 'PENDING',
+      1 => 'PROCESSING',
+      2 => 'RESOLVED',
+      _ => value.toString(),
+    };
+  }
+  final text = value?.toString() ?? '';
+  final code = int.tryParse(text);
+  if (code != null) return sosStatusName(code);
+  return text.toUpperCase();
+}
+
+int? sosStatusCode(String? value) {
+  if (value == null || value.isEmpty) return null;
+  final parsed = int.tryParse(value);
+  if (parsed != null) return parsed;
+  return switch (value.toUpperCase()) {
+    'PENDING' => 0,
+    'PROCESSING' => 1,
+    'RESOLVED' => 2,
+    _ => null,
+  };
+}
+
 class AdminSosListPage {
   final int total;
   final int? size;
@@ -78,7 +106,7 @@ class AdminSosItem {
       description: _nullableString(json['description']),
       imageUrls: _imageList(imageValue),
       createTime: _nullableString(json['create_time'] ?? json['createTime']),
-      status: _stringValue(json['status']).toUpperCase(),
+      status: sosStatusName(json['status']),
       adminReply: _nullableString(json['adminReply']),
       reporterId: _nullableString(json['reporterId']),
       reporterName: _nullableString(json['reporterName']),

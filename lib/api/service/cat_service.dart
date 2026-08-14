@@ -163,10 +163,16 @@ class CatImageKeys {
   const CatImageKeys({this.avatar = '', this.images = const []});
 
   factory CatImageKeys.fromJson(Map<String, dynamic> json) => CatImageKeys(
-    avatar: (json['avatarKey'] ?? json['avatar'] ?? '').toString(),
+    avatar: _imageKey(json['avatarKey'] ?? json['avatar']),
     images:
         ((json['imageKeys'] ?? json['images']) as List<dynamic>? ?? const [])
-            .map((value) => value.toString())
+            .map(_imageKey)
+            .where((key) => key.isNotEmpty)
             .toList(),
   );
+}
+
+String _imageKey(dynamic value) {
+  if (value is Map) return value['key']?.toString() ?? '';
+  return value?.toString() ?? '';
 }

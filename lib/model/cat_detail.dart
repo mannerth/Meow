@@ -74,9 +74,7 @@ class CatDetail {
     attributes: CatAttributes.fromJson(
       json['attributes'] as Map<String, dynamic>? ?? const {},
     ),
-    tags:
-        (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
-        [],
+    tags: (json['tags'] as List<dynamic>?)?.map(_tagIdString).toList() ?? [],
     relationship:
         (json['relationship'] as List<dynamic>?)
             ?.whereType<Map<String, dynamic>>()
@@ -100,6 +98,13 @@ class CatDetail {
     'description': description,
     'popularity': popularity,
   };
+}
+
+String _tagIdString(dynamic value) {
+  if (value is Map) {
+    return (value['id'] ?? value['tagId'] ?? value['key'] ?? '').toString();
+  }
+  return value?.toString() ?? '';
 }
 
 class CatBasicInfo {
@@ -200,7 +205,7 @@ class CatNeutered {
 
   factory CatNeutered.fromJson(Map<String, dynamic> json) => CatNeutered(
     isNeutered: json['isNeutered'] as bool? ?? false,
-    neuteredDate: json['neuteredDate'] as String? ?? '',
+    neuteredDate: (json['neuteredDate'] ?? json['date'] ?? '').toString(),
     type: catNeuteredTypeLabel(json['type']),
   );
 

@@ -25,6 +25,7 @@ class AdoptionService {
   }) async {
     final params = <String, dynamic>{'page': page, 'size': size};
     if (status != null && status.isNotEmpty) {
+      // 列表筛选由后端 Spring 枚举绑定，仍需要状态名；审核请求使用整数。
       params['status'] = status;
     }
     final response = await Http().get(
@@ -37,7 +38,7 @@ class AdoptionService {
 
   static Future<DataResponse<void>> auditAdoption({
     required String id,
-    required String status,
+    required int status,
     required String reason,
   }) async {
     final payload = <String, dynamic>{'status': status, 'reason': reason};

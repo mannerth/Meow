@@ -7,6 +7,7 @@ import 'package:meow/ui/page/admin/admin_adoptions_page.dart';
 import 'package:meow/ui/page/admin/admin_new_cat_page.dart';
 import 'package:meow/ui/page/admin/admin_sos_page.dart';
 import 'package:meow/ui/page/admin/announcements_page.dart';
+import 'package:meow/ui/page/admin/type_management_page.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_provider.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
@@ -96,6 +97,20 @@ class _StaticPageState extends ConsumerState<StaticPage> {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const AnnouncementsPage()),
+                );
+              },
+            ),
+            const SizedBox(height: 16),
+            _SectionTitle(title: '类型数据管理'),
+            const SizedBox(height: 12),
+            _ActionTile(
+              iconBackground: const Color(0xFFFFF4E5),
+              icon: Icons.category_outlined,
+              title: '管理猫咪类型',
+              subtitle: '维护标签、症状、花色、地点和角色类型',
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const TypeManagementPage()),
                 );
               },
             ),

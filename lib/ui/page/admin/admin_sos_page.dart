@@ -32,7 +32,12 @@ class _AdminSosPageState extends State<AdminSosPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_handleScroll);
-    TypeService.fetchSymptoms();
+    Future.wait([
+      TypeService.fetchSymptoms(),
+      TypeService.fetchLocations(),
+    ]).then((_) {
+      if (mounted) setState(() {});
+    });
     _loadSosList(reset: true);
   }
 
@@ -146,7 +151,7 @@ class _AdminSosPageState extends State<AdminSosPage> {
     try {
       await AdminSosService.resolveSos(
         id: item.id,
-        status: status,
+        status: _statusCode(status),
         reply: reply,
       );
       if (!mounted) return;
@@ -160,6 +165,14 @@ class _AdminSosPageState extends State<AdminSosPage> {
         context,
       ).showSnackBar(const SnackBar(content: Text('提交失败，请稍后重试')));
     }
+  }
+
+  int _statusCode(String status) {
+    return switch (status) {
+      'PROCESSING' => 1,
+      'RESOLVED' => 2,
+      _ => 0,
+    };
   }
 
   @override
@@ -359,7 +372,7 @@ class _SosCard extends StatelessWidget {
           _InfoRow(label: '上报人', value: item.reporterName ?? '未知'),
           _InfoRow(label: '校区', value: campusText),
           if (item.location != null && item.location!.isNotEmpty)
-            _InfoRow(label: '位置', value: item.location!),
+            _InfoRow(label: '位置', value: _locationLabel(item.location!)),
           if (item.createTime != null && item.createTime!.isNotEmpty)
             _InfoRow(label: '时间', value: item.createTime!),
           if (item.symptoms.isNotEmpty) ...[
@@ -399,6 +412,11 @@ class _SosCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _locationLabel(String location) {
+    final id = int.tryParse(location);
+    return id == null ? location : TypeService.locationLabel(id);
   }
 }
 

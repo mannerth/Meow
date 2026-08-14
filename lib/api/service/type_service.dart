@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:meow/api/http.dart';
 
 /// 后端预设的类型列表（颜色/症状/标签/地点/角色等）
@@ -65,6 +66,69 @@ class TypeService {
     );
   }
 
+  /// 批量新增类型。kind 对应 tags/symptoms/colors/locations/roles。
+  static Future<List<TypeItem>> batchCreate(
+    String kind,
+    List<String> labels,
+  ) async {
+    final values = labels
+        .map((label) => label.trim())
+        .where((label) => label.isNotEmpty)
+        .toSet()
+        .toList();
+    if (values.isEmpty) return const [];
+    final response = await Http().post(
+      '/type/$kind/batch',
+      data: values,
+      // 顶层数组不会被 Dio 自动推断为 JSON，后端要求明确的 content type。
+      options: Options(contentType: Headers.jsonContentType),
+    );
+    final json = response.data as Map<String, dynamic>;
+    _clearCache(kind);
+    final data = json['data'];
+    if (data is List) {
+      return data
+          .whereType<Map<String, dynamic>>()
+          .map(TypeItem.fromJson)
+          .toList();
+    }
+    return _fetchByKind(kind, force: true);
+  }
+
+  static Future<void> deleteType(String kind, int id) async {
+    await Http().delete('/type/$kind/$id');
+    _clearCache(kind);
+  }
+
+  static Future<List<TypeItem>> _fetchByKind(
+    String kind, {
+    bool force = false,
+  }) {
+    return switch (kind) {
+      'tags' => fetchTags(force: force),
+      'symptoms' => fetchSymptoms(force: force),
+      'colors' => fetchColors(force: force),
+      'locations' => fetchLocations(force: force),
+      'roles' => fetchRoles(force: force),
+      _ => Future.value(const []),
+    };
+  }
+
+  static void _clearCache(String kind) {
+    switch (kind) {
+      case 'tags':
+        _tags = null;
+      case 'symptoms':
+        _symptoms = null;
+      case 'colors':
+        _colors = null;
+      case 'locations':
+        _locations = null;
+      case 'roles':
+        _roles = null;
+    }
+  }
+
   static Future<List<TypeItem>> _fetch(
     String path, {
     required List<TypeItem>? cache,
@@ -108,9 +172,30 @@ class TypeService {
     return id?.toString() ?? '';
   }
 
+  /// 标签 id -> 名称
+  static String tagLabel(int? id) {
+    final label = labelById(id, _tags);
+    if (label != null) return label;
+    return id?.toString() ?? '';
+  }
+
   /// 颜色 id -> 名称
   static String colorLabel(int? id) {
     final label = labelById(id, _colors);
+    if (label != null) return label;
+    return id?.toString() ?? '';
+  }
+
+  /// 地点 id -> 名称
+  static String locationLabel(int? id) {
+    final label = labelById(id, _locations);
+    if (label != null) return label;
+    return id?.toString() ?? '';
+  }
+
+  /// 角色 id -> 名称
+  static String roleLabel(int? id) {
+    final label = labelById(id, _roles);
     if (label != null) return label;
     return id?.toString() ?? '';
   }

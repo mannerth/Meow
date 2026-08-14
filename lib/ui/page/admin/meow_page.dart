@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meow/api/service/cat_service.dart';
+import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/ui/page/admin/meow_edit_page.dart';
 import 'package:meow/ui/widget/cat_card.dart';
@@ -27,6 +28,14 @@ class _MeowPageState extends State<MeowPage> {
   void initState() {
     super.initState();
     _scrollController.addListener(_handleScroll);
+    Future.wait([
+      TypeService.fetchColors(),
+      TypeService.fetchLocations(),
+      TypeService.fetchRoles(),
+      TypeService.fetchTags(),
+    ]).then((_) {
+      if (mounted) setState(() {});
+    });
     _loadCats(reset: true);
   }
 

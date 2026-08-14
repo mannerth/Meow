@@ -19,7 +19,6 @@ class SosPage extends ConsumerStatefulWidget {
 }
 
 class _SosPageState extends ConsumerState<SosPage> {
-  final TextEditingController _locationController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -27,6 +26,8 @@ class _SosPageState extends ConsumerState<SosPage> {
   final List<XFile> _media = [];
   final List<int> _selectedSymptoms = [];
   List<TypeItem> _symptomOptions = [];
+  List<TypeItem> _locationOptions = [];
+  int? _selectedLocationId;
 
   bool _loadingTags = true;
   bool _submitting = false;
@@ -34,24 +35,29 @@ class _SosPageState extends ConsumerState<SosPage> {
   @override
   void initState() {
     super.initState();
-    _loadSymptomTags();
+    _loadTypeOptions();
   }
 
   @override
   void dispose() {
-    _locationController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
 
   bool get _isBusy => _submitting;
 
-  Future<void> _loadSymptomTags() async {
+  Future<void> _loadTypeOptions() async {
     setState(() => _loadingTags = true);
     try {
-      _symptomOptions = await TypeService.fetchSymptoms();
+      final results = await Future.wait([
+        TypeService.fetchSymptoms(),
+        TypeService.fetchLocations(),
+      ]);
+      _symptomOptions = results[0];
+      _locationOptions = results[1];
     } catch (error) {
       _symptomOptions = const [];
+      _locationOptions = const [];
     } finally {
       if (mounted) setState(() => _loadingTags = false);
     }
@@ -143,10 +149,9 @@ class _SosPageState extends ConsumerState<SosPage> {
   }
 
   Future<void> _submit() async {
-    final location = _locationController.text.trim();
     final description = _descriptionController.text.trim();
-    if (location.isEmpty) {
-      _showMessage('请填写发现位置');
+    if (_selectedLocationId == null) {
+      _showMessage('请选择发现地点');
       return;
     }
     if (_selectedSymptoms.isEmpty) {
@@ -170,7 +175,7 @@ class _SosPageState extends ConsumerState<SosPage> {
       final payload = <String, dynamic>{
         if (_selectedCat != null) 'catId': _selectedCat!.id,
         'campus': campusCode ?? 0,
-        'location': location,
+        'location': _selectedLocationId,
         'symptoms': _selectedSymptoms,
         'description': description,
         'medium': keys,
@@ -178,11 +183,11 @@ class _SosPageState extends ConsumerState<SosPage> {
       await Http().post('/sos', data: payload);
       if (!mounted) return;
       _showMessage('上报成功，已通知协会同学');
-      _locationController.clear();
       _descriptionController.clear();
       setState(() {
         _selectedCat = null;
         _selectedSymptoms.clear();
+        _selectedLocationId = null;
         _media.clear();
       });
     } catch (error) {
@@ -246,12 +251,24 @@ class _SosPageState extends ConsumerState<SosPage> {
               const SizedBox(height: 16),
               _SectionTitle(title: '发现位置'),
               _InputCard(
-                child: TextField(
-                  controller: _locationController,
+                child: DropdownButtonFormField<int>(
+                  initialValue: _selectedLocationId,
+                  isExpanded: true,
                   decoration: const InputDecoration(
-                    hintText: '例如：食堂北门灌木丛',
+                    hintText: '请选择发现地点',
                     border: InputBorder.none,
                   ),
+                  items: _locationOptions
+                      .map(
+                        (item) => DropdownMenuItem(
+                          value: item.id,
+                          child: Text(item.label),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: _loadingTags
+                      ? null
+                      : (value) => setState(() => _selectedLocationId = value),
                 ),
               ),
               const SizedBox(height: 16),

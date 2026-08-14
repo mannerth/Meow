@@ -12,6 +12,7 @@ class AdminSosService {
   }) async {
     final params = <String, dynamic>{'page': page, 'size': size};
     if (status != null && status.isNotEmpty) {
+      // 列表筛选由后端 Spring 枚举绑定，仍需要状态名；仅 JSON body 使用整数。
       params['status'] = status;
     }
     if (campus != null) {
@@ -25,7 +26,7 @@ class AdminSosService {
 
   static Future<DataResponse<void>> resolveSos({
     required String id,
-    required String status,
+    required int status,
     required String reply,
   }) async {
     final payload = <String, dynamic>{'status': status, 'reply': reply};

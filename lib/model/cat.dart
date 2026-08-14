@@ -39,47 +39,56 @@ class Cat {
   final String name;
   final String avatar;
   final String color;
+  final int? colorId;
   final String campus;
   final String locationName;
+  final int? locationId;
   final int status;
   final List<String> tags;
   final bool isNeutered;
   final int popularity;
   final String lastSeenTime;
   final String roleName;
+  final int? roleId;
 
   Cat({
     required this.id,
     required this.name,
     required this.avatar,
     required this.color,
+    this.colorId,
     required this.campus,
     required this.locationName,
+    this.locationId,
     required this.status,
     required this.tags,
     required this.isNeutered,
     required this.popularity,
     required this.lastSeenTime,
     required this.roleName,
+    this.roleId,
   });
 
   factory Cat.fromJson(Map<String, dynamic> json) => Cat(
     id: json['id'] as String,
     name: json['name'] as String,
     avatar: (json['avatar'] ?? '').toString(),
-    color: (json['color'] ?? '').toString(),
+    color: json['color'] is num ? '' : (json['color'] ?? '').toString(),
+    colorId: _intValue(json['color']),
     campus: campusLabel(json['campus']),
-    locationName: (json['locationName'] ?? json['location'] ?? '').toString(),
+    locationName: json['location'] is num
+        ? ''
+        : (json['locationName'] ?? json['location'] ?? '').toString(),
+    locationId: _intValue(json['location'] ?? json['locationId']),
     status: (json['status'] is num)
         ? (json['status'] as num).toInt()
         : (catStatusToCode((json['status'] ?? '').toString()) ?? 0),
-    tags:
-        (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
-        [],
+    tags: (json['tags'] as List<dynamic>?)?.map(_tagIdString).toList() ?? [],
     isNeutered: json['isNeutered'] as bool? ?? false,
     popularity: (json['popularity'] as num?)?.toInt() ?? 0,
     lastSeenTime: (json['lastSeenTime'] ?? '') as String,
-    roleName: (json['roleName'] ?? '').toString(),
+    roleName: json['role'] is num ? '' : (json['roleName'] ?? '').toString(),
+    roleId: _intValue(json['role'] ?? json['roleId']),
   );
 
   Map<String, dynamic> toJson() => {
@@ -96,6 +105,18 @@ class Cat {
     'lastSeenTime': lastSeenTime,
     'roleName': roleName,
   };
+}
+
+String _tagIdString(dynamic value) {
+  if (value is Map) {
+    return (value['id'] ?? value['tagId'] ?? value['key'] ?? '').toString();
+  }
+  return value?.toString() ?? '';
+}
+
+int? _intValue(dynamic value) {
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '');
 }
 
 class CatPage {

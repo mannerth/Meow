@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat.dart';
 
 class CatCard extends StatelessWidget {
@@ -18,6 +19,15 @@ class CatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final color = cat.color.isNotEmpty
+        ? cat.color
+        : TypeService.colorLabel(cat.colorId);
+    final location = cat.locationName.isNotEmpty
+        ? cat.locationName
+        : TypeService.locationLabel(cat.locationId);
+    final role = cat.roleName.isNotEmpty
+        ? cat.roleName
+        : TypeService.roleLabel(cat.roleId);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -101,8 +111,13 @@ class CatCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${cat.campus} · ${cat.locationName.isEmpty ? '' : cat.locationName}',
-                    maxLines: 1,
+                    [
+                      if (color.isNotEmpty) color,
+                      cat.campus,
+                      if (location.isNotEmpty) location,
+                      if (role.isNotEmpty) role,
+                    ].join(' · '),
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: Colors.grey.shade600,
@@ -113,6 +128,10 @@ class CatCard extends StatelessWidget {
                     spacing: 6,
                     runSpacing: -4,
                     children: cat.tags.map((tag) {
+                      final tagId = int.tryParse(tag);
+                      final tagLabel = tagId == null
+                          ? tag
+                          : TypeService.tagLabel(tagId);
                       return Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 8,
@@ -123,7 +142,7 @@ class CatCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          tag,
+                          tagLabel,
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: const Color(0xFF6A4BC3),
                             fontWeight: FontWeight.w600,

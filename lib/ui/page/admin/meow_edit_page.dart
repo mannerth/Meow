@@ -47,9 +47,13 @@ class _MeowEditPageState extends State<MeowEditPage> {
   List<TypeItem> _colorOptions = const [];
   List<TypeItem> _locationOptions = const [];
   List<TypeItem> _roleOptions = const [];
+  List<TypeItem> _tagOptions = const [];
+  final List<String> _selectedTagLabels = [];
+  final List<String> _pendingTagLabels = [];
   List<String> _images = [];
   String _avatarKey = '';
   List<String> _imageKeys = [];
+  List<String> _originalImageKeys = [];
   XFile? _avatarFile;
   final List<XFile> _imageFiles = [];
   bool _loading = false;
@@ -94,10 +98,12 @@ class _MeowEditPageState extends State<MeowEditPage> {
         TypeService.fetchColors(),
         TypeService.fetchLocations(),
         TypeService.fetchRoles(),
+        TypeService.fetchTags(),
       ]);
       _colorOptions = results[0];
       _locationOptions = results[1];
       _roleOptions = results[2];
+      _tagOptions = results[3];
       if (widget.catId == null) return;
       final response = await CatService.fetchCatDetail(widget.catId!);
       final detail = response.data;
@@ -106,6 +112,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
       _applyDetail(detail);
       _avatarKey = imageKeys.avatar;
       _imageKeys = imageKeys.images;
+      _originalImageKeys = List<String>.from(imageKeys.images);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -140,6 +147,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
     _appearance = detail.attributes.appearance;
     _images = List<String>.from(detail.images);
     _imageKeys = [];
+    _originalImageKeys = [];
     _avatarKey = '';
     _imageFiles.clear();
     _birthYearController.text = detail.basicInfo.birthYear == 0
@@ -149,6 +157,18 @@ class _MeowEditPageState extends State<MeowEditPage> {
         ? null
         : DateTime.tryParse(detail.basicInfo.admissionDate);
     _healthStatus = _healthStatusFromApi(detail.basicInfo.healthStatus);
+    _selectedTagLabels
+      ..clear()
+      ..addAll(
+        detail.tags.map((tag) {
+          final id = int.tryParse(tag);
+          return _tagOptions
+                  .where((item) => item.id == id)
+                  .map((item) => item.label)
+                  .firstOrNull ??
+              tag;
+        }),
+      );
     if (mounted) setState(() {});
   }
 
@@ -265,15 +285,28 @@ class _MeowEditPageState extends State<MeowEditPage> {
     }
     setState(() => _loading = true);
     try {
+      if (_pendingTagLabels.isNotEmpty) {
+        await TypeService.batchCreate('tags', _pendingTagLabels);
+        _tagOptions = await TypeService.fetchTags(force: true);
+      }
+      final tagIds = _selectedTagLabels
+          .map(
+            (label) => _tagOptions
+                .where((item) => item.label == label)
+                .map((item) => item.id)
+                .firstOrNull,
+          )
+          .whereType<int>()
+          .toList();
       String avatar = _avatarKey;
       if (_avatarFile != null) {
         avatar = (await CosUploadService.uploadImages([
           File(_avatarFile!.path),
         ])).first;
       }
-      final images = <String>[..._imageKeys];
+      final addedImageKeys = <String>[];
       if (_imageFiles.isNotEmpty) {
-        images.addAll(
+        addedImageKeys.addAll(
           await CosUploadService.uploadImages(
             _imageFiles.map((image) => File(image.path)).toList(),
           ),
@@ -284,7 +317,6 @@ class _MeowEditPageState extends State<MeowEditPage> {
         'aliases': <String>[],
         'color': colorId,
         'avatar': avatar,
-        'images': images,
         'gender': _genderValueFromDisplay(_genderController.text.trim()),
         'campus': _campus?.code ?? 0,
         'hauntLocation': _hauntLocationId,
@@ -305,7 +337,19 @@ class _MeowEditPageState extends State<MeowEditPage> {
         'neuteredDate': _neuteredDate?.toIso8601String().split('T').first,
         'neuteredType': _neuteredTypeValueFromDisplay(_neuteredTypeDisplay),
         'description': _descriptionController.text.trim(),
+        'tags': tagIds,
       };
+      if (widget.catId == null) {
+        payload['images'] = [..._imageKeys, ...addedImageKeys];
+      } else {
+        payload['imageActions'] = {
+          'keep': _imageKeys,
+          'delete': _originalImageKeys
+              .where((key) => !_imageKeys.contains(key))
+              .toList(),
+          'add': addedImageKeys,
+        };
+      }
       var result = await CatService.upsertCat(
         id: widget.catId,
         payload: payload,
@@ -323,6 +367,74 @@ class _MeowEditPageState extends State<MeowEditPage> {
       ).showSnackBar(const SnackBar(content: Text('保存失败，请稍后重试')));
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _addTag() async {
+    var input = '';
+    final label = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('添加猫咪标签'),
+        content: TextField(
+          autofocus: true,
+          onChanged: (value) => input = value,
+          decoration: const InputDecoration(hintText: '请输入标签名称'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, input.trim()),
+            child: const Text('添加'),
+          ),
+        ],
+      ),
+    );
+    if (label == null || label.isEmpty) return;
+    if (!_tagOptions.any((item) => item.label == label) &&
+        !_pendingTagLabels.contains(label)) {
+      _pendingTagLabels.add(label);
+    }
+    if (!_selectedTagLabels.contains(label)) {
+      setState(() => _selectedTagLabels.add(label));
+    }
+  }
+
+  Future<void> _deleteTagOption(TypeItem item) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('删除标签'),
+        content: Text('确认删除“${item.label}”？已有猫咪对该标签的引用可能受到影响。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('删除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await TypeService.deleteType('tags', item.id);
+      if (!mounted) return;
+      setState(() {
+        _tagOptions = _tagOptions.where((tag) => tag.id != item.id).toList();
+        _selectedTagLabels.remove(item.label);
+      });
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('删除标签失败，请稍后重试')));
+      }
     }
   }
 
@@ -507,6 +619,75 @@ class _MeowEditPageState extends State<MeowEditPage> {
                     _StatusPicker(
                       status: _status,
                       onChanged: (value) => setState(() => _status = value),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                _SectionCard(
+                  title: '猫咪标签',
+                  children: [
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        ..._tagOptions.map(
+                          (item) => GestureDetector(
+                            onLongPress: () => _deleteTagOption(item),
+                            child: FilterChip(
+                              label: Text(item.label),
+                              selected: _selectedTagLabels.contains(item.label),
+                              selectedColor: const Color(0xFFCDEFD5),
+                              checkmarkColor: const Color(0xFF167A35),
+                              labelStyle: TextStyle(
+                                color: _selectedTagLabels.contains(item.label)
+                                    ? const Color(0xFF167A35)
+                                    : null,
+                                fontWeight:
+                                    _selectedTagLabels.contains(item.label)
+                                    ? FontWeight.w600
+                                    : null,
+                              ),
+                              onSelected: (selected) => setState(() {
+                                if (selected) {
+                                  _selectedTagLabels.add(item.label);
+                                } else {
+                                  _selectedTagLabels.remove(item.label);
+                                }
+                              }),
+                            ),
+                          ),
+                        ),
+                        ..._pendingTagLabels
+                            .where(
+                              (label) => !_tagOptions.any(
+                                (item) => item.label == label,
+                              ),
+                            )
+                            .map(
+                              (label) => FilterChip(
+                                label: Text('$label（待保存）'),
+                                selected: _selectedTagLabels.contains(label),
+                                selectedColor: const Color(0xFFCDEFD5),
+                                checkmarkColor: const Color(0xFF167A35),
+                                labelStyle: const TextStyle(
+                                  color: Color(0xFF167A35),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                onSelected: (selected) => setState(() {
+                                  if (selected) {
+                                    _selectedTagLabels.add(label);
+                                  } else {
+                                    _selectedTagLabels.remove(label);
+                                  }
+                                }),
+                              ),
+                            ),
+                        ActionChip(
+                          avatar: const Icon(Icons.add, size: 18),
+                          label: const Text('新增'),
+                          onPressed: _addTag,
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -1050,7 +1231,7 @@ class _SliderTile extends StatelessWidget {
             inactiveTrackColor: color.withAlpha(51),
             thumbColor: color,
           ),
-          child: Slider(value: value, min: 0, max: 10, onChanged: onChanged),
+          child: Slider(value: value, min: 1, max: 10, onChanged: onChanged),
         ),
         const SizedBox(height: 8),
       ],
