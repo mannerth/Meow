@@ -3,6 +3,7 @@ import 'package:meow/ui/widget/image_preview.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/model/leaderboard.dart';
 import 'package:meow/ui/page/user/cat_detail_page.dart';
+import 'package:meow/ui/widget/safe_network_image.dart';
 
 class LeaderboardPage extends StatefulWidget {
   const LeaderboardPage({super.key});
@@ -308,11 +309,12 @@ class _TopThreeAvatar extends StatelessWidget {
                   ],
                 ),
                 child: GestureDetector(
-                  onTap: () =>
-                      showNetworkImagePreview(context, _vaildUrl(item!.avatar)),
+                  onTap: () => showNetworkImagePreview(context, item!.avatar),
                   child: ClipOval(
-                    child: Image.network(
-                      _vaildUrl(item!.avatar),
+                    child: SafeNetworkImage(
+                      url: item!.avatar,
+                      width: size,
+                      height: size,
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -426,20 +428,13 @@ class _LeaderboardListItem extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             GestureDetector(
-              onTap: () =>
-                  showNetworkImagePreview(context, _vaildUrl(item.avatar)),
+              onTap: () => showNetworkImagePreview(context, item.avatar),
               child: ClipOval(
-                child: Image.network(
-                  _vaildUrl(item.avatar),
+                child: SafeNetworkImage(
+                  url: item.avatar,
                   width: 40,
                   height: 40,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: 40,
-                    height: 40,
-                    color: Colors.grey.shade300,
-                    child: const Icon(Icons.pets, color: Colors.white),
-                  ),
                 ),
               ),
             ),
@@ -477,22 +472,15 @@ class _LeaderboardListItem extends StatelessWidget {
   }
 }
 
-String _formatValue(int value) {
+String _formatValue(num value) {
+  if (value % 1 != 0) return value.toString();
+
+  final integerValue = value.toInt();
   final buffer = StringBuffer();
-  final chars = value.toString().split('').reversed.toList();
+  final chars = integerValue.toString().split('').reversed.toList();
   for (var i = 0; i < chars.length; i++) {
     if (i != 0 && i % 3 == 0) buffer.write(',');
     buffer.write(chars[i]);
   }
   return buffer.toString().split('').reversed.join();
-}
-
-String _vaildUrl(String url) {
-  if (!url.startsWith('http')) {
-    return 'https://image.foofish.work/i/2026/03/03/69a6ae395343b-1772531257.jpg';
-  }
-  if (url.startsWith('https://example.com')) {
-    return 'https://image.foofish.work/i/2026/03/03/69a6ae395343b-1772531257.jpg';
-  }
-  return url;
 }

@@ -6,6 +6,7 @@ import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/api/service/cos_service.dart';
 import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat_detail.dart';
+import 'package:meow/model/static_type.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
@@ -58,15 +59,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
   final List<XFile> _imageFiles = [];
   bool _loading = false;
 
-  static const _statusOptions = ['0', '1', '2', '3'];
   static const _campusOptions = <Campus?>[null, ...Campus.values];
-  static const _genderDisplayOptions = ['公', '母', '未知'];
-  static const _neuteredTypeDisplayOptions = ['剪耳', '未剪耳'];
-
-  static const _genderDisplayToValue = {'公': 1, '母': 2, '未知': 0};
-  static const _statusDisplayToValue = {'在校': 0, '已毕业': 1, '喵星': 2, '住院': 3};
-  static const _neuteredTypeDisplayToValue = {'剪耳': 0, '未剪耳': 1};
-  static const _healthStatusOptions = ['健康', '生病', '恢复中'];
 
   @override
   void initState() {
@@ -122,22 +115,19 @@ class _MeowEditPageState extends State<MeowEditPage> {
     _nameController.text = detail.name;
     _avatarController.text = detail.avatar;
     _colorController.text = detail.basicInfo.color;
-    _genderController.text = _genderDisplayFromApi(detail.basicInfo.gender);
+    _genderController.text = CatGender.fromApi(detail.basicInfo.gender).label;
     _hauntLocationId = _typeIdForValue(
       detail.basicInfo.hauntLocation,
       _locationOptions,
     );
     _roleId = _typeIdForValue(detail.basicInfo.role, _roleOptions);
     _descriptionController.text = detail.description;
-    _campus = Campus.values.cast<Campus?>().firstWhere(
-      (item) => item?.name == detail.basicInfo.campus,
-      orElse: () => null,
-    );
-    _status = _statusValueFromApi(detail.basicInfo.status);
+    _campus = Campus.fromApi(detail.basicInfo.campus);
+    _status = CatStatus.fromApi(detail.basicInfo.status).code.toString();
     _isNeutered = detail.basicInfo.neutered.isNeutered;
     _neuteredTypeDisplay = detail.basicInfo.neutered.type.isEmpty
-        ? _neuteredTypeDisplayOptions.first
-        : _neuteredTypeDisplayFromApi(detail.basicInfo.neutered.type);
+        ? CatNeuteredType.earCut.label
+        : CatNeuteredType.fromApi(detail.basicInfo.neutered.type).label;
     _neuteredDate = detail.basicInfo.neutered.neuteredDate.isEmpty
         ? null
         : DateTime.tryParse(detail.basicInfo.neutered.neuteredDate);
@@ -156,7 +146,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
     _admissionDate = detail.basicInfo.admissionDate.isEmpty
         ? null
         : DateTime.tryParse(detail.basicInfo.admissionDate);
-    _healthStatus = _healthStatusFromApi(detail.basicInfo.healthStatus);
+    _healthStatus = CatHealthStatus.fromApi(detail.basicInfo.healthStatus).code;
     _selectedTagLabels
       ..clear()
       ..addAll(
@@ -190,58 +180,6 @@ class _MeowEditPageState extends State<MeowEditPage> {
       if (option.label == value) return option.id;
     }
     return null;
-  }
-
-  String _genderDisplayFromApi(String value) {
-    switch (value) {
-      case 'MALE':
-        return '公';
-      case 'FEMALE':
-        return '母';
-      case 'UNKNOWN':
-        return '未知';
-    }
-    return value;
-  }
-
-  int? _genderValueFromDisplay(String display) {
-    return _genderDisplayToValue[display];
-  }
-
-  String _statusValueFromApi(dynamic value) {
-    if (value is num) return value.toInt().toString();
-    final str = value?.toString() ?? '';
-    if (_statusDisplayToValue.containsKey(str)) {
-      return _statusDisplayToValue[str]!.toString();
-    }
-    if (_statusOptions.contains(str)) {
-      return str;
-    }
-    return _statusOptions.first;
-  }
-
-  String _neuteredTypeDisplayFromApi(String value) {
-    switch (value) {
-      case 'EAR_CUT':
-        return '剪耳';
-      case 'UNCUT':
-        return '未剪耳';
-    }
-    return value;
-  }
-
-  int? _neuteredTypeValueFromDisplay(String display) {
-    return _neuteredTypeDisplayToValue[display];
-  }
-
-  int _healthStatusFromApi(String value) {
-    final code = int.tryParse(value);
-    if (code != null) return code;
-    return switch (value) {
-      'SICK' => 1,
-      'RECOVERING' => 2,
-      _ => 0,
-    };
   }
 
   Future<void> _pickNeuteredDate() async {
@@ -317,7 +255,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
         'aliases': <String>[],
         'color': colorId,
         'avatar': avatar,
-        'gender': _genderValueFromDisplay(_genderController.text.trim()),
+        'gender': CatGender.fromApi(_genderController.text.trim()).code,
         'campus': _campus?.code ?? 0,
         'hauntLocation': _hauntLocationId,
         'role': _roleId,
@@ -335,7 +273,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
         },
         'isNeutered': _isNeutered,
         'neuteredDate': _neuteredDate?.toIso8601String().split('T').first,
-        'neuteredType': _neuteredTypeValueFromDisplay(_neuteredTypeDisplay),
+        'neuteredType': CatNeuteredType.fromApi(_neuteredTypeDisplay).code,
         'description': _descriptionController.text.trim(),
         'tags': tagIds,
       };
@@ -547,10 +485,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
                           .toList(),
                       onChanged: (value) {
                         setState(() {
-                          _campus = Campus.values.cast<Campus?>().firstWhere(
-                            (item) => item?.name == value,
-                            orElse: () => null,
-                          );
+                          _campus = Campus.fromApi(value);
                         });
                       },
                     ),
@@ -559,7 +494,9 @@ class _MeowEditPageState extends State<MeowEditPage> {
                       value: _genderController.text.isEmpty
                           ? null
                           : _genderController.text,
-                      items: _genderDisplayOptions,
+                      items: CatGender.values
+                          .map((item) => item.label)
+                          .toList(),
                       onChanged: (value) {
                         _genderController.text = value ?? '';
                         setState(() {});
@@ -606,13 +543,13 @@ class _MeowEditPageState extends State<MeowEditPage> {
                     ),
                     _DropdownTile(
                       label: '健康状态',
-                      value: _healthStatusOptions[_healthStatus.clamp(0, 2)],
-                      items: _healthStatusOptions,
+                      value: CatHealthStatus.fromApi(_healthStatus).label,
+                      items: CatHealthStatus.values
+                          .map((item) => item.label)
+                          .toList(),
                       onChanged: (value) {
                         setState(() {
-                          _healthStatus = _healthStatusOptions.indexOf(
-                            value ?? _healthStatusOptions.first,
-                          );
+                          _healthStatus = CatHealthStatus.fromApi(value).code;
                         });
                       },
                     ),
@@ -737,7 +674,9 @@ class _MeowEditPageState extends State<MeowEditPage> {
                     _DropdownTile(
                       label: '绝育类型',
                       value: _neuteredTypeDisplay,
-                      items: _neuteredTypeDisplayOptions,
+                      items: CatNeuteredType.values
+                          .map((item) => item.label)
+                          .toList(),
                       onChanged: (value) {
                         setState(
                           () => _neuteredTypeDisplay =
@@ -1133,32 +1072,16 @@ class _StatusPicker extends StatelessWidget {
     return Wrap(
       spacing: 12,
       runSpacing: 12,
-      children: [
-        _StatusButton(
-          label: '在校',
-          value: '0',
-          selected: status == '0',
-          onTap: onChanged,
-        ),
-        _StatusButton(
-          label: '已毕业',
-          value: '1',
-          selected: status == '1',
-          onTap: onChanged,
-        ),
-        _StatusButton(
-          label: '喵星',
-          value: '2',
-          selected: status == '2',
-          onTap: onChanged,
-        ),
-        _StatusButton(
-          label: '住院',
-          value: '3',
-          selected: status == '3',
-          onTap: onChanged,
-        ),
-      ],
+      children: CatStatus.values
+          .map(
+            (item) => _StatusButton(
+              label: item.label,
+              value: item.code.toString(),
+              selected: status == item.code.toString(),
+              onTap: onChanged,
+            ),
+          )
+          .toList(),
     );
   }
 }

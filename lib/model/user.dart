@@ -136,6 +136,25 @@ enum Campus {
   final String name;
   final String apiKey;
   const Campus(this.code, this.name, this.apiKey);
+
+  static Campus? fromCode(int? code) {
+    if (code == null) return null;
+    for (final campus in Campus.values) {
+      if (campus.code == code) return campus;
+    }
+    return null;
+  }
+
+  static Campus? fromApi(dynamic value) {
+    if (value is num) return fromCode(value.toInt());
+    final text = value?.toString() ?? '';
+    final code = int.tryParse(text);
+    if (code != null) return fromCode(code);
+    for (final campus in Campus.values) {
+      if (campus.name == text || campus.apiKey == text) return campus;
+    }
+    return null;
+  }
 }
 
 @JsonSerializable()

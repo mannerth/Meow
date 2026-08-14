@@ -59,6 +59,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
                   items.length > 4 || constraints.maxWidth / items.length < 72;
 
               return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: List.generate(items.length, (index) {
                   final item = CustomNavigationItem(
                     data: items[index],

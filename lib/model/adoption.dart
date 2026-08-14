@@ -1,57 +1,18 @@
+import 'package:meow/model/static_type.dart';
+
 /// 居住类型 -> 中文（0宿舍 1与父母同住 2合租 3整租 4自有住房）
 /// 领养状态采用整数传输：0 待审核、1 面谈、2 通过、3 拒绝、4 完成。
-String adoptionStatusName(dynamic value) {
-  if (value is num) {
-    return switch (value.toInt()) {
-      0 => 'PENDING',
-      1 => 'INTERVIEW',
-      2 => 'APPROVED',
-      3 => 'REJECTED',
-      4 => 'COMPLETED',
-      _ => value.toString(),
-    };
-  }
-  final text = value?.toString() ?? '';
-  final code = int.tryParse(text);
-  if (code != null) return adoptionStatusName(code);
-  return text.toUpperCase();
-}
+String adoptionStatusName(dynamic value) =>
+    AdoptionStatus.tryFromApi(value)?.apiName ??
+    value?.toString().toUpperCase() ??
+    '';
 
-int? adoptionStatusCode(String? value) {
-  if (value == null || value.isEmpty) return null;
-  final parsed = int.tryParse(value);
-  if (parsed != null) return parsed;
-  return switch (value.toUpperCase()) {
-    'PENDING' => 0,
-    'INTERVIEW' => 1,
-    'APPROVED' => 2,
-    'REJECTED' => 3,
-    'COMPLETED' => 4,
-    _ => null,
-  };
-}
+int? adoptionStatusCode(String? value) =>
+    AdoptionStatus.tryFromApi(value)?.code;
 
-String adoptionHousingLabel(dynamic value) {
-  if (value is num) {
-    const map = {0: '宿舍', 1: '与父母同住', 2: '合租', 3: '整租', 4: '自有住房'};
-    return map[value.toInt()] ?? '—';
-  }
-  final str = value?.toString() ?? '';
-  if (str.isEmpty) return '—';
-  switch (str) {
-    case 'DORM':
-      return '宿舍';
-    case 'WITH_PARENT':
-      return '与父母同住';
-    case 'RENT_SHARE':
-      return '合租';
-    case 'RENT_WHOLE':
-      return '整租';
-    case 'OWN_HOUSE':
-      return '自有住房';
-  }
-  return str;
-}
+String adoptionHousingLabel(dynamic value) =>
+    AdoptionHousing.tryFromApi(value)?.label ??
+    (value?.toString().isEmpty ?? true ? '—' : value.toString());
 
 class AdoptionContact {
   final String phone;

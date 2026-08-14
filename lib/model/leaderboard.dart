@@ -1,10 +1,12 @@
+import 'package:meow/model/campus.dart';
+
 class LeaderboardItem {
   final int rank;
   final String catId;
   final String name;
   final String avatar;
   final String campus;
-  final int value;
+  final num value;
   final List<String> tags;
 
   LeaderboardItem({
@@ -20,13 +22,17 @@ class LeaderboardItem {
   factory LeaderboardItem.fromJson(Map<String, dynamic> json) {
     return LeaderboardItem(
       rank: (json['rank'] as num?)?.toInt() ?? 0,
-      catId: json['catId'] as String? ?? '',
-      name: json['name'] as String? ?? '',
-      avatar: json['avatar'] as String? ?? '',
-      campus: json['campus'] as String? ?? '',
-      value: (json['value'] as num?)?.toInt() ?? 0,
+      catId: (json['catId'] ?? '').toString(),
+      name: (json['name'] ?? '').toString(),
+      avatar: (json['avatar'] ?? '').toString(),
+      campus: campusLabel(json['campus']),
+      value: json['value'] as num? ?? 0,
       tags: (json['tags'] as List<dynamic>? ?? [])
-          .map((e) => e as String)
+          .map(
+            (e) => e is Map
+                ? (e['id'] ?? e['tagId'] ?? '').toString()
+                : e.toString(),
+          )
           .toList(),
     );
   }

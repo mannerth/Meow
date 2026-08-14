@@ -1,32 +1,13 @@
 import 'package:meow/model/user.dart';
+import 'package:meow/model/static_type.dart';
 
 /// SOS 状态采用整数传输：0 待处理、1 处理中、2 已完成。
-String sosStatusName(dynamic value) {
-  if (value is num) {
-    return switch (value.toInt()) {
-      0 => 'PENDING',
-      1 => 'PROCESSING',
-      2 => 'RESOLVED',
-      _ => value.toString(),
-    };
-  }
-  final text = value?.toString() ?? '';
-  final code = int.tryParse(text);
-  if (code != null) return sosStatusName(code);
-  return text.toUpperCase();
-}
+String sosStatusName(dynamic value) =>
+    SosStatus.tryFromApi(value)?.apiName ??
+    value?.toString().toUpperCase() ??
+    '';
 
-int? sosStatusCode(String? value) {
-  if (value == null || value.isEmpty) return null;
-  final parsed = int.tryParse(value);
-  if (parsed != null) return parsed;
-  return switch (value.toUpperCase()) {
-    'PENDING' => 0,
-    'PROCESSING' => 1,
-    'RESOLVED' => 2,
-    _ => null,
-  };
-}
+int? sosStatusCode(String? value) => SosStatus.tryFromApi(value)?.code;
 
 class AdminSosListPage {
   final int total;

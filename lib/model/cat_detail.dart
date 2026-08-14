@@ -1,33 +1,13 @@
 import 'package:meow/model/campus.dart';
 import 'package:meow/model/cat.dart';
+import 'package:meow/model/static_type.dart';
 
 /// 性别 -> 中文（0未知 1男 2女）
-String catGenderLabel(dynamic value) {
-  if (value is num) {
-    switch (value.toInt()) {
-      case 1:
-        return '公';
-      case 2:
-        return '母';
-      default:
-        return '未知';
-    }
-  }
-  return value?.toString() ?? '';
-}
+String catGenderLabel(dynamic value) => CatGender.fromApi(value).label;
 
 /// 绝育类型 -> 中文（0剪耳 1未剪耳）
-String catNeuteredTypeLabel(dynamic value) {
-  if (value is num) {
-    switch (value.toInt()) {
-      case 0:
-        return '剪耳';
-      case 1:
-        return '未剪耳';
-    }
-  }
-  return value?.toString() ?? '';
-}
+String catNeuteredTypeLabel(dynamic value) =>
+    CatNeuteredType.fromApi(value).label;
 
 class CatDetail {
   final String id;
@@ -174,23 +154,9 @@ class CatBasicInfo {
   };
 }
 
-/// 颜色：新接口可能返回数字 id，先按静态映射兜底
-String _colorLabel(dynamic value) {
-  if (value is num) {
-    const map = {
-      1: '橘猫',
-      2: '狸花',
-      3: '奶牛',
-      4: '三花',
-      5: '玳瑁',
-      6: '纯白',
-      7: '纯黑',
-      8: '其他',
-    };
-    return map[value.toInt()] ?? '其他';
-  }
-  return value?.toString() ?? '';
-}
+/// 花色是可配置的动态类型；数字 ID 由页面通过 TypeService 映射显示。
+String _colorLabel(dynamic value) =>
+    value is num ? '' : value?.toString() ?? '';
 
 class CatNeutered {
   final bool isNeutered;

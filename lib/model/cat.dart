@@ -1,35 +1,13 @@
 import 'package:meow/model/campus.dart';
+import 'package:meow/model/static_type.dart';
 
 /// 猫咪状态 -> 中文（0在校 1毕业 2喵星 3住院）
-String catStatusLabel(dynamic status) {
-  if (status is num) {
-    switch (status.toInt()) {
-      case 0:
-        return '在校';
-      case 1:
-        return '毕业';
-      case 2:
-        return '喵星';
-      case 3:
-        return '住院';
-    }
-  }
-  final str = status?.toString() ?? '';
-  if (str.isEmpty) return '在校';
-  return str;
-}
+String catStatusLabel(dynamic status) => CatStatus.fromApi(status).label;
 
 /// 猫咪状态 中文 -> 数字（与 /cats 筛选一致）
 int? catStatusToCode(String label) {
-  switch (label) {
-    case '在校':
-      return 0;
-    case '毕业':
-      return 1;
-    case '喵星':
-      return 2;
-    case '住院':
-      return 3;
+  for (final status in CatStatus.values) {
+    if (status.label == label) return status.code;
   }
   return null;
 }

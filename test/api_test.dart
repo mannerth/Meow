@@ -5,6 +5,8 @@ import 'package:meow/model/admin_new_cat.dart';
 import 'package:meow/model/admin_sos.dart';
 import 'package:meow/model/adoption.dart';
 import 'package:meow/model/cat.dart';
+import 'package:meow/model/leaderboard.dart';
+import 'package:meow/model/static_type.dart';
 import 'package:meow/model/user.dart';
 
 void main() {
@@ -99,5 +101,31 @@ void main() {
     expect(cat.color, isEmpty);
     expect(cat.locationName, isEmpty);
     expect(cat.roleName, isEmpty);
+  });
+
+  test('固定枚举集中处理整数与旧字符串响应', () {
+    expect(CatGender.fromApi(2), CatGender.female);
+    expect(CatGender.fromApi('MALE'), CatGender.male);
+    expect(CatStatus.fromApi('住院').code, 3);
+    expect(CatNeuteredType.fromApi('UNCUT').code, 1);
+    expect(CatHealthStatus.fromApi('RECOVERING').code, 2);
+  });
+
+  test('排行榜兼容整数校区和标签 ID', () {
+    final item = LeaderboardItem.fromJson({
+      'rank': 1,
+      'catId': 'cat-1',
+      'name': '小白',
+      'campus': 0,
+      'value': 9.5,
+      'tags': [
+        3,
+        {'id': 4},
+      ],
+    });
+
+    expect(item.campus, '中心校区');
+    expect(item.tags, ['3', '4']);
+    expect(item.value, 9.5);
   });
 }
