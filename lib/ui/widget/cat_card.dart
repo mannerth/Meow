@@ -113,7 +113,7 @@ class CatCard extends StatelessWidget {
                   Text(
                     [
                       if (color.isNotEmpty) color,
-                      cat.campus,
+                      if (cat.campus != null) cat.campus!.name,
                       if (location.isNotEmpty) location,
                       if (role.isNotEmpty) role,
                     ].join(' · '),

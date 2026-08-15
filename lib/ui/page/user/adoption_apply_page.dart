@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/api/service/adoption_service.dart';
 import 'package:meow/model/adoption.dart';
 import 'package:meow/model/cat.dart';
+import 'package:meow/model/static_type.dart';
 import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/page/user/cat_select_page.dart';
 import 'package:meow/ui/widget/safe_network_image.dart';
@@ -87,7 +88,7 @@ class _AdoptionApplyPageState extends ConsumerState<AdoptionApplyPage> {
       await AdoptionService.submitAdoption(
         catId: cat.id,
         info: AdoptionInfo(
-          housing: int.tryParse(housing),
+          housing: AdoptionHousing.tryFromApi(housing),
           experience: experience,
           plan: plan,
         ),

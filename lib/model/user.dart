@@ -112,13 +112,24 @@ class User {
 
   bool get isGuest => roleType == RoleType.guest;
   bool get isStudent => roleType == RoleType.student;
-  bool get isAdmin => roleType == RoleType.admin;
+  bool get isAdmin => roleType.isAdmin;
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
   Map<String, dynamic> toJson() => _$UserToJson(this);
 }
 
-enum RoleType { guest, student, admin }
+@JsonEnum(valueField: 'code')
+enum RoleType {
+  guest(-1),
+  student(0),
+  admin(1),
+  superAdmin(2);
+
+  final int code;
+  const RoleType(this.code);
+
+  bool get isAdmin => this == RoleType.admin || this == RoleType.superAdmin;
+}
 
 @JsonEnum(valueField: 'code')
 enum Campus {

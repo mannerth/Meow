@@ -63,8 +63,11 @@ flutter_native_splash:
   web: false
 
   color: '#FFFFFF'
-
   fullscreen: true
+
+  # 安卓12以上特殊配置
+  android_12:
+    color: '#FFFFFF'
 
 # The following section is specific to Flutter packages.
 flutter:

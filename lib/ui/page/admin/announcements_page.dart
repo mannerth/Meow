@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meow/api/service/announcement_service.dart';
 import 'package:meow/model/notification.dart';
+import 'package:meow/model/static_type.dart';
 import 'package:meow/ui/page/admin/announcement_edit_page.dart';
 
 class AnnouncementsPage extends StatefulWidget {
@@ -13,7 +14,7 @@ class AnnouncementsPage extends StatefulWidget {
 class _AnnouncementsPageState extends State<AnnouncementsPage> {
   bool _loading = true;
   String? _error;
-  String? _status;
+  AnnouncementStatus? _status;
   List<Announcement> _items = const [];
 
   @override
@@ -90,11 +91,14 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: SegmentedButton<String?>(
+          child: SegmentedButton<AnnouncementStatus?>(
             segments: const [
               ButtonSegment(value: null, label: Text('全部内容')),
-              ButtonSegment(value: 'PUBLISHED', label: Text('已发布')),
-              ButtonSegment(value: 'DRAFT', label: Text('草稿')),
+              ButtonSegment(
+                value: AnnouncementStatus.published,
+                label: Text('已发布'),
+              ),
+              ButtonSegment(value: AnnouncementStatus.draft, label: Text('草稿')),
             ],
             selected: {_status},
             emptySelectionAllowed: false,
@@ -164,9 +168,9 @@ class _AnnouncementCard extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                item.status == 'DRAFT' ? '草稿' : '已发布',
+                item.status.label,
                 style: TextStyle(
-                  color: item.status == 'DRAFT'
+                  color: item.status == AnnouncementStatus.draft
                       ? const Color(0xFFF59E0B)
                       : const Color(0xFF16A34A),
                   fontSize: 12,

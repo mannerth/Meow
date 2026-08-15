@@ -1,6 +1,7 @@
 import 'package:meow/api/data_response.dart';
 import 'package:meow/api/http.dart';
 import 'package:meow/model/notification.dart';
+import 'package:meow/model/static_type.dart';
 
 class AnnouncementService {
   static Future<Announcement> fetchAnnouncement(String id) async {
@@ -15,11 +16,15 @@ class AnnouncementService {
   static Future<DataResponse<AnnouncementPage>> fetchAdminAnnouncements({
     int page = 1,
     int pageSize = 20,
-    String? status,
+    AnnouncementStatus? status,
   }) async {
     final response = await Http().get(
       '/admin/announcements',
-      queryParameters: {'page': page, 'pageSize': pageSize, 'status': ?status},
+      queryParameters: {
+        'page': page,
+        'pageSize': pageSize,
+        'status': ?status?.code,
+      },
     );
     return DataResponse.fromJson(
       response.data as Map<String, dynamic>,
@@ -31,15 +36,15 @@ class AnnouncementService {
     String? id,
     required String title,
     required String content,
-    required String type,
-    required String status,
+    required AnnouncementType type,
+    required AnnouncementStatus status,
   }) async {
     final payload = {
       'title': title,
       'content': content,
       'summary': content.length > 80 ? content.substring(0, 80) : content,
-      'type': type,
-      'status': status,
+      'type': type.code,
+      'status': status.code,
     };
     if (id == null) {
       await Http().post('/admin/announcements', data: payload);

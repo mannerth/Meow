@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:meow/api/service/admin_sos_service.dart';
 import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/admin_sos.dart';
+import 'package:meow/model/static_type.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
@@ -24,7 +25,7 @@ class _AdminSosPageState extends State<AdminSosPage> {
   String? _errorMessage;
   String? _loadMoreError;
 
-  String? _selectedStatus;
+  SosStatus? _selectedStatus;
   Campus? _selectedCampus;
   List<AdminSosItem> _items = [];
 
@@ -145,13 +146,13 @@ class _AdminSosPageState extends State<AdminSosPage> {
 
   Future<void> _submitResolve(
     AdminSosItem item,
-    String status,
+    SosStatus status,
     String reply,
   ) async {
     try {
       await AdminSosService.resolveSos(
         id: item.id,
-        status: _statusCode(status),
+        status: status,
         reply: reply,
       );
       if (!mounted) return;
@@ -165,14 +166,6 @@ class _AdminSosPageState extends State<AdminSosPage> {
         context,
       ).showSnackBar(const SnackBar(content: Text('提交失败，请稍后重试')));
     }
-  }
-
-  int _statusCode(String status) {
-    return switch (status) {
-      'PROCESSING' => 1,
-      'RESOLVED' => 2,
-      _ => 0,
-    };
   }
 
   @override
@@ -252,9 +245,9 @@ class _AdminSosPageState extends State<AdminSosPage> {
 }
 
 class _FilterBar extends StatelessWidget {
-  final String? selectedStatus;
+  final SosStatus? selectedStatus;
   final Campus? selectedCampus;
-  final ValueChanged<String?> onStatusChanged;
+  final ValueChanged<SosStatus?> onStatusChanged;
   final ValueChanged<Campus?> onCampusChanged;
 
   const _FilterBar({
@@ -271,7 +264,7 @@ class _FilterBar extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: DropdownButtonFormField<String>(
+            child: DropdownButtonFormField<SosStatus>(
               initialValue: selectedStatus,
               decoration: InputDecoration(
                 hintText: '筛选状态',
@@ -281,13 +274,19 @@ class _FilterBar extends StatelessWidget {
                 isDense: true,
               ),
               items: const [
-                DropdownMenuItem<String>(value: null, child: Text('全部状态')),
-                DropdownMenuItem<String>(value: 'PENDING', child: Text('待处理')),
-                DropdownMenuItem<String>(
-                  value: 'PROCESSING',
+                DropdownMenuItem<SosStatus>(value: null, child: Text('全部状态')),
+                DropdownMenuItem<SosStatus>(
+                  value: SosStatus.pending,
+                  child: Text('待处理'),
+                ),
+                DropdownMenuItem<SosStatus>(
+                  value: SosStatus.processing,
                   child: Text('处理中'),
                 ),
-                DropdownMenuItem<String>(value: 'RESOLVED', child: Text('已完成')),
+                DropdownMenuItem<SosStatus>(
+                  value: SosStatus.resolved,
+                  child: Text('已完成'),
+                ),
               ],
               onChanged: onStatusChanged,
             ),
@@ -451,7 +450,7 @@ class _InfoRow extends StatelessWidget {
 }
 
 class _StatusChip extends StatelessWidget {
-  final String status;
+  final SosStatus status;
 
   const _StatusChip({required this.status});
 
@@ -475,22 +474,22 @@ class _StatusChip extends StatelessWidget {
     );
   }
 
-  String _labelForStatus(String status) {
-    switch (status.toUpperCase()) {
-      case 'PROCESSING':
+  String _labelForStatus(SosStatus status) {
+    switch (status) {
+      case SosStatus.processing:
         return '处理中';
-      case 'RESOLVED':
+      case SosStatus.resolved:
         return '已完成';
       default:
         return '待处理';
     }
   }
 
-  Color _colorForStatus(String status) {
-    switch (status.toUpperCase()) {
-      case 'PROCESSING':
+  Color _colorForStatus(SosStatus status) {
+    switch (status) {
+      case SosStatus.processing:
         return const Color(0xFFF4A43A);
-      case 'RESOLVED':
+      case SosStatus.resolved:
         return const Color(0xFF43A047);
       default:
         return const Color(0xFFE14B4B);
@@ -571,12 +570,12 @@ class _ResolveSheet extends StatefulWidget {
 }
 
 class _ResolveSheetState extends State<_ResolveSheet> {
-  String _status = 'PROCESSING';
+  SosStatus _status = SosStatus.processing;
 
   @override
   void initState() {
     super.initState();
-    _status = widget.item.status.isEmpty ? 'PROCESSING' : widget.item.status;
+    _status = widget.item.status;
   }
 
   @override
@@ -618,22 +617,19 @@ class _ResolveSheetState extends State<_ResolveSheet> {
             spacing: 10,
             children: [
               _StatusOption(
-                label: '待处理',
-                value: 'PENDING',
-                selected: _status == 'PENDING',
-                onTap: () => setState(() => _status = 'PENDING'),
+                label: SosStatus.pending.label,
+                selected: _status == SosStatus.pending,
+                onTap: () => setState(() => _status = SosStatus.pending),
               ),
               _StatusOption(
-                label: '处理中',
-                value: 'PROCESSING',
-                selected: _status == 'PROCESSING',
-                onTap: () => setState(() => _status = 'PROCESSING'),
+                label: SosStatus.processing.label,
+                selected: _status == SosStatus.processing,
+                onTap: () => setState(() => _status = SosStatus.processing),
               ),
               _StatusOption(
-                label: '已完成',
-                value: 'RESOLVED',
-                selected: _status == 'RESOLVED',
-                onTap: () => setState(() => _status = 'RESOLVED'),
+                label: SosStatus.resolved.label,
+                selected: _status == SosStatus.resolved,
+                onTap: () => setState(() => _status = SosStatus.resolved),
               ),
             ],
           ),
@@ -693,13 +689,11 @@ class _SheetSectionTitle extends StatelessWidget {
 
 class _StatusOption extends StatelessWidget {
   final String label;
-  final String value;
   final bool selected;
   final VoidCallback onTap;
 
   const _StatusOption({
     required this.label,
-    required this.value,
     required this.selected,
     required this.onTap,
   });
@@ -730,7 +724,7 @@ class _StatusOption extends StatelessWidget {
 }
 
 class _ResolveResult {
-  final String status;
+  final SosStatus status;
   final String reply;
 
   const _ResolveResult({required this.status, required this.reply});

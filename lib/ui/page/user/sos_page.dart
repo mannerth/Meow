@@ -694,8 +694,9 @@ class _PreviewImageTile extends StatelessWidget {
 
 extension on Cat {
   String get basicLocation {
-    if (campus.isEmpty) return '点击选择猫咪';
-    if (locationName.isEmpty) return campus;
-    return '$campus · $locationName';
+    final campusName = campus?.name ?? '';
+    if (campusName.isEmpty) return '点击选择猫咪';
+    if (locationName.isEmpty) return campusName;
+    return '$campusName · $locationName';
   }
 }

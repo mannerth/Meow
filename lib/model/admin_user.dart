@@ -1,9 +1,10 @@
 import 'package:meow/model/user.dart';
+import 'package:meow/model/static_type.dart';
 
 class AdminUserListItem {
   final String id;
   final String name;
-  final String status;
+  final UserBanStatus status;
 
   AdminUserListItem({
     required this.id,
@@ -18,7 +19,7 @@ class AdminUserListItem {
       name: _stringValue(
         json['name'] ?? json['nickname'] ?? json['userName'] ?? json['email'],
       ),
-      status: _statusFromDynamic(statusValue),
+      status: UserBanStatus.fromApi(statusValue),
     );
   }
 }
@@ -75,7 +76,7 @@ class AdminUserDetail {
   final int? campusCode;
   final Campus? campus;
   final int? level;
-  final String? status;
+  final UserBanStatus? status;
   final AdminUserStats stats;
 
   AdminUserDetail({
@@ -103,7 +104,9 @@ class AdminUserDetail {
       campusCode: campusCode,
       campus: _campusFromDynamic(campusValue),
       level: _intValue(json['level']),
-      status: _nullableString(json['status']),
+      status: json['status'] == null
+          ? null
+          : UserBanStatus.fromApi(json['status']),
       stats: AdminUserStats.fromJson(
         (json['stats'] as Map<String, dynamic>? ?? const {}),
       ),
@@ -140,16 +143,6 @@ int? _intValue(dynamic value) {
 String _stringValue(dynamic value) {
   if (value == null) return '';
   return value.toString();
-}
-
-/// 封禁状态（0正常 1封禁，或 NORMAL/BANNED 字符串）
-String _statusFromDynamic(dynamic value) {
-  if (value is num) {
-    return value.toInt() == 1 ? 'BANNED' : 'NORMAL';
-  }
-  final str = _stringValue(value ?? 'NORMAL').toUpperCase();
-  if (str == '1' || str == 'BANNED') return 'BANNED';
-  return 'NORMAL';
 }
 
 String? _nullableString(dynamic value) {

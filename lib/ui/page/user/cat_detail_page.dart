@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 import 'package:meow/api/service/cat_service.dart';
-import 'package:meow/model/cat.dart';
+import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat_detail.dart';
 import 'package:meow/model/post.dart';
 import 'package:meow/util/time_tool.dart';
+
+String _dynamicTypeLabel(String value, String Function(int?) labelForId) {
+  final id = int.tryParse(value);
+  if (id == null) return value;
+  return labelForId(id);
+}
 
 class CatDetailPage extends StatefulWidget {
   final String catId;
@@ -32,6 +37,7 @@ class _CatDetailPageState extends State<CatDetailPage> {
   }
 
   Future<CatDetail> _fetchDetail() async {
+    await Future.wait([TypeService.fetchLocations(), TypeService.fetchRoles()]);
     final response = await CatService.fetchCatDetail(widget.catId);
     final detail = response.data;
     if (detail == null) {
@@ -54,29 +60,39 @@ class _CatDetailPageState extends State<CatDetailPage> {
 
   Future<void> _toggleLike(Post post) async {
     if (_postLoading) return;
-    setState(() => _postLoading = true);
+    final index = _postItems.indexWhere((item) => item.id == post.id);
+    if (index == -1) return;
+    final updated = Post(
+        id: post.id,
+        content: post.content,
+        media: post.media,
+        user: post.user,
+        likeCount: post.likeCount + (post.isLiked ? -1 : 1), //乐观更新
+        isLiked: !post.isLiked,
+        createTime: post.createTime,
+    );
+    setState(() {
+      _postLoading = true;
+      _postItems[index] = updated;
+    });
     try {
       final response = post.isLiked
           ? await CatService.unlikePost(post.id)
           : await CatService.likePost(post.id);
       final result = response.data;
-      if (result == null) return;
-      final index = _postItems.indexWhere((item) => item.id == post.id);
-      if (index == -1) return;
-      final updated = Post(
-        id: post.id,
-        content: post.content,
-        media: post.media,
-        user: post.user,
-        likeCount: post.likeCount+ (post.isLiked? -1: 1), //乐观更新 
-        isLiked: result.isLiked,
-        createTime: post.createTime,
-      );
-      setState(() {
-        _postItems[index] = updated;
-      });
+      if (result == null && mounted) {
+        setState(() {
+          _postItems[index] = post;
+        });
+      }
+      
     } catch (error) {
       if (!mounted) return;
+      if ( mounted ) {
+        setState(() {
+          _postItems[index] = post;
+        });
+      }
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('操作失败，请稍后重试')));
@@ -351,7 +367,7 @@ class _DetailInfoCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  _StatusChip(text: catStatusLabel(detail.basicInfo.status)),
+                  _StatusChip(text: detail.basicInfo.status.label),
                   const Spacer(),
                   const CircleAvatar(
                     radius: 18,
@@ -391,7 +407,10 @@ class _DetailInfoCard extends StatelessWidget {
                     child: _InfoTile(
                       icon: Icons.school,
                       title: '学历/编制',
-                      value: detail.basicInfo.role,
+                      value: _dynamicTypeLabel(
+                        detail.basicInfo.role,
+                        TypeService.roleLabel,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -399,7 +418,10 @@ class _DetailInfoCard extends StatelessWidget {
                     child: _InfoTile(
                       icon: Icons.place,
                       title: '常驻据点',
-                      value: detail.basicInfo.hauntLocation,
+                      value: _dynamicTypeLabel(
+                        detail.basicInfo.hauntLocation,
+                        TypeService.locationLabel,
+                      ),
                     ),
                   ),
                 ],
@@ -1017,7 +1039,7 @@ class _DetailError extends StatelessWidget {
 bool _isAdmin(BuildContext context) {
   final container = ProviderScope.containerOf(context, listen: false);
   final role = container.read(authStateProvider).role;
-  return role == RoleType.admin;
+  return role.isAdmin;
 }
 
 bool _isOwner(BuildContext context, Post post) {

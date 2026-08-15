@@ -1,6 +1,7 @@
 import 'package:meow/api/data_response.dart';
 import 'package:meow/api/http.dart';
 import 'package:meow/model/adoption.dart';
+import 'package:meow/model/static_type.dart';
 
 class AdoptionService {
   static Future<DataResponse<void>> submitAdoption({
@@ -21,12 +22,12 @@ class AdoptionService {
   static Future<DataResponse<AdminAdoptionListPage>> fetchAdminAdoptions({
     int page = 1,
     int size = 20,
-    String? status,
+    AdoptionStatus? status,
   }) async {
     final params = <String, dynamic>{'page': page, 'size': size};
-    if (status != null && status.isNotEmpty) {
+    if (status != null) {
       // 列表筛选由后端 Spring 枚举绑定，仍需要状态名；审核请求使用整数。
-      params['status'] = status;
+      params['status'] = status.apiName;
     }
     final response = await Http().get(
       '/admin/adoptions',
@@ -38,10 +39,10 @@ class AdoptionService {
 
   static Future<DataResponse<void>> auditAdoption({
     required String id,
-    required int status,
+    required AdoptionStatus status,
     required String reason,
   }) async {
-    final payload = <String, dynamic>{'status': status, 'reason': reason};
+    final payload = <String, dynamic>{'status': status.code, 'reason': reason};
     final response = await Http().post(
       '/admin/adoptions/$id/audit',
       data: payload,
@@ -53,11 +54,11 @@ class AdoptionService {
   static Future<DataResponse<UserAdoptionListPage>> fetchMyAdoptions({
     int page = 1,
     int size = 20,
-    String? status,
+    AdoptionStatus? status,
   }) async {
     final params = <String, dynamic>{'page': page, 'size': size};
-    if (status != null && status.isNotEmpty) {
-      params['status'] = status;
+    if (status != null) {
+      params['status'] = status.apiName;
     }
     final response = await Http().get('/adoptions/my', queryParameters: params);
     final json = response.data as Map<String, dynamic>;

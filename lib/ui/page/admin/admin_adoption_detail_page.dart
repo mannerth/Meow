@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meow/api/service/adoption_service.dart';
 import 'package:meow/model/adoption.dart';
+import 'package:meow/model/static_type.dart';
 import 'package:meow/ui/widget/safe_network_image.dart';
 import 'package:meow/util/time_tool.dart';
 
@@ -31,7 +32,7 @@ class _AdminAdoptionDetailPageState extends State<AdminAdoptionDetailPage> {
     super.dispose();
   }
 
-  Future<void> _audit(String status) async {
+  Future<void> _audit(AdoptionStatus status) async {
     final reason = _reasonController.text.trim();
     if (reason.isEmpty) {
       _showMessage('请填写审核说明');
@@ -41,14 +42,14 @@ class _AdminAdoptionDetailPageState extends State<AdminAdoptionDetailPage> {
     try {
       await AdoptionService.auditAdoption(
         id: _item.id,
-        status: adoptionStatusCode(status)!,
+        status: status,
         reason: reason,
       );
       if (!mounted) return;
       setState(() {
         _item = _item.copyWith(status: status);
       });
-      _showMessage(status == 'REJECTED' ? '已拒绝该申请' : '审核状态已更新');
+      _showMessage(status == AdoptionStatus.rejected ? '已拒绝该申请' : '审核状态已更新');
       Navigator.of(context).pop(_item);
     } catch (error) {
       _showMessage('提交失败，请稍后重试');
@@ -99,7 +100,9 @@ class _AdminAdoptionDetailPageState extends State<AdminAdoptionDetailPage> {
             children: [
               Expanded(
                 child: FilledButton(
-                  onPressed: _submitting ? null : () => _audit('REJECTED'),
+                  onPressed: _submitting
+                      ? null
+                      : () => _audit(AdoptionStatus.rejected),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFFFFE5E5),
                     foregroundColor: const Color(0xFFCC3D3D),
@@ -110,7 +113,9 @@ class _AdminAdoptionDetailPageState extends State<AdminAdoptionDetailPage> {
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton(
-                  onPressed: _submitting ? null : () => _audit('APPROVED'),
+                  onPressed: _submitting
+                      ? null
+                      : () => _audit(AdoptionStatus.approved),
                   style: FilledButton.styleFrom(
                     backgroundColor: const Color(0xFFE4F4E8),
                     foregroundColor: const Color(0xFF2E7D32),
@@ -124,7 +129,9 @@ class _AdminAdoptionDetailPageState extends State<AdminAdoptionDetailPage> {
           SizedBox(
             width: double.infinity,
             child: TextButton(
-              onPressed: _submitting ? null : () => _audit('INTERVIEW'),
+              onPressed: _submitting
+                  ? null
+                  : () => _audit(AdoptionStatus.interview),
               child: const Text('要求补充材料 / 安排面谈'),
             ),
           ),
@@ -374,7 +381,7 @@ class _InfoRow extends StatelessWidget {
 }
 
 class _StatusChip extends StatelessWidget {
-  final String status;
+  final AdoptionStatus status;
 
   const _StatusChip({required this.status});
 
@@ -395,30 +402,30 @@ class _StatusChip extends StatelessWidget {
     );
   }
 
-  String _labelForStatus(String status) {
-    switch (status.toUpperCase()) {
-      case 'INTERVIEW':
+  String _labelForStatus(AdoptionStatus status) {
+    switch (status) {
+      case AdoptionStatus.interview:
         return '待补充';
-      case 'APPROVED':
+      case AdoptionStatus.approved:
         return '已通过';
-      case 'REJECTED':
+      case AdoptionStatus.rejected:
         return '已拒绝';
-      case 'COMPLETED':
+      case AdoptionStatus.completed:
         return '已完成';
       default:
         return '待审核';
     }
   }
 
-  Color _colorForStatus(String status) {
-    switch (status.toUpperCase()) {
-      case 'INTERVIEW':
+  Color _colorForStatus(AdoptionStatus status) {
+    switch (status) {
+      case AdoptionStatus.interview:
         return const Color(0xFFF4A43A);
-      case 'APPROVED':
+      case AdoptionStatus.approved:
         return const Color(0xFF43A047);
-      case 'REJECTED':
+      case AdoptionStatus.rejected:
         return const Color(0xFFE14B4B);
-      case 'COMPLETED':
+      case AdoptionStatus.completed:
         return const Color(0xFF6B7280);
       default:
         return const Color(0xFFF4A43A);

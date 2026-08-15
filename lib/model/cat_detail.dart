@@ -1,6 +1,5 @@
-import 'package:meow/model/campus.dart';
-import 'package:meow/model/cat.dart';
 import 'package:meow/model/static_type.dart';
+import 'package:meow/model/user.dart';
 
 /// 性别 -> 中文（0未知 1男 2女）
 String catGenderLabel(dynamic value) => CatGender.fromApi(value).label;
@@ -89,14 +88,14 @@ String _tagIdString(dynamic value) {
 
 class CatBasicInfo {
   final String color;
-  final String gender;
-  final String campus;
+  final CatGender gender;
+  final Campus? campus;
   final String hauntLocation;
   final String role;
   final int birthYear;
   final String admissionDate;
-  final int status;
-  final String healthStatus;
+  final CatStatus status;
+  final CatHealthStatus healthStatus;
   final String lastSeenTime;
   final String furLength;
   final CatNeutered neutered;
@@ -104,7 +103,7 @@ class CatBasicInfo {
   CatBasicInfo({
     required this.color,
     required this.gender,
-    required this.campus,
+    this.campus,
     required this.hauntLocation,
     required this.role,
     required this.birthYear,
@@ -117,19 +116,16 @@ class CatBasicInfo {
   });
 
   factory CatBasicInfo.fromJson(Map<String, dynamic> json) {
-    final statusValue = json['status'];
     return CatBasicInfo(
-      color: _colorLabel(json['color']),
-      gender: catGenderLabel(json['gender']),
-      campus: campusLabel(json['campus']),
-      hauntLocation: (json['hauntLocation'] ?? '').toString(),
-      role: (json['role'] ?? '').toString(),
+      color: _dynamicTypeId(json['color']),
+      gender: CatGender.fromApi(json['gender']),
+      campus: Campus.fromApi(json['campus']),
+      hauntLocation: _dynamicTypeId(json['hauntLocation']),
+      role: _dynamicTypeId(json['role']),
       birthYear: (json['birthYear'] as num?)?.toInt() ?? 0,
       admissionDate: json['admissionDate'] as String? ?? '',
-      status: statusValue is num
-          ? statusValue.toInt()
-          : (catStatusToCode((statusValue ?? '').toString()) ?? 0),
-      healthStatus: (json['healthStatus'] ?? '').toString(),
+      status: CatStatus.fromApi(json['status']),
+      healthStatus: CatHealthStatus.fromApi(json['healthStatus']),
       lastSeenTime: json['lastSeenTime'] as String? ?? '',
       furLength: json['furLength'] as String? ?? '',
       neutered: CatNeutered.fromJson(
@@ -140,28 +136,31 @@ class CatBasicInfo {
 
   Map<String, dynamic> toJson() => {
     'color': color,
-    'gender': gender,
-    'campus': campus,
+    'gender': gender.code,
+    'campus': campus?.code,
     'hauntLocation': hauntLocation,
     'role': role,
     'birthYear': birthYear,
     'admissionDate': admissionDate,
-    'status': status,
-    'healthStatus': healthStatus,
+    'status': status.code,
+    'healthStatus': healthStatus.code,
     'lastSeenTime': lastSeenTime,
     'furLength': furLength,
     'neutered': neutered.toJson(),
   };
 }
 
-/// 花色是可配置的动态类型；数字 ID 由页面通过 TypeService 映射显示。
-String _colorLabel(dynamic value) =>
-    value is num ? '' : value?.toString() ?? '';
+String _dynamicTypeId(dynamic value) {
+  if (value is Map) {
+    return (value['id'] ?? value['typeId'] ?? value['code'] ?? '').toString();
+  }
+  return value?.toString() ?? '';
+}
 
 class CatNeutered {
   final bool isNeutered;
   final String neuteredDate;
-  final String type;
+  final CatNeuteredType type;
 
   const CatNeutered({
     required this.isNeutered,
@@ -172,13 +171,13 @@ class CatNeutered {
   factory CatNeutered.fromJson(Map<String, dynamic> json) => CatNeutered(
     isNeutered: json['isNeutered'] as bool? ?? false,
     neuteredDate: (json['neuteredDate'] ?? json['date'] ?? '').toString(),
-    type: catNeuteredTypeLabel(json['type']),
+    type: CatNeuteredType.fromApi(json['type']),
   );
 
   Map<String, dynamic> toJson() => {
     'isNeutered': isNeutered,
     'neuteredDate': neuteredDate,
-    'type': type,
+    'type': type.code,
   };
 }
 

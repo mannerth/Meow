@@ -114,20 +114,21 @@ class _MeowEditPageState extends State<MeowEditPage> {
   void _applyDetail(CatDetail detail) {
     _nameController.text = detail.name;
     _avatarController.text = detail.avatar;
-    _colorController.text = detail.basicInfo.color;
-    _genderController.text = CatGender.fromApi(detail.basicInfo.gender).label;
+    _colorController.text = _typeLabelForValue(
+      detail.basicInfo.color,
+      _colorOptions,
+    );
+    _genderController.text = detail.basicInfo.gender.label;
     _hauntLocationId = _typeIdForValue(
       detail.basicInfo.hauntLocation,
       _locationOptions,
     );
     _roleId = _typeIdForValue(detail.basicInfo.role, _roleOptions);
     _descriptionController.text = detail.description;
-    _campus = Campus.fromApi(detail.basicInfo.campus);
-    _status = CatStatus.fromApi(detail.basicInfo.status).code.toString();
+    _campus = detail.basicInfo.campus;
+    _status = detail.basicInfo.status.code.toString();
     _isNeutered = detail.basicInfo.neutered.isNeutered;
-    _neuteredTypeDisplay = detail.basicInfo.neutered.type.isEmpty
-        ? CatNeuteredType.earCut.label
-        : CatNeuteredType.fromApi(detail.basicInfo.neutered.type).label;
+    _neuteredTypeDisplay = detail.basicInfo.neutered.type.label;
     _neuteredDate = detail.basicInfo.neutered.neuteredDate.isEmpty
         ? null
         : DateTime.tryParse(detail.basicInfo.neutered.neuteredDate);
@@ -146,7 +147,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
     _admissionDate = detail.basicInfo.admissionDate.isEmpty
         ? null
         : DateTime.tryParse(detail.basicInfo.admissionDate);
-    _healthStatus = CatHealthStatus.fromApi(detail.basicInfo.healthStatus).code;
+    _healthStatus = detail.basicInfo.healthStatus.code;
     _selectedTagLabels
       ..clear()
       ..addAll(
@@ -180,6 +181,15 @@ class _MeowEditPageState extends State<MeowEditPage> {
       if (option.label == value) return option.id;
     }
     return null;
+  }
+
+  String _typeLabelForValue(String value, List<TypeItem> options) {
+    final id = int.tryParse(value);
+    if (id == null) return value;
+    for (final option in options) {
+      if (option.id == id) return option.label;
+    }
+    return value;
   }
 
   Future<void> _pickNeuteredDate() async {
@@ -429,6 +439,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
               children: [
                 _AvatarCard(
                   avatarUrl: _avatarController.text,
+                  avatarFile: _avatarFile,
                   onTap: _pickAvatar,
                   onRemove: _removeAvatar,
                 ),
@@ -721,11 +732,13 @@ class _MeowEditPageState extends State<MeowEditPage> {
 
 class _AvatarCard extends StatelessWidget {
   final String avatarUrl;
+  final XFile? avatarFile;
   final VoidCallback onTap;
   final VoidCallback onRemove;
 
   const _AvatarCard({
     required this.avatarUrl,
+    required this.avatarFile,
     required this.onTap,
     required this.onRemove,
   });
@@ -746,16 +759,20 @@ class _AvatarCard extends StatelessWidget {
               GestureDetector(
                 onTap: onTap,
                 onLongPress: () {
-                  if (avatarUrl.isNotEmpty) {
+                  if (avatarFile != null) {
+                    showFileImagePreview(context, File(avatarFile!.path));
+                  } else if (avatarUrl.isNotEmpty) {
                     showNetworkImagePreview(context, avatarUrl);
                   }
                 },
                 child: CircleAvatar(
                   radius: 48,
-                  backgroundImage: avatarUrl.isEmpty
+                  backgroundImage: avatarFile != null
+                      ? FileImage(File(avatarFile!.path))
+                      : avatarUrl.isEmpty
                       ? null
                       : NetworkImage(avatarUrl),
-                  child: avatarUrl.isEmpty
+                  child: avatarFile == null && avatarUrl.isEmpty
                       ? const Icon(
                           Icons.pets,
                           size: 40,
@@ -764,7 +781,7 @@ class _AvatarCard extends StatelessWidget {
                       : null,
                 ),
               ),
-              if (avatarUrl.isNotEmpty)
+              if (avatarFile != null || avatarUrl.isNotEmpty)
                 Positioned(
                   right: -2,
                   top: -2,

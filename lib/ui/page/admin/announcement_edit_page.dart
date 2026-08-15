@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meow/api/service/announcement_service.dart';
 import 'package:meow/model/notification.dart';
+import 'package:meow/model/static_type.dart';
 
 class AnnouncementEditPage extends StatefulWidget {
   const AnnouncementEditPage({super.key, this.announcement});
@@ -14,7 +15,7 @@ class AnnouncementEditPage extends StatefulWidget {
 class _AnnouncementEditPageState extends State<AnnouncementEditPage> {
   late final TextEditingController _titleController;
   late final TextEditingController _contentController;
-  late String _type;
+  late AnnouncementType _type;
   bool _loadingDetail = false;
   bool _saving = false;
 
@@ -25,7 +26,7 @@ class _AnnouncementEditPageState extends State<AnnouncementEditPage> {
     _contentController = TextEditingController(
       text: widget.announcement?.content,
     );
-    _type = widget.announcement?.type ?? 'NEWS';
+    _type = widget.announcement?.type ?? AnnouncementType.campusNews;
     if (widget.announcement != null && widget.announcement!.content == null) {
       _loadDetail();
     }
@@ -59,7 +60,7 @@ class _AnnouncementEditPageState extends State<AnnouncementEditPage> {
     super.dispose();
   }
 
-  Future<void> _save(String status) async {
+  Future<void> _save(AnnouncementStatus status) async {
     final title = _titleController.text.trim();
     final content = _contentController.text.trim();
     if (title.isEmpty || content.isEmpty) {
@@ -97,7 +98,9 @@ class _AnnouncementEditPageState extends State<AnnouncementEditPage> {
         title: Text(isEditing ? '编辑公告内容' : '发布新公告'),
         actions: [
           TextButton(
-            onPressed: _saving || _loadingDetail ? null : () => _save('DRAFT'),
+            onPressed: _saving || _loadingDetail
+                ? null
+                : () => _save(AnnouncementStatus.draft),
             child: const Text('存草稿'),
           ),
         ],
@@ -118,15 +121,27 @@ class _AnnouncementEditPageState extends State<AnnouncementEditPage> {
               const SizedBox(height: 12),
               const Text('公告类型', style: TextStyle(fontWeight: FontWeight.w700)),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
+              DropdownButtonFormField<AnnouncementType>(
                 key: ValueKey(_type),
                 initialValue: _type,
                 decoration: _inputDecoration(null),
                 items: const [
-                  DropdownMenuItem(value: 'NEWS', child: Text('校园资讯')),
-                  DropdownMenuItem(value: 'HEALTH', child: Text('健康护理')),
-                  DropdownMenuItem(value: 'FEEDING', child: Text('投喂指南')),
-                  DropdownMenuItem(value: 'BEHAVIOR', child: Text('行为科普')),
+                  DropdownMenuItem(
+                    value: AnnouncementType.campusNews,
+                    child: Text('校园资讯'),
+                  ),
+                  DropdownMenuItem(
+                    value: AnnouncementType.healthKnowledge,
+                    child: Text('健康知识'),
+                  ),
+                  DropdownMenuItem(
+                    value: AnnouncementType.feedingGuide,
+                    child: Text('喂养指南'),
+                  ),
+                  DropdownMenuItem(
+                    value: AnnouncementType.behaviorInterpretation,
+                    child: Text('行为解读'),
+                  ),
                 ],
                 onChanged: (value) => setState(() => _type = value!),
               ),
@@ -149,7 +164,7 @@ class _AnnouncementEditPageState extends State<AnnouncementEditPage> {
                 child: FilledButton(
                   onPressed: _saving || _loadingDetail
                       ? null
-                      : () => _save('PUBLISHED'),
+                      : () => _save(AnnouncementStatus.published),
                   child: Text(_saving ? '提交中...' : '立即发布公告'),
                 ),
               ),

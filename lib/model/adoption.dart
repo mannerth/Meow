@@ -31,7 +31,7 @@ class AdoptionContact {
 }
 
 class AdoptionInfo {
-  final int? housing;
+  final AdoptionHousing? housing;
   final String experience;
   final String plan;
 
@@ -44,16 +44,14 @@ class AdoptionInfo {
   factory AdoptionInfo.fromJson(Map<String, dynamic> json) {
     final housingValue = json['housing'];
     return AdoptionInfo(
-      housing: housingValue is num
-          ? housingValue.toInt()
-          : (int.tryParse(housingValue?.toString() ?? '')),
+      housing: AdoptionHousing.tryFromApi(housingValue),
       experience: _stringValue(json['experience']),
       plan: _stringValue(json['plan']),
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'housing': housing,
+    'housing': housing?.code,
     'experience': experience,
     'plan': plan,
   };
@@ -124,7 +122,7 @@ class UserAdoptionItem {
   final String catId;
   final String catName;
   final String? catAvatar;
-  final String status;
+  final AdoptionStatus status;
   final String? createTime;
   final String? reason;
 
@@ -144,7 +142,8 @@ class UserAdoptionItem {
       catId: _stringValue(json['catId']),
       catName: _stringValue(json['catName']),
       catAvatar: _nullableString(json['catAvatar']),
-      status: adoptionStatusName(json['status']),
+      status:
+          AdoptionStatus.tryFromApi(json['status']) ?? AdoptionStatus.pending,
       createTime: _nullableString(json['createTime'] ?? json['create_time']),
       reason: _nullableString(json['reason'] ?? json['rejectReason']),
     );
@@ -162,7 +161,7 @@ class AdminAdoptionItem {
   final String catId;
   final String catName;
   final String? catAvatar;
-  final String status;
+  final AdoptionStatus status;
   final String? createTime;
   final AdoptionContact? contact;
   final AdoptionInfo? info;
@@ -198,7 +197,8 @@ class AdminAdoptionItem {
       catId: _stringValue(json['catId']),
       catName: _stringValue(json['catName']),
       catAvatar: _nullableString(json['catAvatar']),
-      status: adoptionStatusName(json['status']),
+      status:
+          AdoptionStatus.tryFromApi(json['status']) ?? AdoptionStatus.pending,
       createTime: _nullableString(json['createTime'] ?? json['create_time']),
       contact: contactJson is Map<String, dynamic>
           ? AdoptionContact.fromJson(contactJson)
@@ -210,7 +210,7 @@ class AdminAdoptionItem {
   }
 
   AdminAdoptionItem copyWith({
-    String? status,
+    AdoptionStatus? status,
     AdoptionContact? contact,
     AdoptionInfo? info,
   }) {

@@ -1,5 +1,5 @@
-import 'package:meow/model/campus.dart';
 import 'package:meow/model/static_type.dart';
+import 'package:meow/model/user.dart';
 
 /// 猫咪状态 -> 中文（0在校 1毕业 2喵星 3住院）
 String catStatusLabel(dynamic status) => CatStatus.fromApi(status).label;
@@ -18,10 +18,10 @@ class Cat {
   final String avatar;
   final String color;
   final int? colorId;
-  final String campus;
+  final Campus? campus;
   final String locationName;
   final int? locationId;
-  final int status;
+  final CatStatus status;
   final List<String> tags;
   final bool isNeutered;
   final int popularity;
@@ -35,7 +35,7 @@ class Cat {
     required this.avatar,
     required this.color,
     this.colorId,
-    required this.campus,
+    this.campus,
     required this.locationName,
     this.locationId,
     required this.status,
@@ -53,14 +53,12 @@ class Cat {
     avatar: (json['avatar'] ?? '').toString(),
     color: json['color'] is num ? '' : (json['color'] ?? '').toString(),
     colorId: _intValue(json['color']),
-    campus: campusLabel(json['campus']),
+    campus: Campus.fromApi(json['campus']),
     locationName: json['location'] is num
         ? ''
         : (json['locationName'] ?? json['location'] ?? '').toString(),
     locationId: _intValue(json['location'] ?? json['locationId']),
-    status: (json['status'] is num)
-        ? (json['status'] as num).toInt()
-        : (catStatusToCode((json['status'] ?? '').toString()) ?? 0),
+    status: CatStatus.fromApi(json['status']),
     tags: (json['tags'] as List<dynamic>?)?.map(_tagIdString).toList() ?? [],
     isNeutered: json['isNeutered'] as bool? ?? false,
     popularity: (json['popularity'] as num?)?.toInt() ?? 0,
@@ -74,9 +72,9 @@ class Cat {
     'name': name,
     'avatar': avatar,
     'color': color,
-    'campus': campus,
+    'campus': campus?.code,
     'locationName': locationName,
-    'status': status,
+    'status': status.code,
     'tags': tags,
     'isNeutered': isNeutered,
     'popularity': popularity,

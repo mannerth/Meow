@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meow/api/service/adoption_service.dart';
 import 'package:meow/model/adoption.dart';
+import 'package:meow/model/static_type.dart';
 import 'package:meow/ui/widget/safe_network_image.dart';
 import 'package:meow/util/time_tool.dart';
 
@@ -22,7 +23,7 @@ class _UserAdoptionsPageState extends State<UserAdoptionsPage> {
   String? _errorMessage;
   String? _loadMoreError;
 
-  String? _selectedStatus;
+  AdoptionStatus? _selectedStatus;
   List<UserAdoptionItem> _items = [];
 
   @override
@@ -116,8 +117,8 @@ class _UserAdoptionsPageState extends State<UserAdoptionsPage> {
     _loadAdoptions(reset: true);
   }
 
-  int _countStatus(String status) {
-    return _items.where((item) => item.status.toUpperCase() == status).length;
+  int _countStatus(AdoptionStatus status) {
+    return _items.where((item) => item.status == status).length;
   }
 
   @override
@@ -132,9 +133,9 @@ class _UserAdoptionsPageState extends State<UserAdoptionsPage> {
             child: _StatusTabs(
               selected: _selectedStatus,
               total: _items.length,
-              pending: _countStatus('PENDING'),
-              approved: _countStatus('APPROVED'),
-              rejected: _countStatus('REJECTED'),
+              pending: _countStatus(AdoptionStatus.pending),
+              approved: _countStatus(AdoptionStatus.approved),
+              rejected: _countStatus(AdoptionStatus.rejected),
               onChanged: (value) {
                 setState(() => _selectedStatus = value);
                 _applyFilters();
@@ -199,12 +200,12 @@ class _UserAdoptionsPageState extends State<UserAdoptionsPage> {
 }
 
 class _StatusTabs extends StatelessWidget {
-  final String? selected;
+  final AdoptionStatus? selected;
   final int total;
   final int pending;
   final int approved;
   final int rejected;
-  final ValueChanged<String?> onChanged;
+  final ValueChanged<AdoptionStatus?> onChanged;
 
   const _StatusTabs({
     required this.selected,
@@ -230,29 +231,29 @@ class _StatusTabs extends StatelessWidget {
         const SizedBox(width: 10),
         _StatusChip(
           label: '待审核',
-          value: 'PENDING',
+          value: AdoptionStatus.pending,
           count: pending,
-          selected: selected == 'PENDING',
+          selected: selected == AdoptionStatus.pending,
           color: const Color(0xFFF4A43A),
-          onTap: () => onChanged('PENDING'),
+          onTap: () => onChanged(AdoptionStatus.pending),
         ),
         const SizedBox(width: 10),
         _StatusChip(
           label: '已通过',
-          value: 'APPROVED',
+          value: AdoptionStatus.approved,
           count: approved,
-          selected: selected == 'APPROVED',
+          selected: selected == AdoptionStatus.approved,
           color: const Color(0xFF43A047),
-          onTap: () => onChanged('APPROVED'),
+          onTap: () => onChanged(AdoptionStatus.approved),
         ),
         const SizedBox(width: 10),
         _StatusChip(
           label: '已拒绝',
-          value: 'REJECTED',
+          value: AdoptionStatus.rejected,
           count: rejected,
-          selected: selected == 'REJECTED',
+          selected: selected == AdoptionStatus.rejected,
           color: const Color(0xFFE77373),
-          onTap: () => onChanged('REJECTED'),
+          onTap: () => onChanged(AdoptionStatus.rejected),
         ),
       ],
     );
@@ -261,7 +262,7 @@ class _StatusTabs extends StatelessWidget {
 
 class _StatusChip extends StatelessWidget {
   final String label;
-  final String? value;
+  final AdoptionStatus? value;
   final int count;
   final bool selected;
   final Color color;
@@ -406,7 +407,7 @@ class _AdoptionCard extends StatelessWidget {
 }
 
 class _StatusLabel extends StatelessWidget {
-  final String status;
+  final AdoptionStatus status;
 
   const _StatusLabel({required this.status});
 
@@ -427,30 +428,30 @@ class _StatusLabel extends StatelessWidget {
     );
   }
 
-  String _labelForStatus(String status) {
-    switch (status.toUpperCase()) {
-      case 'INTERVIEW':
+  String _labelForStatus(AdoptionStatus status) {
+    switch (status) {
+      case AdoptionStatus.interview:
         return '面谈中';
-      case 'APPROVED':
+      case AdoptionStatus.approved:
         return '已通过';
-      case 'REJECTED':
+      case AdoptionStatus.rejected:
         return '已拒绝';
-      case 'COMPLETED':
+      case AdoptionStatus.completed:
         return '已完成';
       default:
         return '待审核';
     }
   }
 
-  Color _colorForStatus(String status) {
-    switch (status.toUpperCase()) {
-      case 'INTERVIEW':
+  Color _colorForStatus(AdoptionStatus status) {
+    switch (status) {
+      case AdoptionStatus.interview:
         return const Color(0xFFF4A43A);
-      case 'APPROVED':
+      case AdoptionStatus.approved:
         return const Color(0xFF43A047);
-      case 'REJECTED':
+      case AdoptionStatus.rejected:
         return const Color(0xFFE14B4B);
-      case 'COMPLETED':
+      case AdoptionStatus.completed:
         return const Color(0xFF6B7280);
       default:
         return const Color(0xFFF4A43A);

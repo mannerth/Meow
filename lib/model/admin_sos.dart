@@ -43,14 +43,13 @@ class AdminSosItem {
   final String id;
   final String? catId;
   final String? catName;
-  final int? campusCode;
-  final String? campusName;
+  final Campus? campus;
   final String? location;
   final List<String> symptoms;
   final String? description;
   final List<String> imageUrls;
   final String? createTime;
-  final String status;
+  final SosStatus status;
   final String? adminReply;
   final String? reporterId;
   final String? reporterName;
@@ -60,8 +59,7 @@ class AdminSosItem {
     required this.status,
     this.catId,
     this.catName,
-    this.campusCode,
-    this.campusName,
+    this.campus,
     this.location,
     this.symptoms = const [],
     this.description,
@@ -80,52 +78,21 @@ class AdminSosItem {
       id: _stringValue(json['id']),
       catId: _nullableString(json['catId']),
       catName: _nullableString(json['catName']),
-      campusCode: _campusCodeFromDynamic(campusValue),
-      campusName: _campusNameFromDynamic(campusValue),
+      campus: Campus.fromApi(campusValue),
       location: _nullableString(json['location']),
       symptoms: _stringList(symptomsValue),
       description: _nullableString(json['description']),
       imageUrls: _imageList(imageValue),
       createTime: _nullableString(json['create_time'] ?? json['createTime']),
-      status: sosStatusName(json['status']),
+      status: SosStatus.tryFromApi(json['status']) ?? SosStatus.pending,
       adminReply: _nullableString(json['adminReply']),
       reporterId: _nullableString(json['reporterId']),
       reporterName: _nullableString(json['reporterName']),
     );
   }
 
-  Campus? get campus {
-    final code = campusCode;
-    if (code == null) return null;
-    for (final item in Campus.values) {
-      if (item.code == code) return item;
-    }
-    return null;
-  }
-}
-
-int? _campusCodeFromDynamic(dynamic value) {
-  if (value is num) return value.toInt();
-  if (value is String) {
-    final parsed = int.tryParse(value);
-    if (parsed != null) return parsed;
-    for (final item in Campus.values) {
-      if (item.apiKey == value || item.name == value) return item.code;
-    }
-  }
-  return null;
-}
-
-String? _campusNameFromDynamic(dynamic value) {
-  if (value == null) return null;
-  if (value is String) {
-    if (value.isEmpty) return null;
-    for (final item in Campus.values) {
-      if (item.apiKey == value) return item.name;
-    }
-    return value;
-  }
-  return null;
+  int? get campusCode => campus?.code;
+  String? get campusName => campus?.name;
 }
 
 int? _intValue(dynamic value) {

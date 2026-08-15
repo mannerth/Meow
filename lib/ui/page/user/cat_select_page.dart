@@ -49,9 +49,11 @@ class _CatSelectPageState extends State<CatSelectPage> {
     final colors = await TypeService.fetchColors();
     if (!mounted) return;
     setState(() {
-      _colorOptions = colors
-          .map((item) => _FilterOption(item.label, item.id.toString()))
-          .toList();
+      _colorOptions =
+          colors
+              .map((item) => _FilterOption(item.label, item.id.toString()))
+              .toList()
+            ..insert(0, const _FilterOption('全部花色', null));
     });
   }
 

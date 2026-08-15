@@ -1,19 +1,20 @@
 import 'package:meow/api/data_response.dart';
 import 'package:meow/api/http.dart';
 import 'package:meow/model/admin_sos.dart';
+import 'package:meow/model/static_type.dart';
 import 'package:meow/model/user.dart';
 
 class AdminSosService {
   static Future<DataResponse<AdminSosListPage>> fetchSosList({
     int page = 1,
     int size = 20,
-    String? status,
+    SosStatus? status,
     Campus? campus,
   }) async {
     final params = <String, dynamic>{'page': page, 'size': size};
-    if (status != null && status.isNotEmpty) {
+    if (status != null) {
       // 列表筛选由后端 Spring 枚举绑定，仍需要状态名；仅 JSON body 使用整数。
-      params['status'] = status;
+      params['status'] = status.apiName;
     }
     if (campus != null) {
       params['campus'] = campus.apiKey;
@@ -26,10 +27,10 @@ class AdminSosService {
 
   static Future<DataResponse<void>> resolveSos({
     required String id,
-    required int status,
+    required SosStatus status,
     required String reply,
   }) async {
-    final payload = <String, dynamic>{'status': status, 'reply': reply};
+    final payload = <String, dynamic>{'status': status.code, 'reply': reply};
     final response = await Http().post('/admin/sos/$id/resolve', data: payload);
     final json = response.data as Map<String, dynamic>;
     return DataResponse.fromJson(json, (_) {});

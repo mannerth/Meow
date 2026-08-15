@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meow/api/service/admin_user_service.dart';
 import 'package:meow/model/admin_user.dart';
+import 'package:meow/model/static_type.dart';
 import 'package:meow/model/user.dart';
 
 class UsersPage extends StatefulWidget {
@@ -91,18 +92,20 @@ class _UsersPageState extends State<UsersPage> {
         _errorMessage = null;
       });
     } catch (error) {
-      if(mounted) setState(() {
-        if (reset) {
-          _errorMessage = '加载失败，请稍后重试';
-        } else {
-          _loadMoreError = '加载失败，点击重试';
-        }
-      });
+      if (mounted)
+        setState(() {
+          if (reset) {
+            _errorMessage = '加载失败，请稍后重试';
+          } else {
+            _loadMoreError = '加载失败，点击重试';
+          }
+        });
     } finally {
-      if(mounted) setState(() {
-        _isInitialLoading = false;
-        _isLoadingMore = false;
-      });
+      if (mounted)
+        setState(() {
+          _isInitialLoading = false;
+          _isLoadingMore = false;
+        });
     }
   }
 
@@ -325,7 +328,7 @@ class _UserCard extends StatelessWidget {
     required this.onToggleBan,
   });
 
-  bool get _isBanned => user.status.toUpperCase() == 'BANNED';
+  bool get _isBanned => user.status == UserBanStatus.banned;
 
   @override
   Widget build(BuildContext context) {

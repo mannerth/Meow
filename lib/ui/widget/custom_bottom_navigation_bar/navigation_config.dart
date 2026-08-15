@@ -30,6 +30,7 @@ class NavigationItemConfig {
   /// 检查当前角色是否有权限访问
   bool isAllowedFor(RoleType role) {
     if (allowedRoles == null) return true;
+    if (role.isAdmin && allowedRoles!.contains(RoleType.admin)) return true;
     return allowedRoles!.contains(role);
   }
 }

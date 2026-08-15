@@ -1,3 +1,5 @@
+import 'package:meow/model/static_type.dart';
+
 class NotificationPage {
   const NotificationPage({required this.total, required this.items});
 
@@ -93,8 +95,8 @@ class Announcement {
   final String title;
   final String? content;
   final String? summary;
-  final String type;
-  final String status;
+  final AnnouncementType type;
+  final AnnouncementStatus status;
   final String? createTime;
 
   factory Announcement.fromJson(Map<String, dynamic> json) {
@@ -103,8 +105,8 @@ class Announcement {
       title: (json['title'] ?? '').toString(),
       content: _nullableString(json['content']),
       summary: _nullableString(json['summary']),
-      type: (json['type'] ?? 'NEWS').toString().toUpperCase(),
-      status: (json['status'] ?? 'PUBLISHED').toString().toUpperCase(),
+      type: AnnouncementType.fromApi(json['type']),
+      status: AnnouncementStatus.fromApi(json['status']),
       createTime: _nullableString(json['createTime'] ?? json['create_time']),
     );
   }

@@ -5,6 +5,7 @@ import 'package:meow/model/admin_new_cat.dart';
 import 'package:meow/model/admin_sos.dart';
 import 'package:meow/model/adoption.dart';
 import 'package:meow/model/cat.dart';
+import 'package:meow/model/cat_detail.dart';
 import 'package:meow/model/leaderboard.dart';
 import 'package:meow/model/static_type.dart';
 import 'package:meow/model/user.dart';
@@ -64,11 +65,12 @@ void main() {
     expect(keys.images, ['meow/4/2026-08-14/image.jpg']);
   });
 
-  test('SOS 整数状态解析为页面状态名', () {
+  test('SOS 整数状态解析为强类型枚举', () {
     final item = AdminSosItem.fromJson({'id': 'sos-1', 'status': 1});
 
-    expect(item.status, 'PROCESSING');
-    expect(sosStatusCode('RESOLVED'), 2);
+    expect(item.status, SosStatus.processing);
+    expect(item.status.code, 1);
+    expect(item.status.apiName, 'PROCESSING');
   });
 
   test('领养整数状态解析和请求编码正确', () {
@@ -79,8 +81,9 @@ void main() {
       'status': 0,
     });
 
-    expect(item.status, 'PENDING');
-    expect(adoptionStatusCode('REJECTED'), 3);
+    expect(item.status, AdoptionStatus.pending);
+    expect(item.status.code, 0);
+    expect(AdoptionStatus.rejected.code, 3);
   });
 
   test('猫咪列表整数类型保留 ID 且不直接展示数字字符串', () {
@@ -109,6 +112,40 @@ void main() {
     expect(CatStatus.fromApi('住院').code, 3);
     expect(CatNeuteredType.fromApi('UNCUT').code, 1);
     expect(CatHealthStatus.fromApi('RECOVERING').code, 2);
+  });
+
+  test('猫咪固定字段存为枚举并按整数序列化', () {
+    final detail = CatDetail.fromJson(<String, dynamic>{
+      'id': 'cat-1',
+      'name': '小白',
+      'basicInfo': <String, dynamic>{
+        'color': 6,
+        'gender': 2,
+        'campus': 0,
+        'status': 3,
+        'healthStatus': 1,
+        'neutered': <String, dynamic>{'type': 0},
+      },
+      'attributes': <String, dynamic>{},
+    });
+
+    expect(detail.basicInfo.gender, CatGender.female);
+    expect(detail.basicInfo.color, '6');
+    expect(detail.basicInfo.campus, Campus.zhongxin);
+    expect(detail.basicInfo.status, CatStatus.hospitalized);
+    expect(detail.basicInfo.healthStatus, CatHealthStatus.sick);
+    expect(detail.basicInfo.neutered.type, CatNeuteredType.earCut);
+    expect(detail.basicInfo.toJson()['gender'], 2);
+    expect(detail.basicInfo.toJson()['campus'], 0);
+    expect(detail.basicInfo.toJson()['status'], 3);
+  });
+
+  test('权限角色使用新版整数编码', () {
+    final user = User.fromJson({'uid': 4, 'roleType': 2});
+
+    expect(user.roleType, RoleType.superAdmin);
+    expect(user.isAdmin, isTrue);
+    expect(user.toJson()['roleType'], 2);
   });
 
   test('排行榜兼容整数校区和标签 ID', () {

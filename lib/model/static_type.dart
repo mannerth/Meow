@@ -90,15 +90,16 @@ enum CatHealthStatus {
 }
 
 enum AdoptionStatus {
-  pending(0, 'PENDING'),
-  interview(1, 'INTERVIEW'),
-  approved(2, 'APPROVED'),
-  rejected(3, 'REJECTED'),
-  completed(4, 'COMPLETED');
+  pending(0, 'PENDING', '待审核'),
+  interview(1, 'INTERVIEW', '面谈中'),
+  approved(2, 'APPROVED', '已通过'),
+  rejected(3, 'REJECTED', '已拒绝'),
+  completed(4, 'COMPLETED', '已完成');
 
   final int code;
   final String apiName;
-  const AdoptionStatus(this.code, this.apiName);
+  final String label;
+  const AdoptionStatus(this.code, this.apiName, this.label);
 
   static AdoptionStatus? tryFromApi(dynamic value) => _tryEnumByCodeOrText(
     AdoptionStatus.values,
@@ -135,19 +136,87 @@ enum AdoptionHousing {
 }
 
 enum SosStatus {
-  pending(0, 'PENDING'),
-  processing(1, 'PROCESSING'),
-  resolved(2, 'RESOLVED');
+  pending(0, 'PENDING', '待处理'),
+  processing(1, 'PROCESSING', '处理中'),
+  resolved(2, 'RESOLVED', '已完成');
 
   final int code;
   final String apiName;
-  const SosStatus(this.code, this.apiName);
+  final String label;
+  const SosStatus(this.code, this.apiName, this.label);
 
   static SosStatus? tryFromApi(dynamic value) => _tryEnumByCodeOrText(
     SosStatus.values,
     value,
     (item) => item.code,
     (item) => item.apiName,
+  );
+}
+
+enum UserBanStatus {
+  normal(0, '正常'),
+  banned(1, '封禁');
+
+  final int code;
+  final String label;
+  const UserBanStatus(this.code, this.label);
+
+  static UserBanStatus fromApi(dynamic value) => _enumByCodeOrText(
+    UserBanStatus.values,
+    value,
+    fallback: UserBanStatus.normal,
+    code: (item) => item.code,
+    text: (item) => item.label,
+    legacyTexts: const {
+      'NORMAL': UserBanStatus.normal,
+      'BANNED': UserBanStatus.banned,
+    },
+  );
+}
+
+enum AnnouncementStatus {
+  draft(0, '草稿'),
+  published(1, '已发布');
+
+  final int code;
+  final String label;
+  const AnnouncementStatus(this.code, this.label);
+
+  static AnnouncementStatus fromApi(dynamic value) => _enumByCodeOrText(
+    AnnouncementStatus.values,
+    value,
+    fallback: AnnouncementStatus.published,
+    code: (item) => item.code,
+    text: (item) => item.label,
+    legacyTexts: const {
+      'DRAFT': AnnouncementStatus.draft,
+      'PUBLISHED': AnnouncementStatus.published,
+    },
+  );
+}
+
+enum AnnouncementType {
+  healthKnowledge(0, '健康知识'),
+  feedingGuide(1, '喂养指南'),
+  behaviorInterpretation(2, '行为解读'),
+  campusNews(3, '校园资讯');
+
+  final int code;
+  final String label;
+  const AnnouncementType(this.code, this.label);
+
+  static AnnouncementType fromApi(dynamic value) => _enumByCodeOrText(
+    AnnouncementType.values,
+    value,
+    fallback: AnnouncementType.campusNews,
+    code: (item) => item.code,
+    text: (item) => item.label,
+    legacyTexts: const {
+      'HEALTH': AnnouncementType.healthKnowledge,
+      'FEEDING': AnnouncementType.feedingGuide,
+      'BEHAVIOR': AnnouncementType.behaviorInterpretation,
+      'NEWS': AnnouncementType.campusNews,
+    },
   );
 }
 
