@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:meow/api/Urls.dart';
 import 'package:meow/main.dart';
 import 'package:meow/ui/page/common/login_page.dart';
 import 'package:meow/util/store.dart';
 
 // 网络请求封装，单例模式
 class Http {
-  static const String baseUrl = 'https://meow.sduonline.cn';
+  static const String baseUrl = Urls.Base_Url;
   static const Duration connectTimeout = Duration(seconds: 15);
   static const Duration sendTimeout = Duration(seconds: 15);
   static const Duration receiveTimeout = Duration(seconds: 15);
@@ -26,12 +30,12 @@ class Http {
 
   void setToken(String token) {
     _token = token;
-    Store().setString('token', token);
+    unawaited(Store().setAccessToken(token));
   }
 
   void setRefreshToken(String refreshToken) {
     _refreshToken = refreshToken;
-    Store().setString('refreshToken', refreshToken);
+    unawaited(Store().setRefreshToken(refreshToken));
   }
 
   void setTokens(String token, String refreshToken) {
@@ -42,8 +46,7 @@ class Http {
   void clearToken() {
     _token = null;
     _refreshToken = null;
-    Store().remove('token');
-    Store().remove('refreshToken');
+    unawaited(Store().clearTokens());
   }
 
   // 私有化构造函数
@@ -68,7 +71,12 @@ class Http {
       InterceptorsWrapper(
         onRequest: (options, handler) {
           // 请求拦截器
-          options.headers['Authorization'] = 'Bearer $_token';
+          final token = _token;
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          } else {
+            options.headers.remove('Authorization');
+          }
           handler.next(options);
         },
         onResponse: (response, handler) {
@@ -81,17 +89,10 @@ class Http {
         },
       ),
     );
-    // 日志
-    _dio.interceptors.add(
-      LogInterceptor(
-        request: true,
-        requestHeader: true,
-        requestBody: true,
-        //responseHeader: true,
-        responseBody: true,
-        error: true,
-      ),
-    );
+    if (kDebugMode) {
+      // 避免把 Token、用户资料或请求正文写入调试日志。
+      _dio.interceptors.add(LogInterceptor(error: true));
+    }
   }
 
   Future<Response<T>> get<T>(
@@ -228,7 +229,9 @@ class Http {
             }
           }
         }
-        if (hasInit && (statusCode == 401 || statusCode == 403)) {
+        if (hasInit &&
+            (statusCode == 401 || statusCode == 403) &&
+            _isAuthFailure(e.response?.data)) {
           navigatorKey.currentState?.push(
             MaterialPageRoute(
               builder: (_) =>
@@ -237,7 +240,7 @@ class Http {
           );
         }
         if (statusCode != null &&
-            (statusCode >= 500 || statusCode == 403) &&
+            statusCode >= 500 &&
             allowRetry &&
             data is! FormData) {
           try {
@@ -297,9 +300,9 @@ class Http {
           if (newAccess.isNotEmpty) {
             _token = newAccess;
             if (newRefresh.isNotEmpty) _refreshToken = newRefresh;
-            Store().setString('token', newAccess);
+            unawaited(Store().setAccessToken(newAccess));
             if (newRefresh.isNotEmpty) {
-              Store().setString('refreshToken', newRefresh);
+              unawaited(Store().setRefreshToken(newRefresh));
             }
             return true;
           }

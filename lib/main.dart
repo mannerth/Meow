@@ -12,11 +12,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Store().init();
   try {
-    final token = Store().getString('token');
+    final token = Store().accessToken;
     if (token != null && token.isNotEmpty) {
       Http().setToken(token);
     }
-    final refreshToken = Store().getString('refreshToken');
+    final refreshToken = Store().refreshToken;
     if (refreshToken != null && refreshToken.isNotEmpty) {
       Http().setRefreshToken(refreshToken);
     }
@@ -30,8 +30,7 @@ void main() async {
     }
     Store().user = user;
   } catch (e) {
-    Store().remove('token');
-    Store().remove('refreshToken');
+    await Store().clearTokens();
   } finally {
     Http.hasInit = true;
   }
@@ -53,7 +52,7 @@ class _MyAppState extends ConsumerState<MyApp> {
       if (Store().user != null) {
         ref
             .read(authStateProvider.notifier)
-            .update(Store().user!, Store().getString('token')!);
+            .update(Store().user!, Store().accessToken ?? '');
       } else if (Store().getString('roleType') == RoleType.guest.toString()) {
         // 游客模式
         final user = User(

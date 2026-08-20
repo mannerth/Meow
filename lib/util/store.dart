@@ -1,10 +1,16 @@
-import 'package:meow/api/http.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:meow/model/user.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // 本地存储，app启动时初始化，全局可用
 class Store {
+  static const _accessTokenKey = 'token';
+  static const _refreshTokenKey = 'refreshToken';
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+
   late final SharedPreferences _prefs;
+  String? _accessToken;
+  String? _refreshToken;
   User? user;
 
   static final Store _instance = Store._internal();
@@ -13,11 +19,30 @@ class Store {
 
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
-    // 顺便加载token
-    String? token = _prefs.getString('token');
-    if (token != null) {
-      Http().setToken(token);
-    }
+    _accessToken = await _secureStorage.read(key: _accessTokenKey);
+    _refreshToken = await _secureStorage.read(key: _refreshTokenKey);
+  }
+
+  String? get accessToken => _accessToken;
+  String? get refreshToken => _refreshToken;
+
+  Future<void> setAccessToken(String token) async {
+    _accessToken = token;
+    await _secureStorage.write(key: _accessTokenKey, value: token);
+  }
+
+  Future<void> setRefreshToken(String token) async {
+    _refreshToken = token;
+    await _secureStorage.write(key: _refreshTokenKey, value: token);
+  }
+
+  Future<void> clearTokens() async {
+    _accessToken = null;
+    _refreshToken = null;
+    await Future.wait([
+      _secureStorage.delete(key: _accessTokenKey),
+      _secureStorage.delete(key: _refreshTokenKey),
+    ]);
   }
 
   // 存储字符串

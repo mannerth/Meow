@@ -30,6 +30,10 @@ class _SharePageState extends ConsumerState<SharePage> {
   final List<XFile> _images = [];
   bool _publishing = false;
 
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -44,6 +48,7 @@ class _SharePageState extends ConsumerState<SharePage> {
   }
 
   void _goToNewCat() {
+    _dismissKeyboard();
     Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => const NewCatPage()));
@@ -52,6 +57,7 @@ class _SharePageState extends ConsumerState<SharePage> {
   bool get _isBusy => _publishing;
 
   Future<void> _selectCat() async {
+    _dismissKeyboard();
     final selectedCat = await Navigator.of(context).push<Cat>(
       MaterialPageRoute(builder: (_) => const CatSelectPage(selectable: true)),
     );
@@ -62,6 +68,7 @@ class _SharePageState extends ConsumerState<SharePage> {
   }
 
   Future<void> _selectCampus() async {
+    _dismissKeyboard();
     final selected = await showModalBottomSheet<Campus>(
       context: context,
       backgroundColor: Colors.white,
@@ -89,6 +96,7 @@ class _SharePageState extends ConsumerState<SharePage> {
   }
 
   Future<void> _pickFromCamera() async {
+    _dismissKeyboard();
     if (_images.length >= 9) {
       _showMessage('最多添加 9 张图片');
       return;
@@ -102,6 +110,7 @@ class _SharePageState extends ConsumerState<SharePage> {
   }
 
   Future<void> _pickFromGallery() async {
+    _dismissKeyboard();
     if (_images.length >= 9) {
       _showMessage('最多添加 9 张图片');
       return;
@@ -116,6 +125,7 @@ class _SharePageState extends ConsumerState<SharePage> {
   }
 
   Future<void> _publish() async {
+    _dismissKeyboard();
     final title = _titleController.text.trim();
     final content = _contentController.text.trim();
     if (title.isEmpty) {

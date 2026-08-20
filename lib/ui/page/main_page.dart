@@ -58,6 +58,25 @@ class _MainPageState extends ConsumerState<MainPage> {
     }
   }
 
+  void _dismissKeyboard() {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
+  void _changePage(int index) {
+    _dismissKeyboard();
+    ref.read(navigationProvider.notifier).setCurrentIndex(index);
+    final pageIndex = _pageController.page?.round() ?? 0;
+    if ((index - pageIndex).abs() <= 1) {
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutCubic,
+      );
+    } else {
+      _pageController.jumpToPage(index);
+    }
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -86,6 +105,8 @@ class _MainPageState extends ConsumerState<MainPage> {
     return Scaffold(
       // 延申页面主体，为了适应自定义悬浮导航栏
       extendBody: true,
+      // 导航栏固定在窗口底部，不随软键盘的 viewInsets 上浮。
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           PageView.builder(
@@ -93,6 +114,7 @@ class _MainPageState extends ConsumerState<MainPage> {
             itemCount: pages.length,
             onPageChanged: (index) {
               // 同步 PageView 滑动与导航栏状态
+              _dismissKeyboard();
               ref.read(navigationProvider.notifier).setCurrentIndex(index);
             },
             itemBuilder: (context, index) {
@@ -108,20 +130,7 @@ class _MainPageState extends ConsumerState<MainPage> {
               child: CustomBottomNavigationBar(
                 currentIndex: currentIndex,
                 items: navigationItemsData,
-                onIndexChanged: (index) {
-                  ref.read(navigationProvider.notifier).setCurrentIndex(index);
-                  final pageIndex = _pageController.page?.round() ?? 0;
-                  // 相邻页使用动画切换，非相邻页直接跳转避免卡顿
-                  if ((index - pageIndex).abs() <= 1) {
-                    _pageController.animateToPage(
-                      index,
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOutCubic,
-                    );
-                  } else {
-                    _pageController.jumpToPage(index);
-                  }
-                },
+                onIndexChanged: _changePage,
               ),
             ),
           ),

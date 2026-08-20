@@ -7,7 +7,8 @@ plugins {
 
 android {
     namespace = "com.example.meow"
-    compileSdk = flutter.compileSdkVersion
+    // flutter_secure_storage 11 使用 Android Keystore 的现代加密实现。
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -24,7 +25,7 @@ android {
         applicationId = "com.example.meow"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
