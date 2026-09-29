@@ -35,13 +35,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         options: const FlutterWebAuth2Options(useWebview: false),
       );
 
-      if (res.isNotEmpty) {
-        debugPrint(res);
-      } else {
-        debugPrint('返回了空信息');
+      final uri = Uri.parse(res);
+      if (uri.scheme != 'meow') {
+        throw const FormatException('登录回调地址无效');
       }
-
-      Uri uri = Uri.parse(res);
       final param = uri.queryParameters;
       final String token = param['meow_token'] ?? '';
       final String refreshToken = param['meow_refresh_token'] ?? '';
