@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:meow/provider/auth_provider.dart';
-import 'package:meow/ui/widget/image_preview.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat_detail.dart';
 import 'package:meow/model/post.dart';
+import 'package:meow/provider/auth_provider.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
+import 'package:meow/ui/widget/image_preview.dart';
 import 'package:meow/util/time_tool.dart';
 
 String _dynamicTypeLabel(String value, String Function(int?) labelForId) {
@@ -63,13 +64,13 @@ class _CatDetailPageState extends State<CatDetailPage> {
     final index = _postItems.indexWhere((item) => item.id == post.id);
     if (index == -1) return;
     final updated = Post(
-        id: post.id,
-        content: post.content,
-        media: post.media,
-        user: post.user,
-        likeCount: post.likeCount + (post.isLiked ? -1 : 1), //乐观更新
-        isLiked: !post.isLiked,
-        createTime: post.createTime,
+      id: post.id,
+      content: post.content,
+      media: post.media,
+      user: post.user,
+      likeCount: post.likeCount + (post.isLiked ? -1 : 1), //乐观更新
+      isLiked: !post.isLiked,
+      createTime: post.createTime,
     );
     setState(() {
       _postLoading = true;
@@ -85,10 +86,9 @@ class _CatDetailPageState extends State<CatDetailPage> {
           _postItems[index] = post;
         });
       }
-      
     } catch (error) {
       if (!mounted) return;
-      if ( mounted ) {
+      if (mounted) {
         setState(() {
           _postItems[index] = post;
         });
@@ -149,7 +149,7 @@ class _CatDetailPageState extends State<CatDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF6F6F8),
       body: FutureBuilder<CatDetail>(
         future: _detailFuture,

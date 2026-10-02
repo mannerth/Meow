@@ -3,6 +3,7 @@ import 'package:meow/api/service/adoption_service.dart';
 import 'package:meow/model/adoption.dart';
 import 'package:meow/model/static_type.dart';
 import 'package:meow/ui/page/admin/admin_adoption_detail_page.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/safe_network_image.dart';
 import 'package:meow/util/time_tool.dart';
 
@@ -143,7 +144,7 @@ class _AdminAdoptionsPageState extends State<AdminAdoptionsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF5F6FA),
       appBar: AppBar(title: const Text('领养申请审批')),
       body: Column(

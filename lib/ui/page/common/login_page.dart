@@ -2,14 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:meow/api/Urls.dart';
 import 'package:meow/api/http.dart';
 import 'package:meow/api/service/auth_repository.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/util/android_browser_login.dart';
 import 'package:meow/util/store.dart';
 
@@ -199,7 +200,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AdaptiveScaffold(
+      maxContentWidth: 480,
       backgroundColor: const Color(0xFFF6F3EF),
       body: SafeArea(
         child: Center(

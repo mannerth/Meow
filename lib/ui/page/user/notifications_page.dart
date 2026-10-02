@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meow/api/service/notification_service.dart';
 import 'package:meow/model/notification.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -69,7 +70,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF6F7FB),
       appBar: AppBar(
         title: const Text('通知'),

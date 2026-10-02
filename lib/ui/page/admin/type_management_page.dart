@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meow/api/service/type_service.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 
 class TypeManagementPage extends StatefulWidget {
   const TypeManagementPage({super.key});
@@ -127,7 +128,7 @@ class _TypeManagementPageState extends State<TypeManagementPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AdaptiveScaffold(
       appBar: AppBar(
         title: const Text('类型数据管理'),
         actions: [

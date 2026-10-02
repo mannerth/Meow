@@ -3,6 +3,7 @@ import 'package:meow/api/service/admin_user_service.dart';
 import 'package:meow/model/admin_user.dart';
 import 'package:meow/model/static_type.dart';
 import 'package:meow/model/user.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 
 class UsersPage extends StatefulWidget {
   const UsersPage({super.key});
@@ -158,7 +159,7 @@ class _UsersPageState extends State<UsersPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AdaptiveScaffold(
       appBar: AppBar(title: const Text('用户管理')),
       body: Column(
         children: [

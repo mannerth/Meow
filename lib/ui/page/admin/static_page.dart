@@ -8,6 +8,7 @@ import 'package:meow/ui/page/admin/admin_new_cat_page.dart';
 import 'package:meow/ui/page/admin/admin_sos_page.dart';
 import 'package:meow/ui/page/admin/announcements_page.dart';
 import 'package:meow/ui/page/admin/type_management_page.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_provider.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
@@ -54,7 +55,7 @@ class _StaticPageState extends ConsumerState<StaticPage> {
     final greeting = _greetingText();
     final dateText = _formatDate(DateTime.now());
     final stats = _stats;
-    return Scaffold(
+    return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF5F6FA),
       body: RefreshIndicator(
         onRefresh: _loadStats,

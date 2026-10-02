@@ -10,6 +10,7 @@ import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/page/user/cat_select_page.dart';
 import 'package:meow/ui/page/user/new_cat_page.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
 /// 发布动态页面
@@ -172,7 +173,7 @@ class _SharePageState extends ConsumerState<SharePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
+    return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF6F6F8),
       appBar: AppBar(
         title: const Text('分享趣事'),

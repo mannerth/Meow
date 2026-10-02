@@ -8,6 +8,7 @@ import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat_detail.dart';
 import 'package:meow/model/static_type.dart';
 import 'package:meow/model/user.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
 class MeowEditPage extends StatefulWidget {
@@ -419,7 +420,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF6F6F8),
       appBar: AppBar(
         title: const Text('编辑猫咪档案'),

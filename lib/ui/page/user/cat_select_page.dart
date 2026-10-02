@@ -4,6 +4,8 @@ import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/ui/page/user/cat_detail_page.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
+import 'package:meow/ui/widget/adaptive/cat_grid_sliver.dart';
 import 'package:meow/ui/widget/cat_card.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
@@ -148,7 +150,8 @@ class _CatSelectPageState extends State<CatSelectPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
+    return AdaptiveScaffold(
+      maxContentWidth: 1200,
       body: RefreshIndicator(
         onRefresh: _refresh,
         child: CustomScrollView(
@@ -251,7 +254,7 @@ class _CatSelectPageState extends State<CatSelectPage> {
       return const SliverToBoxAdapter(child: _EmptyState());
     }
 
-    return SliverGrid(
+    return CatGridSliver(
       delegate: SliverChildBuilderDelegate((context, index) {
         final cat = _items[index];
         return CatCard(
@@ -268,12 +271,6 @@ class _CatSelectPageState extends State<CatSelectPage> {
           },
         );
       }, childCount: _items.length),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.78,
-      ),
     );
   }
 }
@@ -386,7 +383,7 @@ class _LoadingGridSliver extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SliverGrid(
+    return CatGridSliver(
       delegate: SliverChildBuilderDelegate(
         (context, index) => Container(
           decoration: BoxDecoration(
@@ -395,12 +392,6 @@ class _LoadingGridSliver extends StatelessWidget {
           ),
         ),
         childCount: 6,
-      ),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.78,
       ),
     );
   }

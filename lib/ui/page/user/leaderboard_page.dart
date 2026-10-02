@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:meow/ui/widget/image_preview.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/model/leaderboard.dart';
 import 'package:meow/ui/page/user/cat_detail_page.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
+import 'package:meow/ui/widget/image_preview.dart';
 import 'package:meow/ui/widget/safe_network_image.dart';
 
 class LeaderboardPage extends StatefulWidget {
@@ -74,7 +75,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final type = _types[_currentIndex];
-    return Scaffold(
+    return AdaptiveScaffold(
       appBar: AppBar(title: const Text('全校封神榜')),
       body: Column(
         children: [

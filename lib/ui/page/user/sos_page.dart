@@ -9,6 +9,7 @@ import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/page/user/cat_select_page.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
 class SosPage extends ConsumerStatefulWidget {
@@ -210,7 +211,7 @@ class _SosPageState extends ConsumerState<SosPage> {
     final subtitleStyle = theme.textTheme.bodySmall?.copyWith(
       color: const Color(0xFFB45D5D),
     );
-    return Scaffold(
+    return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF7F6F5),
       appBar: AppBar(
         backgroundColor: Colors.transparent,

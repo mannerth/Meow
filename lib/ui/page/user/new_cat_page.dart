@@ -8,6 +8,7 @@ import 'package:meow/api/service/cos_service.dart';
 import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
 class NewCatPage extends ConsumerStatefulWidget {
@@ -227,7 +228,7 @@ class _NewCatPageState extends ConsumerState<NewCatPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
+    return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF6F6F8),
       appBar: AppBar(
         title: const Text('新猫建档'),

@@ -6,11 +6,13 @@ import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
-import 'package:meow/ui/page/user/cat_detail_page.dart';
 import 'package:meow/ui/page/user/adoption_apply_page.dart';
+import 'package:meow/ui/page/user/cat_detail_page.dart';
 import 'package:meow/ui/page/user/leaderboard_page.dart';
 import 'package:meow/ui/page/user/notifications_page.dart';
 import 'package:meow/ui/page/user/sos_page.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
+import 'package:meow/ui/widget/adaptive/cat_grid_sliver.dart';
 import 'package:meow/ui/widget/cat_card.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 import 'package:meow/ui/widget/navigate_card.dart';
@@ -220,7 +222,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Scaffold(
+    return AdaptiveScaffold(
+      maxContentWidth: 1200,
       appBar: AppBar(
         title: Consumer(
           builder: (context, ref, _) {
@@ -260,66 +263,67 @@ class _HomePageState extends State<HomePage> {
                       hospital: _hospitalCount,
                     ),
                     const SizedBox(height: 16),
-                    AspectRatio(
-                      aspectRatio: 2,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Expanded(
-                            child: NavigateCard(
-                              title: '封神榜',
-                              subtitle: '谁是校宠No.1？',
-                              backgroundColor: Colors.orangeAccent.withAlpha(
-                                150,
-                              ),
-                              icon: SvgPicture.asset(
-                                'assets/icons/ranking.svg',
-                              ),
-                              destination: const LeaderboardPage(),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              children: [
-                                Expanded(
-                                  child: NavigateCard(
-                                    title: '紧急SOS',
-                                    subtitle: '伤病快速上报',
-                                    backgroundColor: Colors.redAccent.withAlpha(
-                                      178,
-                                    ),
-                                    icon: const Icon(
-                                      Icons.warning,
-                                      color: Colors.white70,
-                                      size: 40,
-                                    ),
-                                    destination: const SosPage(),
-                                  ),
+                    LayoutBuilder(
+                      builder: (context, constraints) => SizedBox(
+                        height: (constraints.maxWidth / 2).clamp(0, 260),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: NavigateCard(
+                                title: '封神榜',
+                                subtitle: '谁是校宠No.1？',
+                                backgroundColor: Colors.orangeAccent.withAlpha(
+                                  150,
                                 ),
-                                const SizedBox(height: 12),
-                                Expanded(
-                                  child: NavigateCard(
-                                    title: '申请领养',
-                                    subtitle: '给咪一个家',
-                                    backgroundColor: const Color.fromARGB(
-                                      198,
-                                      255,
-                                      162,
-                                      216,
-                                    ),
-                                    icon: const Icon(
-                                      Icons.favorite_border,
-                                      color: Colors.white,
-                                      size: 40,
-                                    ),
-                                    destination: const AdoptionApplyPage(),
-                                  ),
+                                icon: SvgPicture.asset(
+                                  'assets/icons/ranking.svg',
                                 ),
-                              ],
+                                destination: const LeaderboardPage(),
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  Expanded(
+                                    child: NavigateCard(
+                                      title: '紧急SOS',
+                                      subtitle: '伤病快速上报',
+                                      backgroundColor: Colors.redAccent
+                                          .withAlpha(178),
+                                      icon: const Icon(
+                                        Icons.warning,
+                                        color: Colors.white70,
+                                        size: 40,
+                                      ),
+                                      destination: const SosPage(),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Expanded(
+                                    child: NavigateCard(
+                                      title: '申请领养',
+                                      subtitle: '给咪一个家',
+                                      backgroundColor: const Color.fromARGB(
+                                        198,
+                                        255,
+                                        162,
+                                        216,
+                                      ),
+                                      icon: const Icon(
+                                        Icons.favorite_border,
+                                        color: Colors.white,
+                                        size: 40,
+                                      ),
+                                      destination: const AdoptionApplyPage(),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -423,7 +427,7 @@ class _HomePageState extends State<HomePage> {
       return const SliverToBoxAdapter(child: _EmptyState());
     }
 
-    return SliverGrid(
+    return CatGridSliver(
       delegate: SliverChildBuilderDelegate((context, index) {
         final cat = _items[index];
         return CatCard(
@@ -436,12 +440,6 @@ class _HomePageState extends State<HomePage> {
           },
         );
       }, childCount: _items.length),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.78,
-      ),
     );
   }
 }
@@ -554,7 +552,7 @@ class _LoadingGridSliver extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SliverGrid(
+    return CatGridSliver(
       delegate: SliverChildBuilderDelegate(
         (context, index) => Container(
           decoration: BoxDecoration(
@@ -563,12 +561,6 @@ class _LoadingGridSliver extends StatelessWidget {
           ),
         ),
         childCount: 6,
-      ),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 0.78,
       ),
     );
   }
@@ -690,6 +682,7 @@ class _StatsCard extends StatelessWidget {
       decoration: BoxDecoration(
         image: DecorationImage(
           image: AssetImage('assets/images/猫猫图鉴-logo.png'),
+          opacity: 0.12,
           fit: BoxFit.fitHeight,
           alignment: Alignment.centerRight,
         ),

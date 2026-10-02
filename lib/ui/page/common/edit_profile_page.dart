@@ -1,13 +1,14 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meow/api/service/auth_repository.dart';
-import 'package:meow/ui/widget/image_preview.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meow/model/campus.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
-import '../../../model/campus.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
+import 'package:meow/ui/widget/image_preview.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
@@ -126,7 +127,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF6F3EF),
       appBar: _buildAppBar(),
       body: SafeArea(

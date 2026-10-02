@@ -107,34 +107,70 @@ class _MainPageState extends ConsumerState<MainPage> {
       extendBody: true,
       // 导航栏固定在窗口底部，不随软键盘的 viewInsets 上浮。
       resizeToAvoidBottomInset: false,
-      body: Stack(
-        children: [
-          PageView.builder(
-            controller: _pageController,
-            itemCount: pages.length,
-            onPageChanged: (index) {
-              // 同步 PageView 滑动与导航栏状态
-              _dismissKeyboard();
-              ref.read(navigationProvider.notifier).setCurrentIndex(index);
-            },
-            itemBuilder: (context, index) {
-              return KeepAliveWrapper(child: pages[index]);
-            },
-          ),
-          // 自定义悬浮导航栏
-          Positioned(
-            right: 24,
-            left: 24,
-            bottom: 48,
-            child: Center(
-              child: CustomBottomNavigationBar(
-                currentIndex: currentIndex,
-                items: navigationItemsData,
-                onIndexChanged: _changePage,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final useRail =
+              constraints.maxWidth >= 600 && constraints.maxHeight >= 480;
+          return Row(
+            children: [
+              if (useRail)
+                SafeArea(
+                  key: const ValueKey('navigation_rail'),
+                  child: NavigationRail(
+                    scrollable: true,
+                    selectedIndex: currentIndex,
+                    labelType: NavigationRailLabelType.all,
+                    groupAlignment: -1,
+                    onDestinationSelected: _changePage,
+                    destinations: [
+                      for (final item in navigationItemsData)
+                        NavigationRailDestination(
+                          icon: item.icon,
+                          selectedIcon: item.activeIcon,
+                          label: Text(item.label),
+                        ),
+                    ],
+                  ),
+                ),
+              if (useRail) const VerticalDivider(width: 1),
+              Expanded(
+                key: const ValueKey('main_content'),
+                child: Stack(
+                  children: [
+                    PageView.builder(
+                      controller: _pageController,
+                      itemCount: pages.length,
+                      onPageChanged: (index) {
+                        // 同步 PageView 滑动与导航栏状态
+                        _dismissKeyboard();
+                        ref
+                            .read(navigationProvider.notifier)
+                            .setCurrentIndex(index);
+                      },
+                      itemBuilder: (context, index) {
+                        return KeepAliveWrapper(child: pages[index]);
+                      },
+                    ),
+                    // 自定义悬浮导航栏
+                    if (!useRail)
+                      Positioned(
+                        right: 24,
+                        left: 24,
+                        bottom: 48,
+                        child: Center(
+                          child: CustomBottomNavigationBar(
+                            currentIndex: currentIndex,
+                            items: navigationItemsData,
+                            onIndexChanged: _changePage,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }

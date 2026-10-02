@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meow/api/service/auth_repository.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 
 class SetPasswordPage extends StatefulWidget {
   final String email;
@@ -46,7 +47,8 @@ class _SetPasswordPageState extends State<SetPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AdaptiveScaffold(
+      maxContentWidth: 480,
       backgroundColor: const Color(0xFFF6F3EF),
       body: SafeArea(
         child: Center(

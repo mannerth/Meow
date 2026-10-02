@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/page/user/user_adoptions_page.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
+
 import 'edit_profile_page.dart';
 import 'login_page.dart';
 
@@ -15,7 +17,7 @@ class UserPage extends ConsumerWidget {
     final user = ref.watch(authStateProvider).user;
 
     if (user == null || user.roleType == RoleType.guest) {
-      return Scaffold(
+      return AdaptiveScaffold(
         backgroundColor: const Color(0xFFF6F3EF),
         body: Center(
           child: ElevatedButton(
@@ -62,7 +64,7 @@ class _UserCenterDetailPage extends StatelessWidget {
     final levelTitle = user.levelTitle ?? '';
     final currency = user.currency;
 
-    return Scaffold(
+    return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF6F3EF),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),

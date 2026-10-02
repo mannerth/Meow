@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meow/api/service/auth_repository.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
+
 import 'set_password_page.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -76,7 +78,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AdaptiveScaffold(
+      maxContentWidth: 480,
       backgroundColor: const Color(0xFFF6F3EF),
       body: SafeArea(
         child: Center(

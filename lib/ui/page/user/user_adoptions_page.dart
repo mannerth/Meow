@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:meow/api/service/adoption_service.dart';
 import 'package:meow/model/adoption.dart';
 import 'package:meow/model/static_type.dart';
+import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/safe_network_image.dart';
 import 'package:meow/util/time_tool.dart';
 
@@ -123,7 +124,7 @@ class _UserAdoptionsPageState extends State<UserAdoptionsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF6F7FB),
       appBar: AppBar(title: const Text('我的领养申请')),
       body: Column(
