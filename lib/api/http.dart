@@ -15,6 +15,9 @@ class Http {
   static const Duration sendTimeout = Duration(seconds: 15);
   static const Duration receiveTimeout = Duration(seconds: 15);
 
+  /// 公开认证接口不携带旧 Token，也不触发刷新或全局登录页跳转。
+  static const skipAuthenticationKey = 'skipAuthentication';
+
   static bool hasInit = false;
 
   // Dio实例
@@ -72,7 +75,9 @@ class Http {
         onRequest: (options, handler) {
           // 请求拦截器
           final token = _token;
-          if (token != null && token.isNotEmpty) {
+          if (options.extra[skipAuthenticationKey] != true &&
+              token != null &&
+              token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
           } else {
             options.headers.remove('Authorization');
@@ -91,7 +96,13 @@ class Http {
     );
     if (kDebugMode) {
       // 避免把 Token、用户资料或请求正文写入调试日志。
-      _dio.interceptors.add(LogInterceptor(error: true));
+      _dio.interceptors.add(
+        LogInterceptor(
+          requestHeader: false,
+          responseHeader: false,
+          error: true,
+        ),
+      );
     }
   }
 
@@ -195,6 +206,7 @@ class Http {
     CancelToken? cancelToken,
     bool allowRetry = true,
   }) async {
+    final skipAuthentication = options?.extra?[skipAuthenticationKey] == true;
     try {
       final Response<T> response = await _dio.request(
         path,
@@ -210,6 +222,7 @@ class Http {
         final statusCode = e.response?.statusCode;
         // 鉴权失效：尝试用 refreshToken 刷新后重试一次
         if ((statusCode == 401 || statusCode == 403) &&
+            !skipAuthentication &&
             _isAuthFailure(e.response?.data) &&
             allowRetry) {
           final refreshed = await _tryRefresh();
@@ -230,6 +243,7 @@ class Http {
           }
         }
         if (hasInit &&
+            !skipAuthentication &&
             (statusCode == 401 || statusCode == 403) &&
             _isAuthFailure(e.response?.data)) {
           navigatorKey.currentState?.push(

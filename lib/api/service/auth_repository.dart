@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meow/api/http.dart';
 import 'package:meow/api/service/cos_service.dart';
@@ -11,8 +12,50 @@ class AuthResult {
   AuthResult({required this.user, required this.token});
 }
 
+class AuthTokens {
+  final String accessToken;
+  final String refreshToken;
+
+  const AuthTokens({required this.accessToken, required this.refreshToken});
+}
+
+class LoginCodeExchangeException implements Exception {
+  const LoginCodeExchangeException();
+}
+
 class AuthRepository {
   final Http _http = Http();
+
+  /// login_code 只用于交换凭证，不落盘，也不自动重试。
+  static Future<AuthTokens> exchangeLoginCode(String loginCode) async {
+    try {
+      final response = await Http().post<Map<String, dynamic>>(
+        '/auth/exchange',
+        data: {'loginCode': loginCode},
+        options: Options(extra: {Http.skipAuthenticationKey: true}),
+        allowRetry: false,
+      );
+      final body = response.data;
+      final data = body?['data'];
+      if (response.statusCode != 200 ||
+          (body?['code'] != 0 && body?['code'] != 200) ||
+          data is! Map) {
+        throw const LoginCodeExchangeException();
+      }
+      final accessToken = data['accessToken'];
+      final refreshToken = data['refreshToken'];
+      if (accessToken is! String ||
+          accessToken.trim().isEmpty ||
+          refreshToken is! String ||
+          refreshToken.trim().isEmpty) {
+        throw const LoginCodeExchangeException();
+      }
+      return AuthTokens(accessToken: accessToken, refreshToken: refreshToken);
+    } catch (_) {
+      // 服务端错误或异常对象可能包含凭证，统一使用本地错误提示。
+      throw const LoginCodeExchangeException();
+    }
+  }
 
   // 统一认证登录（返回 token，用户信息通过 getMe 获取）
   Future<AuthResult> login({

@@ -81,22 +81,26 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       if (uri.scheme != 'meow') {
         throw const FormatException('登录回调地址无效');
       }
-      final param = uri.queryParameters;
-      final String token = param['meow_token'] ?? '';
-      final String refreshToken = param['meow_refresh_token'] ?? '';
-
-      if (token.isEmpty || refreshToken.isEmpty) {
-        throw Exception('获取的token为空');
+      final codes = uri.queryParametersAll['login_code'];
+      if (codes == null ||
+          codes.length != 1 ||
+          codes.single.trim().isEmpty ||
+          codes.single.length > 128) {
+        throw const FormatException('登录回调缺少有效的 login_code');
       }
 
-      Http().setTokens(token, refreshToken);
+      final tokens = await AuthRepository.exchangeLoginCode(codes.single);
+      if (!mounted) return;
+      Http().setTokens(tokens.accessToken, tokens.refreshToken);
 
       User user = await AuthRepository.getMe();
       if (!mounted) return;
       if (result.isAdmin) {
         user.roleType = RoleType.admin;
       }
-      ref.read(authStateProvider.notifier).update(user);
+      ref
+          .read(authStateProvider.notifier)
+          .update(user, Http().token ?? tokens.accessToken);
 
       Store().setString('roleType', user.roleType.toString());
 
@@ -125,6 +129,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final message = switch (error) {
       PlatformException(:final message) => message ?? '无法完成浏览器登录，请重试',
       FormatException() => '登录回调数据无效，请重试',
+      LoginCodeExchangeException() => '登录凭证交换失败，请重新登录',
       _ => '未能完成登录，请重试',
     };
     ScaffoldMessenger.of(context).showSnackBar(
@@ -246,7 +251,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  '欢迎回到山大猫猫图鉴',
+                  '欢迎回到猫猫图鉴',
                   style: TextStyle(color: Colors.black54),
                 ),
                 const SizedBox(height: 24),
@@ -300,7 +305,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         ],
                         const SizedBox(height: 8),
                         const Text(
-                          'SDU Meow',
+                          'Meow',
                           style: TextStyle(color: Colors.black54),
                         ),
                       ],

@@ -100,6 +100,80 @@
         "security": []
       }
     },
+    "/auth/admin-login": {
+      "get": {
+        "summary": "redirectToAdminLogin",
+        "deprecated": false,
+        "description": "# 管理员端的cas登录",
+        "tags": [
+          "AuthController"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/auth/exchange": {
+      "post": {
+        "summary": "exchangeLoginCode",
+        "deprecated": false,
+        "description": "登录回调不再返回 meow_token 和 meow_refresh_token，改为返回 login_code。\n客户端需调整登录回调处理，接收 login_code，调用 /auth/exchange 换取 token。",
+        "tags": [
+          "AuthController"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "",
+                "type": "object",
+                "properties": {
+                  "loginCode": {
+                    "type": "string",
+                    "description": "",
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "loginCode"
+                ]
+              },
+              "example": {
+                "loginCode": "rG6HRpgAQlwjZnwLB2mjaePUacchpa621Ub5NsfqhDM"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
     "/cats": {
       "get": {
         "summary": "listCats",
@@ -276,6 +350,45 @@
         ]
       }
     },
+    "/sos/{id}/cancel": {
+      "post": {
+        "summary": "cancelSos",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "SosController"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      }
+    },
     "/sos": {
       "post": {
         "summary": "createSos",
@@ -331,16 +444,17 @@
                 ]
               },
               "example": {
-                "catId": "b332c5658cca58c183431314fa9eeb68",
+                "catId": "fe3b06fc43dede196d4d51321a2512dc",
                 "campus": 0,
-                "location": 0,
+                "location": "食堂门口",
                 "symptoms": [
-                  1,
-                  2
+                  "流血",
+                  "外伤"
                 ],
                 "description": "腹部出血",
-                "medium": [
-                  "meow/3/2026-08-14/xxx.jpg"
+                "media": [
+                  "https://example.com/121",
+                  "https://example.com/121"
                 ]
               }
             }
@@ -529,6 +643,7 @@
             "in": "query",
             "description": "",
             "required": false,
+            "example": "",
             "schema": {
               "type": "string"
             }
@@ -543,7 +658,8 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
         "security": []
@@ -560,41 +676,10 @@
           "content": {
             "application/json": {
               "schema": {
-                "description": "",
-                "type": "object",
-                "properties": {
-                  "content": {
-                    "type": "string",
-                    "description": ""
-                  },
-                  "media": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "description": ""
-                  },
-                  "catId": {
-                    "type": "string",
-                    "description": ""
-                  },
-                  "location": {
-                    "type": "string",
-                    "description": ""
-                  }
-                },
-                "required": [
-                  "catId"
-                ]
+                "$ref": "#/components/schemas/CreatePostDTO",
+                "description": ""
               },
-              "example": {
-                "catId": "b332c5658cca58c183431314fa9eeb68",
-                "content": "今天遇到了小猫",
-                "media": [
-                  "meow/3/2026-08-14/xxx.jpg"
-                ],
-                "location": "中心校区"
-              }
+              "examples": {}
             }
           }
         },
@@ -632,6 +717,7 @@
             "in": "path",
             "description": "",
             "required": true,
+            "example": "",
             "schema": {
               "type": "string"
             }
@@ -669,6 +755,7 @@
             "in": "path",
             "description": "",
             "required": true,
+            "example": "",
             "schema": {
               "type": "string"
             }
@@ -708,6 +795,7 @@
             "in": "path",
             "description": "",
             "required": true,
+            "example": "",
             "schema": {
               "type": "string"
             }
@@ -747,6 +835,7 @@
             "in": "query",
             "description": "",
             "required": false,
+            "example": "",
             "schema": {
               "type": "string"
             }
@@ -807,13 +896,40 @@
           }
         },
         "security": []
+      },
+      "get": {
+        "summary": "sendVerificationCode",
+        "deprecated": false,
+        "description": "# 请求验证码\n\n## 麻烦客户端添加60s限制\n## 验证码有效时间为10分钟",
+        "tags": [
+          "UserController"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
       }
     },
     "/users/register": {
       "post": {
-        "summary": "register",
+        "summary": "bind-email",
         "deprecated": false,
-        "description": "# 用户注册",
+        "description": "# 用户邮箱绑定",
         "tags": [
           "UserController"
         ],
@@ -822,11 +938,10 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RegisterReqDTO",
+                "$ref": "#/components/schemas/BindEmailReqDTO",
                 "description": ""
               },
               "example": {
-                "email": "202400300000@mail.sdu.edu.cn",
                 "password": "123456",
                 "code": "666666"
               }
@@ -842,21 +957,37 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
-        "security": []
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
       }
     },
     "/users/login": {
       "post": {
         "summary": "login",
-        "deprecated": true,
-        "description": "# 用户登录",
+        "deprecated": false,
+        "description": "# 用户登录\n## 支持绑定邮箱后的用户使用邮箱登录",
         "tags": [
           "UserController"
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "accessToken",
+            "in": "cookie",
+            "description": "",
+            "required": false,
+            "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1aWQiOiIxMCIsInNlc3Npb25UeXBlIjoidXNlciIsImV4cCI6MTc5MDk1MzAxOH0.lEdX-3VW748gJvhA_Nc_kgrcMfaa-OaNTQYTHU41ryg",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -866,7 +997,7 @@
               },
               "example": {
                 "email": "202400300000@mail.sdu.edu.cn",
-                "password": "123456"
+                "password": "12345"
               }
             }
           }
@@ -880,7 +1011,8 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
         "security": []
@@ -889,7 +1021,7 @@
     "/users/change-password": {
       "post": {
         "summary": "changePassword",
-        "deprecated": true,
+        "deprecated": false,
         "description": "# 修改密码",
         "tags": [
           "UserController"
@@ -919,10 +1051,15 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
-        "security": []
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
       }
     },
     "/users/me": {
@@ -1093,6 +1230,7 @@
             "in": "query",
             "description": "",
             "required": false,
+            "example": "",
             "schema": {
               "type": "string"
             }
@@ -1132,6 +1270,7 @@
             "in": "query",
             "description": "",
             "required": true,
+            "example": "",
             "schema": {
               "type": "string"
             }
@@ -1146,7 +1285,8 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
         "security": []
@@ -1181,9 +1321,173 @@
         ]
       }
     },
-    "/admin/cats": {
+    "/admin/promotion/{sid}": {
+      "get": {
+        "summary": "用户权限升级",
+        "deprecated": false,
+        "description": "# 暂用",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [
+          {
+            "name": "sid",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      }
+    },
+    "/admin/new-cats/{id}/reject": {
       "post": {
-        "summary": "createCat",
+        "summary": "rejectNewCat",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "integer",
+                    "description": "拒绝原因ID"
+                  },
+                  "reply": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              },
+              "examples": {}
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      }
+    },
+    "/admin/announcements": {
+      "get": {
+        "summary": "listAnnouncements",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "",
+            "required": true,
+            "example": 1,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "",
+            "required": true,
+            "example": 20,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": " DRAFT :DRAFT\nPUBLISHED :PUBLISHED",
+            "required": false,
+            "example": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "createAnnouncement",
         "deprecated": false,
         "description": "",
         "tags": [
@@ -1194,40 +1498,10 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateCatReqDTO",
+                "$ref": "#/components/schemas/CreateAnnouncementDTO",
                 "description": ""
               },
-              "example": {
-                "name": "小白",
-                "aliases": [
-                  "白白",
-                  "小雪"
-                ],
-                "color": 1,
-                "avatar": "cats/avatar/example.jpg",
-                "images": [
-                  "cats/images/example-1.jpg",
-                  "cats/images/example-2.jpg"
-                ],
-                "gender": 2,
-                "campus": 0,
-                "hauntLocation": 1,
-                "role": 1,
-                "birthYear": 2024,
-                "admissionDate": "2025-09-01",
-                "status": 0,
-                "healthStatus": 0,
-                "attributes": {
-                  "friendliness": 8,
-                  "gluttony": 7,
-                  "fight": 3,
-                  "appearance": 9
-                },
-                "isNeutered": true,
-                "neuteredDate": "2025-10-01",
-                "neuteredType": 0,
-                "description": "经常出现在教学楼附近"
-              }
+              "examples": {}
             }
           }
         },
@@ -1238,14 +1512,99 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseEntityResult"
-                },
-                "example": {
-                  "code": 0,
-                  "data": {},
-                  "msg": ""
                 }
               }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      }
+    },
+    "/admin/announcements/{id}": {
+      "put": {
+        "summary": "updateAnnouncement",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "",
+            "schema": {
+              "type": "string"
             }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAnnouncementDTO",
+                "description": ""
+              },
+              "examples": {}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "deleteAnnouncement",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
           }
         },
         "security": [
@@ -1258,8 +1617,8 @@
     "/admin/login": {
       "post": {
         "summary": "adminLogin",
-        "deprecated": true,
-        "description": "# 管理员端登录",
+        "deprecated": false,
+        "description": "# 管理员端登录\n## 允许在账号绑定邮箱后使用邮箱登录",
         "tags": [
           "AdminController"
         ],
@@ -1296,144 +1655,11 @@
                   "msg": "管理员登录成功"
                 }
               }
-            }
-          }
-        },
-        "security": [
-          {
-            "双TOKEN鉴权": []
-          }
-        ]
-      }
-    },
-    "/admin/cats/{id}": {
-      "put": {
-        "summary": "updateCat",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "example": "c8daf32a67462d10779bc99aaf2819e5",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateCatReqDTO",
-                "description": ""
-              },
-              "example": {
-                "name": "头像测试",
-                "aliases": [],
-                "color": 4,
-                "avatar": "meow/4/2026-08-14/avatar.jpg",
-                "imageActions": {
-                  "keep": [
-                    "meow/4/2026-08-14/old-1.jpg"
-                  ],
-                  "delete": [
-                    "meow/4/2026-08-14/old-2.jpg"
-                  ],
-                  "add": [
-                    "meow/4/2026-08-14/new-1.jpg"
-                  ]
-                },
-                "gender": 2,
-                "campus": 1,
-                "hauntLocation": 3,
-                "role": 5,
-                "birthYear": 2024,
-                "admissionDate": "2026-01-01",
-                "status": 0,
-                "healthStatus": 0,
-                "attributes": {
-                  "friendliness": 5,
-                  "gluttony": 5,
-                  "fight": 5,
-                  "appearance": 5
-                },
-                "isNeutered": false,
-                "description": "猫咪介绍",
-                "tags": [
-                  1,
-                  2
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                },
-                "example": {
-                  "code": 0,
-                  "data": {},
-                  "msg": ""
-                }
-              }
             },
             "headers": {}
           }
         },
-        "security": [
-          {
-            "双TOKEN鉴权": []
-          }
-        ]
-      },
-      "delete": {
-        "summary": "deleteCat",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "example": "5e47de3144e9fada7ed2607093414c5c",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": [
-          {
-            "双TOKEN鉴权": []
-          }
-        ]
+        "security": []
       }
     },
     "/admin/sos": {
@@ -1450,6 +1676,7 @@
             "in": "query",
             "description": "",
             "required": false,
+            "example": "",
             "schema": {
               "type": "string",
               "enum": [
@@ -1464,6 +1691,7 @@
             "in": "query",
             "description": "",
             "required": false,
+            "example": "",
             "schema": {
               "type": "string",
               "enum": [
@@ -1483,6 +1711,7 @@
             "in": "query",
             "description": "",
             "required": false,
+            "example": "",
             "schema": {
               "type": "integer",
               "default": 1
@@ -1493,6 +1722,7 @@
             "in": "query",
             "description": "",
             "required": false,
+            "example": "",
             "schema": {
               "type": "integer",
               "default": 20
@@ -1552,102 +1782,6 @@
         ]
       }
     },
-    "/admin/announcements": {
-      "get": {
-        "summary": "listAnnouncements",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "description": "",
-            "required": true,
-            "example": 1,
-            "schema": {
-              "type": "integer"
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "description": "",
-            "required": true,
-            "example": 20,
-            "schema": {
-              "type": "integer"
-            }
-          },
-          {
-            "name": "status",
-            "in": "query",
-            "description": " DRAFT :DRAFT\nPUBLISHED :PUBLISHED",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "双TOKEN鉴权": []
-          }
-        ]
-      },
-      "post": {
-        "summary": "createAnnouncement",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateAnnouncementDTO",
-                "description": ""
-              },
-              "examples": {}
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": [
-          {
-            "双TOKEN鉴权": []
-          }
-        ]
-      }
-    },
     "/admin/sos/{id}/resolve": {
       "post": {
         "summary": "resolveSOS",
@@ -1662,7 +1796,7 @@
             "in": "path",
             "description": "",
             "required": true,
-            "example": "4091bcf6-7cf0-4534-9d08-e13db65c49ae",
+            "example": "",
             "schema": {
               "type": "string"
             }
@@ -1676,7 +1810,7 @@
                 "description": ""
               },
               "example": {
-                "status": 1,
+                "status": "RESOLVED",
                 "reply": "已收到，正在处理中..."
               }
             }
@@ -1716,7 +1850,7 @@
             "in": "path",
             "description": "",
             "required": true,
-            "example": "a2d95e3e-cae5-4ab2-a323-04ddf95e23dc",
+            "example": "a51a4216-9191-43c6-86aa-92cdcee4c694",
             "schema": {
               "type": "string"
             }
@@ -1730,8 +1864,8 @@
                 "description": ""
               },
               "example": {
-                "status": 0,
-                "reason": "原因"
+                "status": "INTERVIEW",
+                "reason": "sed incididunt"
               }
             }
           }
@@ -1747,100 +1881,6 @@
               }
             },
             "headers": {}
-          }
-        },
-        "security": [
-          {
-            "双TOKEN鉴权": []
-          }
-        ]
-      }
-    },
-    "/admin/announcements/{id}": {
-      "put": {
-        "summary": "updateAnnouncement",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "example": "6a7e9b84e2fe46f0d0718a38",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateAnnouncementDTO",
-                "description": ""
-              },
-              "example": {
-                "title": "可用性嗯从摊飞",
-                "content": "Ut eiusmod aliquip in",
-                "summary": "sunt eiusmod",
-                "coverImage": "https://loremflickr.com/400/400?lock=6114969047724788",
-                "type": "FEEDING",
-                "status": "PUBLISHED"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": [
-          {
-            "双TOKEN鉴权": []
-          }
-        ]
-      },
-      "delete": {
-        "summary": "deleteAnnouncement",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            }
           }
         },
         "security": [
@@ -1941,6 +1981,7 @@
             "in": "query",
             "description": "",
             "required": false,
+            "example": "",
             "schema": {
               "type": "string"
             }
@@ -1950,6 +1991,7 @@
             "in": "query",
             "description": "",
             "required": false,
+            "example": "",
             "schema": {
               "type": "integer"
             }
@@ -1959,200 +2001,7 @@
             "in": "query",
             "description": "",
             "required": false,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": [
-          {
-            "双TOKEN鉴权": []
-          }
-        ]
-      }
-    },
-    "/admin/users/{id}": {
-      "get": {
-        "summary": "getUserInfo",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "example": "2",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": [
-          {
-            "双TOKEN鉴权": []
-          }
-        ]
-      }
-    },
-    "/admin/users/{id}/ban": {
-      "post": {
-        "summary": "banUser",
-        "deprecated": false,
-        "description": "# 封禁/解封用户\n\n## 自动判断当前状态然后取反",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                },
-                "example": {
-                  "code": 200,
-                  "message": "操作成功",
-                  "data": null
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": [
-          {
-            "双TOKEN鉴权": []
-          }
-        ]
-      }
-    },
-    "/admin/new-cats/{id}/approve": {
-      "post": {
-        "summary": "approveNewCat",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "",
-            "required": true,
-            "example": "0d848517e8e9691086db62b2b4e68e1b",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ApproveNewCatReqDTO",
-                "description": ""
-              },
-              "example": {
-                "officialName": "艾菲"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            },
-            "headers": {}
-          }
-        },
-        "security": [
-          {
-            "双TOKEN鉴权": []
-          }
-        ]
-      }
-    },
-    "/admin/new-cats": {
-      "get": {
-        "summary": "listNewCats",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "AdminController"
-        ],
-        "parameters": [
-          {
-            "name": "status",
-            "in": "query",
-            "description": "",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "description": "",
-            "required": false,
-            "schema": {
-              "type": "integer"
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "description": "",
-            "required": false,
+            "example": "",
             "schema": {
               "type": "integer"
             }
@@ -2223,6 +2072,650 @@
         ]
       }
     },
+    "/admin/users/{id}": {
+      "get": {
+        "summary": "getUserInfo",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "2",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      }
+    },
+    "/admin/users/{id}/ban": {
+      "post": {
+        "summary": "banUser",
+        "deprecated": false,
+        "description": "# 封禁/解封用户\n\n## 自动判断当前状态然后取反",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                },
+                "example": {
+                  "code": 200,
+                  "message": "操作成功",
+                  "data": null
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      }
+    },
+    "/admin/cats": {
+      "post": {
+        "summary": "createCat",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "description": "",
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "",
+                    "title": "名字"
+                  },
+                  "aliases": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "",
+                    "title": "曾用名/别名"
+                  },
+                  "color": {
+                    "type": "string",
+                    "description": "• ORANGE：橘猫\n• TABBY：狸花\n• COW：奶牛\n• CALICO：三花\n• TORTIE：玳瑁\n• WHITE：纯白\n• BLACK：纯黑\n• OTHER：其他",
+                    "title": "花色"
+                  },
+                  "avatar": {
+                    "type": "string",
+                    "description": "",
+                    "title": "头像"
+                  },
+                  "images": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "",
+                    "title": "轮播图/相册"
+                  },
+                  "gender": {
+                    "type": "string",
+                    "description": "",
+                    "title": "性别"
+                  },
+                  "campus": {
+                    "type": "string",
+                    "description": "",
+                    "title": "所在校区"
+                  },
+                  "hauntLocation": {
+                    "type": "string",
+                    "description": "",
+                    "title": "常驻/出没地点"
+                  },
+                  "birthYear": {
+                    "type": "integer",
+                    "description": "",
+                    "title": "出生年份"
+                  },
+                  "admissionDate": {
+                    "type": "string",
+                    "description": "",
+                    "title": "入园/入学时间"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "SCHOOL(在校),  GRADUATED(毕业/被领养), MEOW_STAR(喵星), HOSPITAL(住院)\n",
+                    "title": "状态"
+                  },
+                  "healthStatus": {
+                    "type": "string",
+                    "description": "HEALTHY, SICK, RECOVERING",
+                    "title": "健康状态"
+                  },
+                  "attributes": {
+                    "$ref": "#/components/schemas/MapDouble",
+                    "description": "",
+                    "title": "属性打分 (1.0-10.0)"
+                  },
+                  "isNeutered": {
+                    "type": "boolean",
+                    "description": "",
+                    "title": "是否绝育"
+                  },
+                  "neuteredDate": {
+                    "type": "string",
+                    "description": "",
+                    "title": "绝育日期"
+                  },
+                  "neuteredType": {
+                    "type": "string",
+                    "description": "EAR_CUT(剪耳), UNCUT(未剪耳)",
+                    "title": "绝育类型"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "",
+                    "title": "详细描述/备注"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "",
+                    "title": "标签"
+                  }
+                },
+                "required": [
+                  "name",
+                  "avatar",
+                  "color",
+                  "gender",
+                  "campus",
+                  "status",
+                  "isNeutered",
+                  "attributes"
+                ]
+              },
+              "example": {
+                "name": "麻薯",
+                "aliases": [
+                  "小麻",
+                  "三花"
+                ],
+                "color": "三花",
+                "avatar": "url...",
+                "images": [
+                  "url1",
+                  "url2"
+                ],
+                "gender": "FEMALE",
+                "campus": "软件园校区",
+                "hauntLocation": "食堂",
+                "birthYear": 2022,
+                "admissionDate": "2023-08-01",
+                "status": "SCHOOL",
+                "healthStatus": "HEALTHY",
+                "attributes": {
+                  "friendliness": 9,
+                  "gluttony": 9.5,
+                  "fight": 4,
+                  "appearance": 10
+                },
+                "isNeutered": true,
+                "neuteredDate": "2023-11-13",
+                "neuteredType": "EAR_CUT",
+                "description": "...",
+                "tags": [
+                  "亲人",
+                  "吃货"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      }
+    },
+    "/admin/cats/{id}": {
+      "put": {
+        "summary": "updateCat",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "25805e387ae620c50882d77a5596f170",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "aliases": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "color": {
+                    "type": "integer"
+                  },
+                  "avatar": {
+                    "type": "string"
+                  },
+                  "imageActions": {
+                    "type": "object",
+                    "properties": {
+                      "keep": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "delete": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "add": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "keep",
+                      "delete",
+                      "add"
+                    ]
+                  },
+                  "gender": {
+                    "type": "integer"
+                  },
+                  "campus": {
+                    "type": "integer"
+                  },
+                  "hauntLocation": {
+                    "type": "integer"
+                  },
+                  "role": {
+                    "type": "integer"
+                  },
+                  "birthYear": {
+                    "type": "integer"
+                  },
+                  "admissionDate": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "integer"
+                  },
+                  "healthStatus": {
+                    "type": "integer"
+                  },
+                  "attributes": {
+                    "type": "object",
+                    "properties": {
+                      "friendliness": {
+                        "type": "number"
+                      },
+                      "gluttony": {
+                        "type": "integer"
+                      },
+                      "fight": {
+                        "type": "integer"
+                      },
+                      "appearance": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "friendliness",
+                      "gluttony",
+                      "fight",
+                      "appearance"
+                    ]
+                  },
+                  "isNeutered": {
+                    "type": "boolean"
+                  },
+                  "neuteredDate": {
+                    "type": "string"
+                  },
+                  "neuteredType": {
+                    "type": "integer"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "aliases",
+                  "color",
+                  "avatar",
+                  "imageActions",
+                  "gender",
+                  "campus",
+                  "hauntLocation",
+                  "role",
+                  "birthYear",
+                  "admissionDate",
+                  "status",
+                  "healthStatus",
+                  "attributes",
+                  "isNeutered",
+                  "neuteredDate",
+                  "neuteredType",
+                  "description",
+                  "tags"
+                ]
+              },
+              "example": {
+                "name": "小橘",
+                "aliases": [
+                  "橘子",
+                  "大橘"
+                ],
+                "color": 2,
+                "avatar": "meow/1001/2026-08-16/avatar.jpg",
+                "imageActions": {
+                  "keep": [
+                    "meow/owned/cat/cat-id/image-1.jpg",
+                    "meow/owned/cat/cat-id/image-2.jpg"
+                  ],
+                  "delete": [
+                    "meow/owned/cat/cat-id/image-3.jpg"
+                  ],
+                  "add": [
+                    "meow/1001/2026-08-16/new-image.jpg"
+                  ]
+                },
+                "gender": 1,
+                "campus": 0,
+                "hauntLocation": 3,
+                "role": 1,
+                "birthYear": 2022,
+                "admissionDate": "2023-09-01",
+                "status": 0,
+                "healthStatus": 0,
+                "attributes": {
+                  "friendliness": 8.5,
+                  "gluttony": 9,
+                  "fight": 4,
+                  "appearance": 9.5
+                },
+                "isNeutered": true,
+                "neuteredDate": "2023-12-10",
+                "neuteredType": 0,
+                "description": "经常出现在中心校区教学楼附近，性格亲人。",
+                "tags": [
+                  1,
+                  3,
+                  5
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "deleteCat",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "5e47de3144e9fada7ed2607093414c5c",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      }
+    },
+    "/admin/new-cats": {
+      "get": {
+        "summary": "listNewCats",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      }
+    },
+    "/admin/new-cats/{id}/approve": {
+      "post": {
+        "summary": "approveNewCat",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "AdminController"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "",
+            "required": true,
+            "example": "0d848517e8e9691086db62b2b4e68e1b",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveNewCatReqDTO",
+                "description": ""
+              },
+              "example": {
+                "officialName": "艾菲"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      }
+    },
     "/admin/cats/{id}/image-keys": {
       "get": {
         "summary": "getImageKeys",
@@ -2237,6 +2730,7 @@
             "in": "path",
             "description": "",
             "required": true,
+            "example": "",
             "schema": {
               "type": "string"
             }
@@ -2278,7 +2772,7 @@
                 "$ref": "#/components/schemas/AdoptionApplyDTO",
                 "description": ""
               },
-              "example": "{                                                                                              \r\n    \"catId\": \"b332c5658cca58c183431314fa9eeb68\",                                             \r\n    \"info\": {                                                                                    \r\n      \"housing\": 0,                                                                   \r\n      \"experience\": 0,                                                               \r\n      \"plan\": \"承诺科学喂养...\"                                                                  \r\n    },                                                                                           \r\n    \"contact\": {                                                                                 \r\n      \"phone\": \"13800000000\",                                                                    \r\n      \"wechat\": \"wx_test\"                                                                        \r\n    }                                                                                            \r\n  }    \r\n}"
+              "example": "{                                                                                              \r\n    \"catId\": \"660e8400-e29b-41d4-a716-446655440001\",                                             \r\n    \"info\": {                                                                                    \r\n      \"housing\": \"RENT_WHOLE\",                                                                   \r\n      \"experience\": \"EXPERIENCED\",                                                               \r\n      \"plan\": \"承诺科学喂养...\"                                                                  \r\n    },                                                                                           \r\n    \"contact\": {                                                                                 \r\n      \"phone\": \"13800000000\",                                                                    \r\n      \"wechat\": \"wx_test\"                                                                        \r\n    }                                                                                            \r\n  }    \r\n}"
             }
           }
         },
@@ -2316,6 +2810,7 @@
             "in": "query",
             "description": "状态",
             "required": false,
+            "example": "",
             "schema": {
               "type": "string",
               "enum": [
@@ -2407,7 +2902,8 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
         "security": []
@@ -2468,16 +2964,17 @@
                 "title": "暂定名称"
               },
               "example": {
-                "tempName": "橘子",
-                "color": 4,
+                "tempName": "庾蒙",
+                "color": "ORANGE",
                 "images": [
-                  "meow/3/2026-08-14/xxx.jpg"
+                  "https://loremflickr.com/400/400?lock=8351335682210789",
+                  "https://loremflickr.com/400/400?lock=3752139673092941",
+                  "https://loremflickr.com/400/400?lock=4297276881926224"
                 ],
                 "campus": 0,
-                "location": "食堂门口",
+                "location": "路口",
                 "tags": [
-                  1,
-                  2
+                  "可爱啊"
                 ]
               }
             }
@@ -2500,6 +2997,69 @@
                     "currency": 50
                   },
                   "msg": "提交成功"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      }
+    },
+    "/new-cats/my": {
+      "get": {
+        "summary": "listMyNewCatClues",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "NewCatController"
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "状态",
+            "required": false,
+            "example": "",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "页码",
+            "required": false,
+            "example": "",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "",
+            "required": false,
+            "example": "",
+            "schema": {
+              "type": "integer",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
                 }
               }
             },
@@ -2566,7 +3126,8 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
         "security": []
@@ -2760,6 +3321,7 @@
             "in": "query",
             "description": "限制显示个数",
             "required": false,
+            "example": "",
             "schema": {
               "type": "integer"
             }
@@ -2774,39 +3336,16 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
         "security": []
       }
     },
-    "/type/tags": {
+    "/type/new-cat-reject-reasons": {
       "get": {
-        "summary": "listTags",
-        "deprecated": false,
-        "description": "获取全部猫咪的标签类型",
-        "tags": [
-          "TypeController"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            }
-          }
-        },
-        "security": []
-      }
-    },
-    "/type/symptoms": {
-      "get": {
-        "summary": "listSymptoms",
+        "summary": "listNewCatRejectReasons",
         "deprecated": false,
         "description": "",
         "tags": [
@@ -2819,106 +3358,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
+                  "type": "object",
+                  "properties": {}
                 }
               }
-            }
-          }
-        },
-        "security": []
-      }
-    },
-    "/type/announcement-types": {
-      "get": {
-        "summary": "listAnnouncementTypes",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "TypeController"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            }
-          }
-        },
-        "security": []
-      }
-    },
-    "/type/colors": {
-      "get": {
-        "summary": "listColors",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "TypeController"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            }
-          }
-        },
-        "security": []
-      }
-    },
-    "/type/locations": {
-      "get": {
-        "summary": "listLocations",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "TypeController"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            }
-          }
-        },
-        "security": []
-      }
-    },
-    "/type/roles": {
-      "get": {
-        "summary": "listRoles",
-        "deprecated": false,
-        "description": "",
-        "tags": [
-          "TypeController"
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ResponseEntityResult"
-                }
-              }
-            }
+            },
+            "headers": {}
           }
         },
         "security": []
@@ -3343,6 +3788,156 @@
         ]
       }
     },
+    "/type/tags": {
+      "get": {
+        "summary": "listTags",
+        "deprecated": false,
+        "description": "获取全部猫咪的标签类型",
+        "tags": [
+          "TypeController"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/type/symptoms": {
+      "get": {
+        "summary": "listSymptoms",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "TypeController"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/type/announcement-types": {
+      "get": {
+        "summary": "listAnnouncementTypes",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "TypeController"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/type/colors": {
+      "get": {
+        "summary": "listColors",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "TypeController"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/type/locations": {
+      "get": {
+        "summary": "listLocations",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "TypeController"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
+    "/type/roles": {
+      "get": {
+        "summary": "listRoles",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "TypeController"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": []
+      }
+    },
     "/statement/feed-log": {
       "get": {
         "summary": "listFeedLogs",
@@ -3427,6 +4022,7 @@
             "in": "query",
             "description": " EXP :EXP\nTOTAL_CHECK_IN_DAYS :TOTAL_CHECK_IN_DAYS\nFEED_COUNT :FEED_COUNT\nCATS_FOUND :CATS_FOUND\nRECEIVED_LIKES :RECEIVED_LIKES\nMOMENT_COUNT :MOMENT_COUNT",
             "required": false,
+            "example": "",
             "schema": {
               "type": "string"
             }
@@ -3486,6 +4082,7 @@
             "in": "query",
             "description": " CURRENCY :CURRENCY",
             "required": false,
+            "example": "",
             "schema": {
               "type": "string"
             }
@@ -3545,6 +4142,7 @@
             "in": "query",
             "description": " HEALTH :HEALTH\nFEEDING :FEEDING\nBEHAVIOR :BEHAVIOR\nNEWS :NEWS",
             "required": false,
+            "example": "",
             "schema": {
               "type": "string"
             }
@@ -3559,7 +4157,8 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
         "security": []
@@ -3579,6 +4178,7 @@
             "in": "path",
             "description": "",
             "required": true,
+            "example": "",
             "schema": {
               "type": "string"
             }
@@ -3593,7 +4193,8 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
         "security": []
@@ -3653,6 +4254,7 @@
             "in": "query",
             "description": "",
             "required": true,
+            "example": "",
             "schema": {
               "type": "string"
             }
@@ -3687,7 +4289,8 @@
                   "$ref": "#/components/schemas/ResponseEntityResult"
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
         "security": []
@@ -3751,6 +4354,35 @@
         ]
       }
     },
+    "/badges/progress": {
+      "get": {
+        "summary": "getBadgeProgress",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "BadgeController"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            },
+            "headers": {}
+          }
+        },
+        "security": [
+          {
+            "双TOKEN鉴权": []
+          }
+        ]
+      }
+    },
     "/notifications": {
       "get": {
         "summary": "listNotifications",
@@ -3765,6 +4397,7 @@
             "in": "query",
             "description": "",
             "required": false,
+            "example": "",
             "schema": {
               "type": "string"
             }
@@ -3774,6 +4407,7 @@
             "in": "query",
             "description": "",
             "required": false,
+            "example": "",
             "schema": {
               "type": "boolean"
             }
@@ -3783,6 +4417,7 @@
             "in": "query",
             "description": "",
             "required": false,
+            "example": "",
             "schema": {
               "type": "integer"
             }
@@ -3792,6 +4427,7 @@
             "in": "query",
             "description": "",
             "required": false,
+            "example": "",
             "schema": {
               "type": "integer"
             }
@@ -3890,7 +4526,8 @@
                   "msg": ""
                 }
               }
-            }
+            },
+            "headers": {}
           }
         },
         "security": [
@@ -4176,73 +4813,6 @@
           }
         }
       },
-      "ResolveSosDTO": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "description": "",
-            "enum": [
-              "PENDING",
-              "PROCESSING",
-              "RESOLVED"
-            ]
-          },
-          "reply": {
-            "type": "string",
-            "description": ""
-          }
-        }
-      },
-      "AdoptAuditDTO": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "description": "",
-            "enum": [
-              "PENDING",
-              "INTERVIEW",
-              "APPROVED",
-              "REJECTED",
-              "COMPLETED"
-            ]
-          },
-          "reason": {
-            "type": "string",
-            "description": ""
-          }
-        }
-      },
-      "Info": {
-        "type": "object",
-        "properties": {
-          "housing": {
-            "type": "string",
-            "description": "",
-            "enum": [
-              "OWN_HOUSE",
-              "RENT_WHOLE",
-              "RENT_SHARE",
-              "DORM",
-              "WITH_PARENT"
-            ]
-          },
-          "experience": {
-            "type": "string",
-            "description": "",
-            "enum": [
-              "NEWBIE",
-              "EXPERIENCED",
-              "MULTI_CAT"
-            ]
-          },
-          "plan": {
-            "type": "string",
-            "description": ""
-          }
-        }
-      },
       "Contact": {
         "type": "object",
         "properties": {
@@ -4270,45 +4840,6 @@
           "contact": {
             "$ref": "#/components/schemas/Contact",
             "description": ""
-          }
-        }
-      },
-      "CreateAnnouncementDTO": {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string",
-            "description": ""
-          },
-          "content": {
-            "type": "string",
-            "description": ""
-          },
-          "summary": {
-            "type": "string",
-            "description": ""
-          },
-          "coverImage": {
-            "type": "string",
-            "description": ""
-          },
-          "type": {
-            "type": "string",
-            "description": "",
-            "enum": [
-              "HEALTH",
-              "FEEDING",
-              "BEHAVIOR",
-              "NEWS"
-            ]
-          },
-          "status": {
-            "type": "string",
-            "description": "",
-            "enum": [
-              "DRAFT",
-              "PUBLISHED"
-            ]
           }
         }
       },
@@ -4601,6 +5132,143 @@
           "name",
           "color",
           "avatar"
+        ]
+      },
+      "BindEmailReqDTO": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": ""
+          },
+          "password": {
+            "type": "string",
+            "description": ""
+          }
+        }
+      },
+      "ResolveSosDTO": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "PENDING",
+              "PROCESSING",
+              "RESOLVED"
+            ]
+          },
+          "reply": {
+            "type": "string",
+            "description": ""
+          }
+        }
+      },
+      "AdoptAuditDTO": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "PENDING",
+              "INTERVIEW",
+              "APPROVED",
+              "REJECTED",
+              "COMPLETED"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "description": ""
+          }
+        }
+      },
+      "Info": {
+        "type": "object",
+        "properties": {
+          "housing": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "OWN_HOUSE",
+              "RENT_WHOLE",
+              "RENT_SHARE",
+              "DORM",
+              "WITH_PARENT"
+            ]
+          },
+          "experience": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "NEWBIE",
+              "EXPERIENCED",
+              "MULTI_CAT"
+            ]
+          },
+          "plan": {
+            "type": "string",
+            "description": ""
+          }
+        }
+      },
+      "CreateAnnouncementDTO": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": ""
+          },
+          "content": {
+            "type": "string",
+            "description": ""
+          },
+          "summary": {
+            "type": "string",
+            "description": ""
+          },
+          "coverImage": {
+            "type": "string",
+            "description": ""
+          },
+          "type": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "HEALTH",
+              "FEEDING",
+              "BEHAVIOR",
+              "NEWS"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "description": "",
+            "enum": [
+              "DRAFT",
+              "PUBLISHED"
+            ]
+          }
+        }
+      },
+      "ExchangeLoginCodeReqDTO": {
+        "type": "object",
+        "properties": {
+          "loginCode": {
+            "type": "string",
+            "description": "",
+            "maxLength": 128
+          },
+          "codeVerifier": {
+            "type": "string",
+            "description": "",
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "loginCode"
         ]
       }
     },
