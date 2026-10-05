@@ -53,21 +53,24 @@ dev_dependencies:
 
 flutter_launcher_icons:
   android: "launcher_icon"
-  ios: true
-  image_path: "assets/images/猫猫图鉴-logo.png"  # 图标路径
-  adaptive_icon_background: "#FFFFFF"  # Android 适应性图标背景色
+  ios: false
+  image_path: "assets/images/猫猫图鉴 黄底 无字.png"
+  adaptive_icon_foreground: "assets/images/猫猫图鉴 透明底 无字.png"
+  adaptive_icon_background: "#FFD17A"
 
 flutter_native_splash:
   android: true
-  ios: true
+  ios: false
   web: false
 
-  color: '#FFFFFF'
+  color: '#F8F6F3'
+  image: 'assets/images/猫猫图鉴 透明底 无字.png'
   fullscreen: true
 
   # 安卓12以上特殊配置
   android_12:
-    color: '#FFFFFF'
+    color: '#F8F6F3'
+    # 使用新的自适应应用图标，保留系统圆形遮罩所需的安全边距。
 
 # The following section is specific to Flutter packages.
 flutter:

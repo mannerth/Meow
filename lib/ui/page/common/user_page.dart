@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
+import 'package:meow/ui/page/common/about_page.dart';
 import 'package:meow/ui/page/user/user_adoptions_page.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 
@@ -19,28 +20,43 @@ class UserPage extends ConsumerWidget {
     if (user == null || user.roleType == RoleType.guest) {
       return AdaptiveScaffold(
         backgroundColor: const Color(0xFFF6F3EF),
-        body: Center(
-          child: ElevatedButton(
-            onPressed: () {
-              ref.read(authStateProvider.notifier).clear();
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const LoginPage(popAfterLogin: true),
+        appBar: AppBar(
+          title: const Text('个人中心'),
+          centerTitle: true,
+          backgroundColor: const Color(0xFFF6F3EF),
+        ),
+        body: ListView(
+          padding: const EdgeInsets.only(top: 32, bottom: 140),
+          children: [
+            Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  ref.read(authStateProvider.notifier).clear();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const LoginPage(popAfterLogin: true),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 40,
+                    vertical: 16,
+                  ),
+                  backgroundColor: Colors.black87,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
                 ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-              backgroundColor: Colors.black87,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
+                child: const Text(
+                  "前往登录",
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
               ),
             ),
-            child: const Text(
-              "前往登录",
-              style: TextStyle(fontSize: 18, color: Colors.white),
-            ),
-          ),
+            const SizedBox(height: 32),
+            const _MoreSection(),
+          ],
         ),
       );
     }
@@ -63,6 +79,9 @@ class _UserCenterDetailPage extends StatelessWidget {
     final level = user.level;
     final levelTitle = user.levelTitle ?? '';
     final currency = user.currency;
+    final campusLabel = user.studentId.length >= 4
+        ? '$campus · ${user.studentId.substring(0, 4)}级本科生'
+        : campus;
 
     return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF6F3EF),
@@ -101,7 +120,7 @@ class _UserCenterDetailPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        "$campus · ${user.studentId.substring(0, 4)}级本科生",
+                        campusLabel,
                         style: TextStyle(color: Colors.black54, fontSize: 15),
                       ),
                       const SizedBox(height: 10),
@@ -311,6 +330,8 @@ class _UserCenterDetailPage extends StatelessWidget {
               ),
             ),
 
+            const SizedBox(height: 28),
+            const _MoreSection(),
             const SizedBox(height: 38),
             // 退出登录按钮
             Padding(
@@ -345,6 +366,52 @@ class _UserCenterDetailPage extends StatelessWidget {
             const SizedBox(height: 140),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _MoreSection extends StatelessWidget {
+  const _MoreSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '更多',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          Card(
+            color: Colors.white,
+            surfaceTintColor: Colors.transparent,
+            margin: EdgeInsets.zero,
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 18,
+                vertical: 8,
+              ),
+              leading: const Icon(Icons.info_outline, color: Color(0xFFB68500)),
+              title: const Text(
+                '关于我们',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              trailing: const Icon(Icons.chevron_right, color: Colors.black38),
+              onTap: () => Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const AboutPage())),
+            ),
+          ),
+        ],
       ),
     );
   }

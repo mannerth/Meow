@@ -59,6 +59,9 @@
     },
     {
       "name": "NotificationController"
+    },
+    {
+      "name": "CommunityController"
     }
   ],
   "paths": {
@@ -4535,6 +4538,30 @@
             "双TOKEN鉴权": []
           }
         ]
+      }
+    },
+    "/community/group-qrcode": {
+      "get": {
+        "summary": "getGroupQrcode",
+        "deprecated": false,
+        "description": "",
+        "tags": [
+          "CommunityController"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseEntityResult"
+                }
+              }
+            }
+          }
+        },
+        "security": []
       }
     }
   },

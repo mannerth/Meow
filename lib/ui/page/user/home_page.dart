@@ -681,7 +681,7 @@ class _StatsCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       decoration: BoxDecoration(
         image: DecorationImage(
-          image: AssetImage('assets/images/猫猫图鉴-logo.png'),
+          image: AssetImage('assets/images/猫猫图鉴 透明底 无字.png'),
           opacity: 0.12,
           fit: BoxFit.fitHeight,
           alignment: Alignment.centerRight,

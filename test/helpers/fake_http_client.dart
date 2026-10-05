@@ -62,9 +62,15 @@ class FakeHttpRequest implements HttpClientRequest {
 
 class FakeHttpResponse extends Stream<List<int>> implements HttpClientResponse {
   FakeHttpResponse(this.statusCode, Object? body)
-    : _stream = Stream.value(utf8.encode(jsonEncode(body)));
+    : _stream = Stream.value(utf8.encode(jsonEncode(body))),
+      _contentType = 'application/json';
+
+  FakeHttpResponse.bytes(this.statusCode, List<int> bytes)
+    : _stream = Stream.value(bytes),
+      _contentType = 'image/png';
 
   final Stream<List<int>> _stream;
+  final String _contentType;
   @override
   final int statusCode;
   @override
@@ -75,8 +81,7 @@ class FakeHttpResponse extends Stream<List<int>> implements HttpClientResponse {
   List<RedirectInfo> get redirects => [];
   @override
   HttpHeaders get headers =>
-      _FakeHttpHeaders()
-        ..set(HttpHeaders.contentTypeHeader, 'application/json');
+      _FakeHttpHeaders()..set(HttpHeaders.contentTypeHeader, _contentType);
 
   @override
   StreamSubscription<List<int>> listen(
