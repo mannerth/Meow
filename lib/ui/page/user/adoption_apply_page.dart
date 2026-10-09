@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/api/service/adoption_service.dart';
 import 'package:meow/model/adoption.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/model/static_type.dart';
 import 'package:meow/provider/auth_provider.dart';
-import 'package:meow/ui/page/user/cat_select_page.dart';
+import 'package:meow/router/app_routes.dart';
+import 'package:meow/router/auth_guard.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/safe_network_image.dart';
 
@@ -44,10 +46,10 @@ class _AdoptionApplyPageState extends ConsumerState<AdoptionApplyPage> {
   }
 
   Future<void> _selectCat() async {
-    final selected = await Navigator.of(context).push<Cat>(
-      MaterialPageRoute(builder: (_) => const CatSelectPage(selectable: true)),
+    final selected = await context.push<Cat>(
+      '${AppRoutes.selectCat}?select=true',
     );
-    if (selected == null) return;
+    if (!mounted || selected == null) return;
     setState(() => _selectedCat = selected);
   }
 
@@ -127,6 +129,7 @@ class _AdoptionApplyPageState extends ConsumerState<AdoptionApplyPage> {
     return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF8F4ED),
       appBar: AppBar(
+        leading: BackButton(onPressed: () => popOrHome(context)),
         backgroundColor: const Color(0xFFFCE5C5),
         elevation: 0,
         title: const Text(

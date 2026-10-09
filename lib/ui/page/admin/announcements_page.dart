@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/api/service/announcement_service.dart';
 import 'package:meow/model/notification.dart';
 import 'package:meow/model/static_type.dart';
-import 'package:meow/ui/page/admin/announcement_edit_page.dart';
+import 'package:meow/router/app_routes.dart';
+import 'package:meow/router/auth_guard.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 
 class AnnouncementsPage extends StatefulWidget {
@@ -42,10 +44,11 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
   }
 
   Future<void> _openEditor([Announcement? item]) async {
-    final changed = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => AnnouncementEditPage(announcement: item),
-      ),
+    final changed = await context.push<bool>(
+      item == null
+          ? AppRoutes.createAnnouncement
+          : AppRoutes.editAnnouncement(item.id),
+      extra: item,
     );
     if (changed == true) _load();
   }
@@ -83,7 +86,10 @@ class _AnnouncementsPageState extends State<AnnouncementsPage> {
   @override
   Widget build(BuildContext context) => AdaptiveScaffold(
     backgroundColor: const Color(0xFFF6F7FB),
-    appBar: AppBar(title: const Text('公告管理中心')),
+    appBar: AppBar(
+      leading: BackButton(onPressed: () => popOrHome(context)),
+      title: const Text('公告管理中心'),
+    ),
     floatingActionButton: FloatingActionButton(
       onPressed: _openEditor,
       child: const Icon(Icons.add),

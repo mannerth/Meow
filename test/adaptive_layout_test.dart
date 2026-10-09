@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:meow/router/app_routes.dart';
 import 'package:meow/ui/page/main_page.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/adaptive/cat_grid_sliver.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/custom_bottom_navigation_bar.dart';
-import 'package:meow/ui/widget/custom_bottom_navigation_bar/custom_navigation_item.dart';
+import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_config.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_items_provider.dart';
 
 void main() {
@@ -17,23 +19,39 @@ void main() {
   testWidgets('窗口切换导航方式后保留页面输入和当前选中项', (tester) async {
     addTearDown(tester.view.reset);
     setWindow(tester, const Size(390, 844));
+    final configs = NavigationConfigRegistry.allConfigs;
+    final router = GoRouter(
+      initialLocation: AppRoutes.home,
+      routes: [
+        StatefulShellRoute.indexedStack(
+          builder: (_, _, shell) => MainPage(navigationShell: shell),
+          branches: [
+            for (final config in configs)
+              StatefulShellBranch(
+                routes: [
+                  GoRoute(
+                    path: config.routePath,
+                    builder: (_, _) => config.routePath == AppRoutes.profile
+                        ? const AdaptiveScaffold(
+                            body: TextField(key: ValueKey('draft')),
+                          )
+                        : const AdaptiveScaffold(
+                            body: Center(child: Text('首页内容')),
+                          ),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ],
+    );
+    addTearDown(router.dispose);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          navigationItemsDataProvider.overrideWith(
-            (ref) => const [
-              CustomNavigationItemData(label: '首页', icon: Icon(Icons.home)),
-              CustomNavigationItemData(label: '我的', icon: Icon(Icons.person)),
-            ],
-          ),
-          navigationPagesProvider.overrideWith(
-            (ref) => const [
-              AdaptiveScaffold(body: Center(child: Text('首页内容'))),
-              AdaptiveScaffold(body: TextField(key: ValueKey('draft'))),
-            ],
-          ),
+          navigationItemsProvider.overrideWith(_TestNavigationItems.new),
         ],
-        child: const MaterialApp(home: MainPage()),
+        child: MaterialApp.router(routerConfig: router),
       ),
     );
     final bar = tester.widget<CustomBottomNavigationBar>(
@@ -151,4 +169,14 @@ void main() {
       expect(tester.takeException(), isNull);
     }
   });
+}
+
+class _TestNavigationItems extends NavigationItems {
+  @override
+  List<NavigationItemConfig> build() => NavigationConfigRegistry.allConfigs
+      .where(
+        (config) =>
+            [AppRoutes.home, AppRoutes.profile].contains(config.routePath),
+      )
+      .toList();
 }

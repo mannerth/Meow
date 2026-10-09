@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/api/service/adoption_service.dart';
 import 'package:meow/model/adoption.dart';
 import 'package:meow/model/static_type.dart';
+import 'package:meow/router/auth_guard.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/safe_network_image.dart';
 import 'package:meow/util/time_tool.dart';
@@ -51,7 +53,7 @@ class _AdminAdoptionDetailPageState extends State<AdminAdoptionDetailPage> {
         _item = _item.copyWith(status: status);
       });
       _showMessage(status == AdoptionStatus.rejected ? '已拒绝该申请' : '审核状态已更新');
-      Navigator.of(context).pop(_item);
+      context.pop(_item);
     } catch (error) {
       _showMessage('提交失败，请稍后重试');
     } finally {
@@ -71,7 +73,10 @@ class _AdminAdoptionDetailPageState extends State<AdminAdoptionDetailPage> {
     final timeText = _formatTime(_item.createTime);
     return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF5F6FA),
-      appBar: AppBar(title: Text(_item.id)),
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => popOrHome(context)),
+        title: Text(_item.id),
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         children: [

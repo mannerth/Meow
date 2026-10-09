@@ -1,7 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
-import 'package:meow/ui/widget/custom_bottom_navigation_bar/custom_navigation_item.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_config.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -25,19 +23,4 @@ class NavigationItems extends _$NavigationItems {
 
     return configs;
   }
-}
-
-/// 导航项数据列表 Provider（仅数据，不含页面）
-@riverpod
-List<CustomNavigationItemData> navigationItemsData(Ref ref) {
-  final List<NavigationItemConfig> configs = ref.watch(navigationItemsProvider);
-  return configs.map((c) => c.itemData).toList();
-}
-
-/// 导航页面列表 Provider
-@riverpod
-List<Widget> navigationPages(Ref ref) {
-  final List<NavigationItemConfig> configs = ref.watch(navigationItemsProvider);
-  // 使用 Builder 延迟构建页面
-  return configs.map((c) => Builder(builder: c.pageBuilder)).toList();
 }

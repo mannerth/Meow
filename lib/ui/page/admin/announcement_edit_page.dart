@@ -1,13 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/api/service/announcement_service.dart';
 import 'package:meow/model/notification.dart';
 import 'package:meow/model/static_type.dart';
+import 'package:meow/router/app_routes.dart';
+import 'package:meow/router/auth_guard.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 
 class AnnouncementEditPage extends StatefulWidget {
-  const AnnouncementEditPage({super.key, this.announcement});
+  const AnnouncementEditPage({
+    super.key,
+    this.announcement,
+    this.announcementId,
+  });
 
   final Announcement? announcement;
+  final String? announcementId;
+  String? get id => announcementId ?? announcement?.id;
 
   @override
   State<AnnouncementEditPage> createState() => _AnnouncementEditPageState();
@@ -28,7 +37,7 @@ class _AnnouncementEditPageState extends State<AnnouncementEditPage> {
       text: widget.announcement?.content,
     );
     _type = widget.announcement?.type ?? AnnouncementType.campusNews;
-    if (widget.announcement != null && widget.announcement!.content == null) {
+    if (widget.id != null && widget.announcement?.content == null) {
       _loadDetail();
     }
   }
@@ -37,7 +46,7 @@ class _AnnouncementEditPageState extends State<AnnouncementEditPage> {
     setState(() => _loadingDetail = true);
     try {
       final announcement = await AnnouncementService.fetchAnnouncement(
-        widget.announcement!.id,
+        widget.id!,
       );
       if (!mounted) return;
       _titleController.text = announcement.title;
@@ -73,13 +82,18 @@ class _AnnouncementEditPageState extends State<AnnouncementEditPage> {
     setState(() => _saving = true);
     try {
       await AnnouncementService.saveAnnouncement(
-        id: widget.announcement?.id,
+        id: widget.id,
         title: title,
         content: content,
         type: _type,
         status: status,
       );
-      if (mounted) Navigator.of(context).pop(true);
+      if (!mounted) return;
+      if (context.canPop()) {
+        context.pop(true);
+      } else {
+        context.go(AppRoutes.announcements);
+      }
     } catch (_) {
       if (mounted)
         ScaffoldMessenger.of(
@@ -92,10 +106,11 @@ class _AnnouncementEditPageState extends State<AnnouncementEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isEditing = widget.announcement != null;
+    final isEditing = widget.id != null;
     return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF6F7FB),
       appBar: AppBar(
+        leading: BackButton(onPressed: () => popOrHome(context)),
         title: Text(isEditing ? '编辑公告内容' : '发布新公告'),
         actions: [
           TextButton(

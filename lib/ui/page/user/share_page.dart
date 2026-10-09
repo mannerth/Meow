@@ -2,14 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/api/service/cos_service.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
-import 'package:meow/ui/page/user/cat_select_page.dart';
-import 'package:meow/ui/page/user/new_cat_page.dart';
+import 'package:meow/router/app_routes.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
@@ -50,19 +50,17 @@ class _SharePageState extends ConsumerState<SharePage> {
 
   void _goToNewCat() {
     _dismissKeyboard();
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const NewCatPage()));
+    context.push(AppRoutes.newCat);
   }
 
   bool get _isBusy => _publishing;
 
   Future<void> _selectCat() async {
     _dismissKeyboard();
-    final selectedCat = await Navigator.of(context).push<Cat>(
-      MaterialPageRoute(builder: (_) => const CatSelectPage(selectable: true)),
+    final selectedCat = await context.push<Cat>(
+      '${AppRoutes.selectCat}?select=true',
     );
-    if (selectedCat == null) return;
+    if (!mounted || selectedCat == null) return;
     setState(() {
       _selectedCat = selectedCat;
     });

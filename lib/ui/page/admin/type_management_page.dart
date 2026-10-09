@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meow/api/service/type_service.dart';
+import 'package:meow/router/auth_guard.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 
 class TypeManagementPage extends StatefulWidget {
@@ -130,6 +131,7 @@ class _TypeManagementPageState extends State<TypeManagementPage> {
   Widget build(BuildContext context) {
     return AdaptiveScaffold(
       appBar: AppBar(
+        leading: BackButton(onPressed: () => popOrHome(context)),
         title: const Text('类型数据管理'),
         actions: [
           IconButton(

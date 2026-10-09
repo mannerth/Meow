@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class NavigateCard extends StatelessWidget {
   const NavigateCard({
@@ -7,14 +8,14 @@ class NavigateCard extends StatelessWidget {
     this.width,
     required this.title,
     this.subtitle = '',
-    required this.destination,
+    required this.location,
     this.backgroundColor = Colors.blueAccent,
     this.icon = const Icon(Icons.arrow_forward, color: Colors.white),
   });
 
   final String title;
   final String subtitle;
-  final Widget destination;
+  final String location;
   final Color backgroundColor;
   final Widget icon;
   final double? width;
@@ -24,9 +25,7 @@ class NavigateCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (context) => destination));
+        context.push(location);
       },
       child: Container(
         width: width,

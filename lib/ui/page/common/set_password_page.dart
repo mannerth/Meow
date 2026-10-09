@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/api/service/auth_repository.dart';
+import 'package:meow/router/app_routes.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 
 class SetPasswordPage extends StatefulWidget {
@@ -32,17 +34,26 @@ class _SetPasswordPageState extends State<SetPasswordPage> {
         code: widget.code,
         password: pwd,
       );
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("注册成功，请登录")));
-      Navigator.of(context).popUntil((route) => route.isFirst); // 返回登录页
+      ).showSnackBar(const SnackBar(content: Text("邮箱绑定成功")));
+      context.go(AppRoutes.profile); // 邮箱绑定接口要求登录，完成后返回个人中心。
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("注册失败：$e")));
+      ).showSnackBar(SnackBar(content: Text("邮箱绑定失败：$e")));
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
+  }
+
+  @override
+  void dispose() {
+    _pwdCtrl.dispose();
+    _confirmCtrl.dispose();
+    super.dispose();
   }
 
   @override

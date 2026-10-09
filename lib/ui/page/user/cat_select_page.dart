@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/model/user.dart';
-import 'package:meow/ui/page/user/cat_detail_page.dart';
+import 'package:meow/router/app_routes.dart';
+import 'package:meow/router/auth_guard.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/adaptive/cat_grid_sliver.dart';
 import 'package:meow/ui/widget/cat_card.dart';
@@ -110,6 +112,7 @@ class _CatSelectPageState extends State<CatSelectPage> {
       final pageData = response.data;
       final newItems = pageData?.items ?? [];
       final total = pageData?.total ?? 0;
+      if (!mounted) return;
 
       setState(() {
         if (reset) {
@@ -124,6 +127,7 @@ class _CatSelectPageState extends State<CatSelectPage> {
         _errorMessage = null;
       });
     } catch (error) {
+      if (!mounted) return;
       setState(() {
         if (reset) {
           _errorMessage = '加载失败，请稍后重试';
@@ -132,10 +136,11 @@ class _CatSelectPageState extends State<CatSelectPage> {
         }
       });
     } finally {
-      setState(() {
-        _isInitialLoading = false;
-        _isLoadingMore = false;
-      });
+      if (mounted)
+        setState(() {
+          _isInitialLoading = false;
+          _isLoadingMore = false;
+        });
     }
   }
 
@@ -158,6 +163,7 @@ class _CatSelectPageState extends State<CatSelectPage> {
           controller: _scrollController,
           slivers: [
             SliverAppBar(
+              leading: BackButton(onPressed: () => popOrHome(context)),
               pinned: true,
               title: PreferredSize(
                 preferredSize: const Size.fromHeight(56),
@@ -262,12 +268,10 @@ class _CatSelectPageState extends State<CatSelectPage> {
           onImageLongPress: () => showNetworkImagePreview(context, cat.avatar),
           onTap: () {
             if (widget.selectable) {
-              Navigator.of(context).pop(cat);
+              context.pop(cat);
               return;
             }
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => CatDetailPage(catId: cat.id)),
-            );
+            context.push(AppRoutes.catDetail(cat.id));
           },
         );
       }, childCount: _items.length),

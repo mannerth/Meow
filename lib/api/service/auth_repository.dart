@@ -86,9 +86,6 @@ class AuthRepository {
       }
 
       User user = await getMe();
-      if (isAdmin) {
-        user.roleType = RoleType.admin;
-      }
       return AuthResult(user: user, token: accessToken);
     }
 

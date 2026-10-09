@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/model/leaderboard.dart';
-import 'package:meow/ui/page/user/cat_detail_page.dart';
+import 'package:meow/router/app_routes.dart';
+import 'package:meow/router/auth_guard.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 import 'package:meow/ui/widget/safe_network_image.dart';
@@ -44,17 +46,20 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
         type: type.value,
         limit: 20,
       );
+      if (!mounted) return;
       setState(() {
         _items = response.data?.items ?? [];
       });
     } catch (error) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = '排行榜加载失败';
       });
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted)
+        setState(() {
+          _isLoading = false;
+        });
     }
   }
 
@@ -66,9 +71,7 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
 
   void _openDetail(LeaderboardItem item) {
     if (item.catId.isEmpty) return;
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => CatDetailPage(catId: item.catId)));
+    context.push(AppRoutes.catDetail(item.catId));
   }
 
   @override
@@ -76,7 +79,10 @@ class _LeaderboardPageState extends State<LeaderboardPage> {
     final theme = Theme.of(context);
     final type = _types[_currentIndex];
     return AdaptiveScaffold(
-      appBar: AppBar(title: const Text('全校封神榜')),
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => popOrHome(context)),
+        title: const Text('全校封神榜'),
+      ),
       body: Column(
         children: [
           const SizedBox(height: 8),

@@ -2,13 +2,15 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meow/api/http.dart';
 import 'package:meow/api/service/cos_service.dart';
 import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/provider/auth_provider.dart';
-import 'package:meow/ui/page/user/cat_select_page.dart';
+import 'package:meow/router/app_routes.dart';
+import 'package:meow/router/auth_guard.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
@@ -65,10 +67,10 @@ class _SosPageState extends ConsumerState<SosPage> {
   }
 
   Future<void> _selectCat() async {
-    final selected = await Navigator.of(context).push<Cat>(
-      MaterialPageRoute(builder: (_) => const CatSelectPage(selectable: true)),
+    final selected = await context.push<Cat>(
+      '${AppRoutes.selectCat}?select=true',
     );
-    if (selected == null) return;
+    if (!mounted || selected == null) return;
     setState(() => _selectedCat = selected);
   }
 
@@ -218,7 +220,7 @@ class _SosPageState extends ConsumerState<SosPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: Color(0xFFB04545)),
-          onPressed: () => Navigator.of(context).maybePop(),
+          onPressed: () => popOrHome(context),
         ),
         title: const Text(
           '紧急病情上报',

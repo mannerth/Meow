@@ -7,6 +7,7 @@ import 'package:meow/api/service/auth_repository.dart';
 import 'package:meow/model/campus.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
+import 'package:meow/router/auth_guard.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
@@ -84,18 +85,17 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       wechat: _wechatCtrl.text.trim().isEmpty ? null : _wechatCtrl.text,
       avatar: _pickedImage,
     );
+    if (!mounted) return;
     if (!success) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("更新失败，请稍后重试")));
       return;
     }
-    final RoleType role =
-        ref.read(authStateProvider).user?.roleType ?? RoleType.student;
-    final newUser = await AuthRepository.getMe()
-      ..roleType = role;
+    final newUser = await AuthRepository.getMe();
+    if (!mounted) return;
     ref.read(authStateProvider.notifier).update(newUser);
-    Navigator.pop(context);
+    popOrHome(context);
   }
 
   // 顶部导航栏
@@ -103,7 +103,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     backgroundColor: Colors.transparent,
     elevation: 0,
     leading: TextButton(
-      onPressed: () => Navigator.pop(context),
+      onPressed: () => popOrHome(context),
       child: const Text(
         "取消",
         style: TextStyle(color: Color.fromARGB(255, 0, 0, 0)),

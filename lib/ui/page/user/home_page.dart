@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
-import 'package:meow/ui/page/user/adoption_apply_page.dart';
-import 'package:meow/ui/page/user/cat_detail_page.dart';
-import 'package:meow/ui/page/user/leaderboard_page.dart';
-import 'package:meow/ui/page/user/notifications_page.dart';
-import 'package:meow/ui/page/user/sos_page.dart';
+import 'package:meow/router/app_routes.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/adaptive/cat_grid_sliver.dart';
 import 'package:meow/ui/widget/cat_card.dart';
@@ -235,9 +232,7 @@ class _HomePageState extends State<HomePage> {
             tooltip: '通知',
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const NotificationsPage()),
-              );
+              context.push(AppRoutes.notifications);
             },
           ),
         ],
@@ -279,7 +274,7 @@ class _HomePageState extends State<HomePage> {
                                 icon: SvgPicture.asset(
                                   'assets/icons/ranking.svg',
                                 ),
-                                destination: const LeaderboardPage(),
+                                location: AppRoutes.leaderboard,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -297,7 +292,7 @@ class _HomePageState extends State<HomePage> {
                                         color: Colors.white70,
                                         size: 40,
                                       ),
-                                      destination: const SosPage(),
+                                      location: AppRoutes.sos,
                                     ),
                                   ),
                                   const SizedBox(height: 12),
@@ -316,7 +311,7 @@ class _HomePageState extends State<HomePage> {
                                         color: Colors.white,
                                         size: 40,
                                       ),
-                                      destination: const AdoptionApplyPage(),
+                                      location: AppRoutes.adoptionApply,
                                     ),
                                   ),
                                 ],
@@ -434,9 +429,7 @@ class _HomePageState extends State<HomePage> {
           cat: cat,
           onImageLongPress: () => showNetworkImagePreview(context, cat.avatar),
           onTap: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => CatDetailPage(catId: cat.id)),
-            );
+            context.push(AppRoutes.catDetail(cat.id));
           },
         );
       }, childCount: _items.length),

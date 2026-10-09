@@ -8,6 +8,7 @@ import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat_detail.dart';
 import 'package:meow/model/static_type.dart';
 import 'package:meow/model/user.dart';
+import 'package:meow/router/auth_guard.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
@@ -423,6 +424,7 @@ class _MeowEditPageState extends State<MeowEditPage> {
     return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF6F6F8),
       appBar: AppBar(
+        leading: BackButton(onPressed: () => popOrHome(context)),
         title: const Text('编辑猫咪档案'),
         actions: [
           TextButton(

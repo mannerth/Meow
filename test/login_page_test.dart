@@ -8,7 +8,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:meow/api/Urls.dart';
 import 'package:meow/api/http.dart';
-import 'package:meow/main.dart' show navigatorKey;
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/page/common/login_page.dart';
@@ -33,6 +32,7 @@ void main() {
   });
 
   setUp(() {
+    Store().user = null;
     backend.requests.clear();
     backend.respond = (request) => throw StateError('未配置测试响应');
     Http.hasInit = true;
@@ -49,9 +49,7 @@ void main() {
 
   Future<void> showLogin(WidgetTester tester) async {
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(navigatorKey: navigatorKey, home: const LoginPage()),
-      ),
+      ProviderScope(child: const MaterialApp(home: LoginPage())),
     );
     await tester.pump();
   }
@@ -184,7 +182,7 @@ void main() {
           expect(request.authorization, 'Bearer test-access');
           return FakeHttpResponse(200, {
             'code': 200,
-            'data': {'uid': 7, 'nickname': '测试账户', 'roleType': 0},
+            'data': {'uid': 7, 'nickname': '测试账户', 'roleType': isAdmin ? 1 : 0},
           });
         };
         Http().setTokens('test-old-access', 'test-old-refresh');

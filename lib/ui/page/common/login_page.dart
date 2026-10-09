@@ -5,24 +5,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/api/Urls.dart';
 import 'package:meow/api/http.dart';
 import 'package:meow/api/service/auth_repository.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
+import 'package:meow/router/app_routes.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/util/android_browser_login.dart';
 import 'package:meow/util/store.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
-  final bool popAfterLogin;
   final bool showLoginExpired;
 
-  const LoginPage({
-    super.key,
-    this.popAfterLogin = false,
-    this.showLoginExpired = false,
-  });
+  const LoginPage({super.key, this.showLoginExpired = false});
   @override
   ConsumerState<LoginPage> createState() => _LoginPageState();
 }
@@ -95,19 +92,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
       User user = await AuthRepository.getMe();
       if (!mounted) return;
-      if (result.isAdmin) {
-        user.roleType = RoleType.admin;
-      }
       ref
           .read(authStateProvider.notifier)
           .update(user, Http().token ?? tokens.accessToken);
 
       Store().setString('roleType', user.roleType.toString());
 
-      if (widget.popAfterLogin) {
-        Navigator.of(context).pop();
-      }
-      // 不需要 Navigator，MyApp 会自动切到 MainPage
+      // 登录态刷新后，路由守卫会恢复待访问页面。
     } catch (e) {
       if (mounted) _showLoginError(e);
     } finally {
@@ -175,11 +166,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       nextLevelExp: 0,
       createTime: now,
     );
-    ref.read(authStateProvider.notifier).update(user, '');
+    ref.read(authStateProvider.notifier).clear();
+    ref.read(authStateProvider.notifier).update(user);
     Store().setString('roleType', RoleType.guest.toString());
-    if (widget.popAfterLogin) {
-      Navigator.of(context).pop();
-    }
+    context.go(AppRoutes.home);
   }
 
   @override

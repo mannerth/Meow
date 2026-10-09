@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/api/service/auth_repository.dart';
+import 'package:meow/router/app_routes.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
-
-import 'set_password_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -19,7 +19,7 @@ class _RegisterPageState extends State<RegisterPage> {
   void _startCountDown() {
     setState(() => _countDown = 60);
     Future.doWhile(() async {
-      if (_countDown > 0) {
+      if (mounted && _countDown > 0) {
         await Future.delayed(const Duration(seconds: 1));
         setState(() => _countDown--);
         return _countDown > 0;
@@ -44,7 +44,7 @@ class _RegisterPageState extends State<RegisterPage> {
           context,
         ).showSnackBar(const SnackBar(content: Text("验证码已发送，请查收邮箱")));
       }
-      _startCountDown();
+      if (mounted) _startCountDown();
     } catch (e) {
       debugPrint('验证码发送失败: $e');
       if (mounted) {
@@ -53,7 +53,7 @@ class _RegisterPageState extends State<RegisterPage> {
         ).showSnackBar(SnackBar(content: Text("验证码发送失败：${e.toString()}")));
       }
     } finally {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -68,12 +68,17 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
     // 跳转到设置密码页，邮箱/验证码传参
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => SetPasswordPage(email: email, code: code),
-      ),
+    context.push(
+      AppRoutes.setPassword,
+      extra: SetPasswordArguments(email: email, code: code),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    _codeCtrl.dispose();
+    super.dispose();
   }
 
   @override
@@ -104,12 +109,12 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
                 const SizedBox(height: 24),
                 const Text(
-                  '注册账号',
+                  '绑定邮箱',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  '用山大邮箱注册，获取验证码',
+                  '绑定山大邮箱，获取验证码',
                   style: TextStyle(color: Colors.black54),
                 ),
                 const SizedBox(height: 24),

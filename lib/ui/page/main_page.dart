@@ -1,111 +1,84 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/api/service/auth_repository.dart';
-import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/custom_bottom_navigation_bar.dart';
+import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_config.dart';
 import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_items_provider.dart';
-import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_provider.dart';
-import 'package:meow/ui/widget/keep_alive_wrapper.dart';
 
-// 使用RiverPod的ConsumerStatefulWidget，可以使用ref来监听和读取Provider
-// 同时也有StatefulWidget的setState功能
 class MainPage extends ConsumerStatefulWidget {
-  const MainPage({super.key});
+  const MainPage({super.key, required this.navigationShell});
+  final StatefulNavigationShell navigationShell;
 
   @override
   ConsumerState<MainPage> createState() => _MainPageState();
 }
 
 class _MainPageState extends ConsumerState<MainPage> {
-  /// PageView 控制器
-  /// 用于切换当前显示页面
-  late PageController _pageController;
-
-  // App生命周期监听
-  late AppLifecycleListener _lifecycleListener;
+  late final AppLifecycleListener _lifecycleListener;
+  bool _checkingIn = false;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
-    ref.read(navigationProvider.notifier).setController(_pageController);
-    _initLifecycleListener();
-    debugPrint('MainPage initialized');
-    daliyCheckIn();
+    _lifecycleListener = AppLifecycleListener(onResume: _dailyCheckIn);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _dailyCheckIn();
+    });
   }
 
-  void _initLifecycleListener() {
-    _lifecycleListener = AppLifecycleListener(
-      onResume: () {
-        // 应用恢复，处理应用在后台到达新的一天时执行签到
-        daliyCheckIn();
-      },
-    );
-  }
-
-  void daliyCheckIn() async {
-    if (ref.read(authStateProvider).user == null ||
-        ref.read(authStateProvider).user!.roleType == RoleType.guest) {
-      // 游客模式不签到
-      return;
-    }
-    bool checkedIn = await AuthRepository.dailyCheckIn();
-    if (checkedIn && mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('今日签到成功！')));
+  Future<void> _dailyCheckIn() async {
+    final auth = ref.read(authStateProvider);
+    if (!auth.loggedIn || _checkingIn) return;
+    _checkingIn = true;
+    try {
+      final checkedIn = await AuthRepository.dailyCheckIn();
+      if (checkedIn &&
+          mounted &&
+          ref.read(authStateProvider).user?.id == auth.user?.id) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('今日签到成功！')));
+      }
+    } catch (_) {
+      // 签到失败不阻断页面导航，下次恢复前台时可重试。
+    } finally {
+      _checkingIn = false;
     }
   }
 
-  void _dismissKeyboard() {
+  void _changePage(int index, List<NavigationItemConfig> configs) {
     FocusManager.instance.primaryFocus?.unfocus();
-  }
-
-  void _changePage(int index) {
-    _dismissKeyboard();
-    ref.read(navigationProvider.notifier).setCurrentIndex(index);
-    final pageIndex = _pageController.page?.round() ?? 0;
-    if ((index - pageIndex).abs() <= 1) {
-      _pageController.animateToPage(
-        index,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-      );
-    } else {
-      _pageController.jumpToPage(index);
-    }
+    final path = configs[index].routePath;
+    final branch = NavigationConfigRegistry.allConfigs.indexWhere(
+      (config) => config.routePath == path,
+    );
+    widget.navigationShell.goBranch(branch);
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
     _lifecycleListener.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final navigationState = ref.watch(navigationProvider);
-    // 监听导航项配置变化（用户角色变化时自动更新）
-    final navigationItemsData = ref.watch(navigationItemsDataProvider);
-    final pages = ref.watch(navigationPagesProvider);
-
-    // 当导航项数量变化时，确保 currentIndex 有效
-    final itemCount = navigationItemsData.length;
-    final currentIndex = navigationState.currentIndex.clamp(0, itemCount - 1);
-
-    // 如果索引被修正，同步更新 provider
-    if (currentIndex != navigationState.currentIndex) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(navigationProvider.notifier).setCurrentIndex(currentIndex);
-      });
-    }
+    final configs = ref.watch(navigationItemsProvider);
+    final allConfigs = NavigationConfigRegistry.allConfigs;
+    final path = allConfigs[widget.navigationShell.currentIndex].routePath;
+    final currentIndex = configs.indexWhere(
+      (config) => config.routePath == path,
+    );
+    final selectedIndex = currentIndex < 0 ? 0 : currentIndex;
+    final items = configs.map((config) => config.itemData).toList();
+    ref.listen(authStateProvider, (previous, next) {
+      if (next.loggedIn && previous?.user?.id != next.user?.id) _dailyCheckIn();
+    });
 
     return Scaffold(
-      // 延申页面主体，为了适应自定义悬浮导航栏
       extendBody: true,
-      // 导航栏固定在窗口底部，不随软键盘的 viewInsets 上浮。
       resizeToAvoidBottomInset: false,
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -118,12 +91,13 @@ class _MainPageState extends ConsumerState<MainPage> {
                   key: const ValueKey('navigation_rail'),
                   child: NavigationRail(
                     scrollable: true,
-                    selectedIndex: currentIndex,
+                    selectedIndex: selectedIndex,
                     labelType: NavigationRailLabelType.all,
                     groupAlignment: -1,
-                    onDestinationSelected: _changePage,
+                    onDestinationSelected: (index) =>
+                        _changePage(index, configs),
                     destinations: [
-                      for (final item in navigationItemsData)
+                      for (final item in items)
                         NavigationRailDestination(
                           icon: item.icon,
                           selectedIcon: item.activeIcon,
@@ -137,21 +111,7 @@ class _MainPageState extends ConsumerState<MainPage> {
                 key: const ValueKey('main_content'),
                 child: Stack(
                   children: [
-                    PageView.builder(
-                      controller: _pageController,
-                      itemCount: pages.length,
-                      onPageChanged: (index) {
-                        // 同步 PageView 滑动与导航栏状态
-                        _dismissKeyboard();
-                        ref
-                            .read(navigationProvider.notifier)
-                            .setCurrentIndex(index);
-                      },
-                      itemBuilder: (context, index) {
-                        return KeepAliveWrapper(child: pages[index]);
-                      },
-                    ),
-                    // 自定义悬浮导航栏
+                    widget.navigationShell,
                     if (!useRail)
                       Positioned(
                         right: 24,
@@ -159,9 +119,10 @@ class _MainPageState extends ConsumerState<MainPage> {
                         bottom: 48,
                         child: Center(
                           child: CustomBottomNavigationBar(
-                            currentIndex: currentIndex,
-                            items: navigationItemsData,
-                            onIndexChanged: _changePage,
+                            currentIndex: selectedIndex,
+                            items: items,
+                            onIndexChanged: (index) =>
+                                _changePage(index, configs),
                           ),
                         ),
                       ),

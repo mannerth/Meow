@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
-import 'package:meow/ui/page/common/about_page.dart';
-import 'package:meow/ui/page/user/user_adoptions_page.dart';
+import 'package:meow/router/app_routes.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
-
-import 'edit_profile_page.dart';
-import 'login_page.dart';
 
 //用户个人页面
 class UserPage extends ConsumerWidget {
@@ -31,12 +28,7 @@ class UserPage extends ConsumerWidget {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  ref.read(authStateProvider.notifier).clear();
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const LoginPage(popAfterLogin: true),
-                    ),
-                  );
+                  context.push(AppRoutes.loginLocation(AppRoutes.profile));
                 },
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
@@ -161,12 +153,7 @@ class _UserCenterDetailPage extends StatelessWidget {
                   right: 22,
                   child: ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const EditProfilePage(),
-                        ),
-                      );
+                      context.push(AppRoutes.editProfile);
                     },
                     icon: const Icon(
                       Icons.edit,
@@ -310,11 +297,7 @@ class _UserCenterDetailPage extends StatelessWidget {
                       desc: "查看进度",
                       //badge: "新办",
                       onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const UserAdoptionsPage(),
-                          ),
-                        );
+                        context.push(AppRoutes.myAdoptions);
                       },
                     ),
                   ),
@@ -348,6 +331,7 @@ class _UserCenterDetailPage extends StatelessWidget {
                     ),
                     onPressed: () {
                       ref.read(authStateProvider.notifier).clear();
+                      context.go(AppRoutes.login);
                     },
                     icon: const Icon(Icons.logout, color: Colors.black87),
                     label: const Text(
@@ -406,9 +390,7 @@ class _MoreSection extends StatelessWidget {
                 style: TextStyle(fontWeight: FontWeight.w600),
               ),
               trailing: const Icon(Icons.chevron_right, color: Colors.black38),
-              onTap: () => Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const AboutPage())),
+              onTap: () => context.push(AppRoutes.about),
             ),
           ),
         ],

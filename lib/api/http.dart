@@ -2,10 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:meow/api/Urls.dart';
-import 'package:meow/main.dart';
-import 'package:meow/ui/page/common/login_page.dart';
 import 'package:meow/util/store.dart';
 
 // 网络请求封装，单例模式
@@ -20,6 +17,9 @@ class Http {
 
   static bool hasInit = false;
 
+  /// UI 层注册处理器；网络层不直接压入登录页面。
+  VoidCallback? onAuthenticationExpired;
+
   // Dio实例
   late final Dio _dio;
 
@@ -29,6 +29,7 @@ class Http {
   // token
   String? _token;
   String? _refreshToken;
+  Future<bool>? _refreshing;
   String? get token => _token;
 
   void setToken(String token) {
@@ -223,53 +224,41 @@ class Http {
         // 鉴权失效：尝试用 refreshToken 刷新后重试一次
         if ((statusCode == 401 || statusCode == 403) &&
             !skipAuthentication &&
-            _isAuthFailure(e.response?.data) &&
+            _isAuthFailure(statusCode, e.response?.data) &&
             allowRetry) {
           final refreshed = await _tryRefresh();
           if (refreshed) {
-            try {
-              return await _dio.request<T>(
-                path,
-                queryParameters: queryParameters,
-                data: data,
-                options:
-                    options?.copyWith(method: method) ??
-                    Options(method: method),
-                cancelToken: cancelToken,
-              );
-            } catch (e) {
-              debugPrint('刷新后重试失败: $e');
-            }
+            return request<T>(
+              path,
+              method: method,
+              queryParameters: queryParameters,
+              data: data is FormData ? data.clone() : data,
+              options: options,
+              cancelToken: cancelToken,
+              allowRetry: false,
+            );
           }
         }
         if (hasInit &&
             !skipAuthentication &&
             (statusCode == 401 || statusCode == 403) &&
-            _isAuthFailure(e.response?.data)) {
-          navigatorKey.currentState?.push(
-            MaterialPageRoute(
-              builder: (_) =>
-                  LoginPage(popAfterLogin: true, showLoginExpired: true),
-            ),
-          );
+            _isAuthFailure(statusCode, e.response?.data) &&
+            e.requestOptions.headers['Authorization'] == 'Bearer $_token') {
+          onAuthenticationExpired?.call();
         }
         if (statusCode != null &&
             statusCode >= 500 &&
             allowRetry &&
             data is! FormData) {
-          try {
-            // 重试请求
-            return await _dio.request<T>(
-              path,
-              queryParameters: queryParameters,
-              data: data,
-              options:
-                  options?.copyWith(method: method) ?? Options(method: method),
-              cancelToken: cancelToken,
-            );
-          } catch (e) {
-            throw Exception('Retry failed: $e');
-          }
+          return request<T>(
+            path,
+            method: method,
+            queryParameters: queryParameters,
+            data: data,
+            options: options,
+            cancelToken: cancelToken,
+            allowRetry: false,
+          );
         }
         if (e.response != null) {
           return e.response as Response<T>;
@@ -280,7 +269,8 @@ class Http {
   }
 
   /// 判断是否为 token 相关的鉴权失败（而非权限不足）
-  bool _isAuthFailure(dynamic body) {
+  bool _isAuthFailure(int? statusCode, dynamic body) {
+    if (statusCode == 401) return true;
     if (body is Map) {
       final msg = body['msg']?.toString() ?? '';
       if (msg.contains('权限不足') || msg.contains('权限')) return false;
@@ -293,11 +283,16 @@ class Http {
         return true;
       }
     }
-    return false;
+    return statusCode == 401;
   }
 
   /// 使用 refreshToken 刷新 access token
-  Future<bool> _tryRefresh() async {
+  Future<bool> _tryRefresh() =>
+      _refreshing ??= _refreshTokens().whenComplete(() {
+        _refreshing = null;
+      });
+
+  Future<bool> _refreshTokens() async {
     final refresh = _refreshToken;
     if (refresh == null || refresh.isEmpty) return false;
     try {
@@ -311,7 +306,7 @@ class Http {
         if (data is Map) {
           final newAccess = data['accessToken']?.toString() ?? '';
           final newRefresh = data['refreshToken']?.toString() ?? '';
-          if (newAccess.isNotEmpty) {
+          if (newAccess.isNotEmpty && _refreshToken == refresh) {
             _token = newAccess;
             if (newRefresh.isNotEmpty) _refreshToken = newRefresh;
             unawaited(Store().setAccessToken(newAccess));

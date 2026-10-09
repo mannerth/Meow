@@ -43,7 +43,7 @@ final class AuthStateProvider extends $NotifierProvider<AuthState, Auth> {
   }
 }
 
-String _$authStateHash() => r'187381c5baf02c07e528d4013ab67cf2e0011028';
+String _$authStateHash() => r'd5825705e80180c45aa70ef4649222834fc224a2';
 
 /// 登录状态provider
 

@@ -2,12 +2,14 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:meow/api/http.dart';
 import 'package:meow/api/service/cos_service.dart';
 import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/user.dart';
 import 'package:meow/provider/auth_provider.dart';
+import 'package:meow/router/auth_guard.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
@@ -208,8 +210,8 @@ class _NewCatPageState extends ConsumerState<NewCatPage> {
         _selectedTagIds.clear();
         _selectedColorId = null;
       });
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+      if (context.canPop()) {
+        context.pop();
       }
     } catch (error) {
       _showMessage('提交失败，请稍后重试');
@@ -235,7 +237,7 @@ class _NewCatPageState extends ConsumerState<NewCatPage> {
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () => Navigator.of(context).maybePop(),
+          onPressed: () => popOrHome(context),
         ),
         elevation: 0,
       ),

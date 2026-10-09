@@ -6,7 +6,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/api/http.dart';
+import 'package:meow/router/app_routes.dart';
 import 'package:meow/ui/page/common/about_page.dart';
 import 'package:meow/ui/page/common/user_page.dart';
 import 'package:meow/ui/widget/community_qrcode_dialog.dart';
@@ -78,8 +80,16 @@ void main() {
     addTearDown(tester.view.reset);
     tester.view.devicePixelRatio = 1;
     tester.view.physicalSize = const Size(390, 844);
+    final router = GoRouter(
+      initialLocation: AppRoutes.profile,
+      routes: [
+        GoRoute(path: AppRoutes.profile, builder: (_, _) => const UserPage()),
+        GoRoute(path: AppRoutes.about, builder: (_, _) => const AboutPage()),
+      ],
+    );
+    addTearDown(router.dispose);
     await tester.pumpWidget(
-      const ProviderScope(child: MaterialApp(home: UserPage())),
+      ProviderScope(child: MaterialApp.router(routerConfig: router)),
     );
     expect(find.text('更多'), findsOneWidget);
     await tester.tap(find.text('关于我们'));

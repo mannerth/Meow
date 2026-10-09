@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/api/service/adoption_service.dart';
 import 'package:meow/model/adoption.dart';
 import 'package:meow/model/static_type.dart';
-import 'package:meow/ui/page/admin/admin_adoption_detail_page.dart';
+import 'package:meow/router/app_routes.dart';
+import 'package:meow/router/auth_guard.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/safe_network_image.dart';
 import 'package:meow/util/time_tool.dart';
@@ -82,6 +84,7 @@ class _AdminAdoptionsPageState extends State<AdminAdoptionsPage> {
       final pageData = response.data;
       final newItems = pageData?.items ?? [];
       final total = pageData?.total ?? 0;
+      if (!mounted) return;
 
       setState(() {
         if (reset) {
@@ -96,6 +99,7 @@ class _AdminAdoptionsPageState extends State<AdminAdoptionsPage> {
         _errorMessage = null;
       });
     } catch (error) {
+      if (!mounted) return;
       setState(() {
         if (reset) {
           _errorMessage = '加载失败，请稍后重试';
@@ -104,10 +108,11 @@ class _AdminAdoptionsPageState extends State<AdminAdoptionsPage> {
         }
       });
     } finally {
-      setState(() {
-        _isInitialLoading = false;
-        _isLoadingMore = false;
-      });
+      if (mounted)
+        setState(() {
+          _isInitialLoading = false;
+          _isLoadingMore = false;
+        });
     }
   }
 
@@ -120,14 +125,13 @@ class _AdminAdoptionsPageState extends State<AdminAdoptionsPage> {
   }
 
   void _openDetail(AdminAdoptionItem item) {
-    Navigator.of(context)
-        .push(
-          MaterialPageRoute(
-            builder: (_) => AdminAdoptionDetailPage(item: item),
-          ),
+    context
+        .push<AdminAdoptionItem>(
+          AppRoutes.adminAdoptionDetail(item.id),
+          extra: item,
         )
         .then((value) {
-          if (value is AdminAdoptionItem) {
+          if (mounted && value != null) {
             setState(() {
               final index = _items.indexWhere(
                 (element) => element.id == value.id,
@@ -146,7 +150,10 @@ class _AdminAdoptionsPageState extends State<AdminAdoptionsPage> {
   Widget build(BuildContext context) {
     return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF5F6FA),
-      appBar: AppBar(title: const Text('领养申请审批')),
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => popOrHome(context)),
+        title: const Text('领养申请审批'),
+      ),
       body: Column(
         children: [
           const Padding(

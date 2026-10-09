@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meow/router/auth_guard.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/community_qrcode_dialog.dart';
 
@@ -25,7 +26,7 @@ class AboutPage extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(18, 8, 10, 8),
           child: IconButton.filled(
             tooltip: '返回',
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => popOrHome(context),
             style: IconButton.styleFrom(backgroundColor: Colors.white),
             icon: const Icon(Icons.arrow_back, color: Color(0xFF586474)),
           ),
@@ -96,15 +97,15 @@ class AboutPage extends StatelessWidget {
                   padding: EdgeInsets.symmetric(vertical: 16),
                   child: Divider(height: 1, color: Color(0xFFF0F0F0)),
                 ),
-                Text(
-                  '开发部门（学生在线）始终坚持“为学生服务，替学生发声”的宗旨，不断提高和完善自身。',
-                  style: TextStyle(
-                    color: Color(0xFF727272),
-                    fontSize: 14,
-                    height: 1.7,
-                  ),
-                ),
-                SizedBox(height: 10),
+                // Text(
+                //   '开发部门（学生在线）。',
+                //   style: TextStyle(
+                //     color: Color(0xFF727272),
+                //     fontSize: 14,
+                //     height: 1.7,
+                //   ),
+                // ),
+                // SizedBox(height: 10),
                 Text(
                   '来学生在线，和有意思的人，发现更精彩的自己。',
                   style: TextStyle(
@@ -147,7 +148,7 @@ class AboutPage extends StatelessWidget {
                 ),
                 SizedBox(height: 16),
                 Text(
-                  '猫猫图鉴 · 用代码守护每一只喵',
+                  '猫猫图鉴 · 守护每一只喵',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Color(0xFFC2C2C2), fontSize: 12),
                 ),

@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat_detail.dart';
 import 'package:meow/model/post.dart';
 import 'package:meow/provider/auth_provider.dart';
+import 'package:meow/router/app_routes.dart';
+import 'package:meow/router/auth_guard.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 import 'package:meow/util/time_tool.dart';
@@ -60,7 +63,7 @@ class _CatDetailPageState extends State<CatDetailPage> {
   }
 
   Future<void> _toggleLike(Post post) async {
-    if (_postLoading) return;
+    if (_postLoading || !requireLogin(context)) return;
     final index = _postItems.indexWhere((item) => item.id == post.id);
     if (index == -1) return;
     final updated = Post(
@@ -102,7 +105,7 @@ class _CatDetailPageState extends State<CatDetailPage> {
   }
 
   Future<void> _deletePost(Post post) async {
-    if (_postLoading) return;
+    if (_postLoading || !requireLogin(context)) return;
     final confirmed = await _showConfirmDialog(
       context,
       title: '删除动态',
@@ -130,6 +133,7 @@ class _CatDetailPageState extends State<CatDetailPage> {
   }
 
   Future<void> _feedCat(WidgetRef ref) async {
+    if (!requireLogin(context, message: '未登录，请登录后投喂猫咪')) return;
     try {
       final response = await CatService.feedCat(widget.catId);
       final currency = response.data?.userCurrency ?? 0;
@@ -178,11 +182,7 @@ class _CatDetailPageState extends State<CatDetailPage> {
                     child: _RelationSection(
                       relations: detail.relationship,
                       onTap: (id) {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => CatDetailPage(catId: id),
-                          ),
-                        );
+                        context.push(AppRoutes.catDetail(id));
                       },
                     ),
                   ),
@@ -307,7 +307,7 @@ class _DetailHeader extends StatelessWidget {
           backgroundColor: Colors.white.withAlpha(217),
           child: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.black),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => popOrHome(context),
           ),
         ),
       ),

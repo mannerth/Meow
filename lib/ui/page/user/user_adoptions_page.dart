@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:meow/api/service/adoption_service.dart';
 import 'package:meow/model/adoption.dart';
 import 'package:meow/model/static_type.dart';
+import 'package:meow/router/auth_guard.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/safe_network_image.dart';
 import 'package:meow/util/time_tool.dart';
@@ -81,6 +82,7 @@ class _UserAdoptionsPageState extends State<UserAdoptionsPage> {
       final pageData = response.data;
       final newItems = pageData?.items ?? [];
       final total = pageData?.total ?? 0;
+      if (!mounted) return;
 
       setState(() {
         if (reset) {
@@ -95,6 +97,7 @@ class _UserAdoptionsPageState extends State<UserAdoptionsPage> {
         _errorMessage = null;
       });
     } catch (error) {
+      if (!mounted) return;
       setState(() {
         if (reset) {
           _errorMessage = '加载失败，请稍后重试';
@@ -103,10 +106,11 @@ class _UserAdoptionsPageState extends State<UserAdoptionsPage> {
         }
       });
     } finally {
-      setState(() {
-        _isInitialLoading = false;
-        _isLoadingMore = false;
-      });
+      if (mounted)
+        setState(() {
+          _isInitialLoading = false;
+          _isLoadingMore = false;
+        });
     }
   }
 
@@ -126,7 +130,10 @@ class _UserAdoptionsPageState extends State<UserAdoptionsPage> {
   Widget build(BuildContext context) {
     return AdaptiveScaffold(
       backgroundColor: const Color(0xFFF6F7FB),
-      appBar: AppBar(title: const Text('我的领养申请')),
+      appBar: AppBar(
+        leading: BackButton(onPressed: () => popOrHome(context)),
+        title: const Text('我的领养申请'),
+      ),
       body: Column(
         children: [
           Padding(

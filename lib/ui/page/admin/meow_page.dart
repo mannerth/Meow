@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat.dart';
-import 'package:meow/ui/page/admin/meow_edit_page.dart';
+import 'package:meow/router/app_routes.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
 import 'package:meow/ui/widget/adaptive/cat_grid_sliver.dart';
 import 'package:meow/ui/widget/cat_card.dart';
@@ -84,6 +85,7 @@ class _MeowPageState extends State<MeowPage> {
       final pageData = response.data;
       final newItems = pageData?.items ?? [];
       final total = pageData?.total ?? 0;
+      if (!mounted) return;
 
       setState(() {
         if (reset) {
@@ -98,6 +100,7 @@ class _MeowPageState extends State<MeowPage> {
         _errorMessage = null;
       });
     } catch (error) {
+      if (!mounted) return;
       setState(() {
         if (reset) {
           _errorMessage = '加载失败，请稍后重试';
@@ -106,18 +109,19 @@ class _MeowPageState extends State<MeowPage> {
         }
       });
     } finally {
-      setState(() {
-        _isInitialLoading = false;
-        _isLoadingMore = false;
-      });
+      if (mounted)
+        setState(() {
+          _isInitialLoading = false;
+          _isLoadingMore = false;
+        });
     }
   }
 
   Future<void> _openEditor({String? catId}) async {
-    final result = await Navigator.of(
-      context,
-    ).push<bool>(MaterialPageRoute(builder: (_) => MeowEditPage(catId: catId)));
-    if (result == true) {
+    final result = await context.push<bool>(
+      catId == null ? AppRoutes.createCat : AppRoutes.editCat(catId),
+    );
+    if (mounted && result == true) {
       await _loadCats(reset: true);
     }
   }

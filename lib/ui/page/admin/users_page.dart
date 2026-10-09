@@ -79,6 +79,7 @@ class _UsersPageState extends State<UsersPage> {
       final pageData = response.data;
       final newItems = pageData?.items ?? [];
       final total = pageData?.total ?? 0;
+      if (!mounted) return;
 
       setState(() {
         if (reset) {

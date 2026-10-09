@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meow/api/service/admin_dashboard_service.dart';
 import 'package:meow/model/admin_dashboard_stats.dart';
 import 'package:meow/provider/auth_provider.dart';
-import 'package:meow/ui/page/admin/admin_adoptions_page.dart';
-import 'package:meow/ui/page/admin/admin_new_cat_page.dart';
-import 'package:meow/ui/page/admin/admin_sos_page.dart';
-import 'package:meow/ui/page/admin/announcements_page.dart';
-import 'package:meow/ui/page/admin/type_management_page.dart';
+import 'package:meow/router/app_routes.dart';
 import 'package:meow/ui/widget/adaptive/adaptive_scaffold.dart';
-import 'package:meow/ui/widget/custom_bottom_navigation_bar/navigation_provider.dart';
 import 'package:meow/ui/widget/image_preview.dart';
 
 class StaticPage extends ConsumerStatefulWidget {
@@ -72,19 +68,13 @@ class _StaticPageState extends ConsumerState<StaticPage> {
               errorMessage: _errorMessage,
               stats: stats,
               onSosTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const AdminSosPage()));
+                context.push(AppRoutes.adminSos);
               },
               onPendingTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const AdminNewCatPage()),
-                );
+                context.push(AppRoutes.adminNewCats);
               },
               onAdoptionTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const AdminAdoptionsPage()),
-                );
+                context.push(AppRoutes.adminAdoptions);
               },
             ),
             const SizedBox(height: 18),
@@ -96,9 +86,7 @@ class _StaticPageState extends ConsumerState<StaticPage> {
               title: '发布新公告',
               subtitle: '向全校用户推送最新通知或招募信息',
               onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const AnnouncementsPage()),
-                );
+                context.push(AppRoutes.announcements);
               },
             ),
             const SizedBox(height: 16),
@@ -110,9 +98,7 @@ class _StaticPageState extends ConsumerState<StaticPage> {
               title: '管理猫咪类型',
               subtitle: '维护标签、症状、花色、地点和角色类型',
               onTap: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const TypeManagementPage()),
-                );
+                context.push(AppRoutes.types);
               },
             ),
             const SizedBox(height: 16),
@@ -301,9 +287,7 @@ class _StatsGrid extends StatelessWidget {
               footnote: '--',
               footnoteColor: const Color(0xFF43A047),
               onTap: () {
-                ref
-                    .read(navigationProvider.notifier)
-                    .setCurrentIndex(1, controlJump: true);
+                context.go(AppRoutes.adminCats);
               },
             );
           },
