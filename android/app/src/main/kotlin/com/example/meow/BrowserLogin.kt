@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
@@ -63,21 +62,6 @@ class BrowserLogin(private val activity: Activity) : MethodChannel.MethodCallHan
             return
         }
 
-        // Resolve an ordinary web URL that cannot be claimed by an App Link.
-        // No network request is made to this reserved .invalid domain.
-        val probe = Intent(Intent.ACTION_VIEW, Uri.parse("https://browser-selection.invalid/"))
-            .addCategory(Intent.CATEGORY_BROWSABLE)
-        val resolved = activity.packageManager.resolveActivity(probe, PackageManager.MATCH_DEFAULT_ONLY)
-        val candidates = activity.packageManager.queryIntentActivities(probe, PackageManager.MATCH_DEFAULT_ONLY)
-        val defaultActivity = resolved?.activityInfo
-        if (defaultActivity == null || candidates.none {
-                it.activityInfo.packageName == defaultActivity.packageName &&
-                    it.activityInfo.name == defaultActivity.name
-            }) {
-            result.error("NO_DEFAULT_BROWSER", "请先在系统设置中选择默认浏览器", null)
-            return
-        }
-
         // Store only the pending session metadata; never persist callback URLs or tokens here.
         val saved = preferences.edit()
             .putLong("expiresAt", System.currentTimeMillis() + SESSION_DURATION_MS)
@@ -91,12 +75,18 @@ class BrowserLogin(private val activity: Activity) : MethodChannel.MethodCallHan
         scheduleTimeout()
         val intent = Intent(Intent.ACTION_VIEW, url)
             .addCategory(Intent.CATEGORY_BROWSABLE)
-            .setPackage(defaultActivity.packageName)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        // Let Android apply the user's browser preference, without querying packages:
+        // OEM resolver activities and package visibility can make preflight checks fail.
+        // A hostless selector matches HTTPS browsers, excluding domain-specific App Links.
+        // Only resolution uses the selector; the browser receives the original login URL.
+        // If no default exists, Android lets the user choose a browser itself.
+        intent.selector = Intent(Intent.ACTION_VIEW, Uri.parse("https:"))
+            .addCategory(Intent.CATEGORY_BROWSABLE)
         try {
             activity.startActivity(intent)
         } catch (_: ActivityNotFoundException) {
-            fail("BROWSER_UNAVAILABLE", "默认浏览器不可用，请检查系统设置")
+            fail("BROWSER_UNAVAILABLE", "无法打开浏览器，请检查浏览器是否已安装、启用及设为默认")
         } catch (_: SecurityException) {
             fail("BROWSER_UNAVAILABLE", "无法打开默认浏览器，请检查系统设置")
         }

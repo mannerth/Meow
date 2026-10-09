@@ -93,7 +93,7 @@ void main() {
   );
 
   testWidgets(
-    '未设置默认浏览器时提供系统设置入口',
+    '系统无法打开浏览器时提供设置入口，结束等待状态',
     (tester) async {
       var openedSettings = false;
       messenger.setMockMethodCallHandler(channel, (call) async {
@@ -102,8 +102,8 @@ void main() {
             return false;
           case 'authenticate':
             throw PlatformException(
-              code: 'NO_DEFAULT_BROWSER',
-              message: '请先在系统设置中选择默认浏览器',
+              code: 'BROWSER_UNAVAILABLE',
+              message: '无法打开浏览器，请检查浏览器是否已安装、启用及设为默认',
             );
           case 'openDefaultBrowserSettings':
             openedSettings = true;
@@ -114,7 +114,13 @@ void main() {
       await showLogin(tester);
       await tester.tap(find.text('统一认证登录'));
       await tester.pumpAndSettle();
-      expect(find.text('请先在系统设置中选择默认浏览器'), findsOneWidget);
+      expect(find.text('无法打开浏览器，请检查浏览器是否已安装、启用及设为默认'), findsOneWidget);
+      expect(find.text('请在默认浏览器中完成登录'), findsNothing);
+      expect(find.text('取消登录'), findsNothing);
+      expect(
+        tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+        isNotNull,
+      );
       await tester.tap(find.text('设置'));
       await tester.pumpAndSettle();
       expect(openedSettings, isTrue);

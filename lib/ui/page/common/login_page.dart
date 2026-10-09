@@ -123,9 +123,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   void _showLoginError(Object error) {
     if (error is PlatformException && error.code == 'CANCELED') return;
     final needsSettings =
-        error is PlatformException &&
-        (error.code == 'NO_DEFAULT_BROWSER' ||
-            error.code == 'BROWSER_UNAVAILABLE');
+        error is PlatformException && error.code == 'BROWSER_UNAVAILABLE';
     final message = switch (error) {
       PlatformException(:final message) => message ?? '无法完成浏览器登录，请重试',
       FormatException() => '登录回调数据无效，请重试',
@@ -250,10 +248,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  '欢迎回到猫猫图鉴',
-                  style: TextStyle(color: Colors.black54),
-                ),
+                const Text('欢迎回到猫猫图鉴', style: TextStyle(color: Colors.black54)),
                 const SizedBox(height: 24),
                 Card(
                   elevation: 4,
