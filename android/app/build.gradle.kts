@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.example.meow"
     // flutter_secure_storage 11 使用 Android Keystore 的现代加密实现。
-    compileSdk = 37
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

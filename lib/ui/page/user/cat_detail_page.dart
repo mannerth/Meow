@@ -5,6 +5,7 @@ import 'package:meow/api/service/cat_service.dart';
 import 'package:meow/api/service/type_service.dart';
 import 'package:meow/model/cat_detail.dart';
 import 'package:meow/model/post.dart';
+import 'package:meow/model/static_type.dart';
 import 'package:meow/provider/auth_provider.dart';
 import 'package:meow/router/app_routes.dart';
 import 'package:meow/router/auth_guard.dart';
@@ -388,16 +389,30 @@ class _DetailInfoCard extends StatelessWidget {
                 children: [
                   const Icon(Icons.cut, size: 16, color: Color(0xFF7B8593)),
                   const SizedBox(width: 6),
-                  Expanded(
+                  Flexible(
                     child: Text(
                       detail.basicInfo.neutered.isNeutered
                           ? '${detail.basicInfo.neutered.neuteredDate} 已绝育'
                           : '未绝育',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: const Color(0xFF7B8593),
                       ),
                     ),
                   ),
+                  if (detail.basicInfo.gender != CatGender.unknown) ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      detail.basicInfo.gender == CatGender.male ? '♂' : '♀',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: detail.basicInfo.gender == CatGender.male
+                            ? const Color(0xFF4A90E2)
+                            : const Color(0xFFF06292),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ],
               ),
               const SizedBox(height: 14),
