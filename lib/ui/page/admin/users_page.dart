@@ -122,6 +122,8 @@ class _UsersPageState extends State<UsersPage> {
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      // 用户管理页位于 Shell 的子 Navigator 中；使用根 Navigator 才能覆盖全局底部导航栏。
+      useRootNavigator: true,
       builder: (context) =>
           _UserDetailSheet(detail: detail, onToggleBan: () => _toggleBan(item)),
     );

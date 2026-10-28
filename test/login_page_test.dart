@@ -182,7 +182,8 @@ void main() {
           expect(request.authorization, 'Bearer test-access');
           return FakeHttpResponse(200, {
             'code': 200,
-            'data': {'uid': 7, 'nickname': '测试账户', 'roleType': isAdmin ? 1 : 0},
+            // /users/me 不再返回角色，身份由当前登录流程决定。
+            'data': {'uid': 7, 'nickname': '测试账户'},
           });
         };
         Http().setTokens('test-old-access', 'test-old-refresh');

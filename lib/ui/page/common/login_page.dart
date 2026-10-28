@@ -92,6 +92,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
       User user = await AuthRepository.getMe();
       if (!mounted) return;
+      // 用户信息接口不再返回角色；管理员身份由本次管理员登录流程决定。
+      if (result.isAdmin) user.roleType = RoleType.admin;
       ref
           .read(authStateProvider.notifier)
           .update(user, Http().token ?? tokens.accessToken);
